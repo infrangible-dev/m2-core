@@ -317,7 +317,6 @@ class Stores
     public function getWebsite($websiteId = null): Website
     {
         /** @var Website $website */
-        /** @noinspection PhpUnnecessaryLocalVariableInspection */
         $website = $this->storeManager->getWebsite($websiteId);
 
         return $website;
@@ -332,7 +331,6 @@ class Stores
     public function getWebsites(bool $withDefault = false, bool $codeKey = false): array
     {
         /** @var Website[] $websites */
-        /** @noinspection PhpUnnecessaryLocalVariableInspection */
         $websites = $this->storeManager->getWebsites($withDefault, $codeKey);
 
         return $websites;
@@ -347,7 +345,6 @@ class Stores
     public function getStores(bool $withDefault = false, bool $codeKey = false): array
     {
         /** @var Store[] $stores */
-        /** @noinspection PhpUnnecessaryLocalVariableInspection */
         $stores = $this->storeManager->getStores($withDefault, $codeKey);
 
         return $stores;
@@ -547,10 +544,10 @@ class Stores
     }
 
     /**
-     * @param float   $price
-     * @param boolean $format
+     * @param float $price
+     * @param bool  $format
      *
-     * @return float|int|string
+     * @return float|string
      */
     public function convertPrice(float $price, bool $format = false)
     {

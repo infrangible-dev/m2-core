@@ -108,12 +108,12 @@ class Cache
     }
 
     /**
-     * @param string $data
-     * @param string $id
-     * @param array  $tags
-     * @param bool   $lifeTime
+     * @param string   $data
+     * @param string   $id
+     * @param array    $tags
+     * @param int|null $lifeTime
      */
-    public function saveCache(string $data, string $id, array $tags = [], bool $lifeTime = false)
+    public function saveCache(string $data, string $id, array $tags = [], int $lifeTime = null)
     {
         $this->cache->save($data, $id, $tags, $lifeTime);
     }
