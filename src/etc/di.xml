@@ -9,6 +9,8 @@
     <type name="Magento\Framework\Console\CommandList">
         <arguments>
             <argument name="commands" xsi:type="array">
+                <item name="infrangible_core_config_decrypt" xsi:type="object">Infrangible\Core\Console\Command\Config\Decrypt</item>
+                <item name="infrangible_core_config_encrypt" xsi:type="object">Infrangible\Core\Console\Command\Config\Encrypt</item>
                 <item name="infrangible_core_config_export" xsi:type="object">Infrangible\Core\Console\Command\Config\Export</item>
                 <item name="infrangible_core_config_import" xsi:type="object">Infrangible\Core\Console\Command\Config\Import</item>
             </argument>
