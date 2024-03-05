@@ -20,12 +20,19 @@ class Encrypt
     /** @var EncryptorInterface */
     protected $encryptor;
 
+    /** @var \Infrangible\Core\Model\Config\EncryptorInterface */
+    protected $customEncryptor;
+
     /**
-     * @param EncryptorInterface $encryptor
+     * @param EncryptorInterface                                $encryptor
+     * @param \Infrangible\Core\Model\Config\EncryptorInterface $customEncryptor
      */
-    public function __construct(EncryptorInterface $encryptor)
-    {
+    public function __construct(
+        EncryptorInterface $encryptor,
+        \Infrangible\Core\Model\Config\EncryptorInterface $customEncryptor
+    ) {
         $this->encryptor = $encryptor;
+        $this->customEncryptor = $customEncryptor;
     }
 
     /**
@@ -37,8 +44,9 @@ class Encrypt
     public function execute(InputInterface $input, OutputInterface $output): int
     {
         $value = $input->getOption('value');
+        $key = $input->getOption('key');
 
-        $encrypted = $this->encryptor->encrypt($value);
+        $encrypted = $key === null ? $this->encryptor->encrypt($value) : $this->customEncryptor->encrypt($key, $value);
 
         $output->writeln($encrypted);
 

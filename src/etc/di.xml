@@ -16,4 +16,5 @@
             </argument>
         </arguments>
     </type>
+    <preference for="Infrangible\Core\Model\Config\EncryptorInterface" type="Infrangible\Core\Model\Config\Encryptor" />
 </config>

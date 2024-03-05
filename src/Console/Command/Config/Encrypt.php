@@ -38,7 +38,8 @@ class Encrypt
     protected function getCommandDefinition(): array
     {
         return [
-            new InputOption('value', null, InputOption::VALUE_REQUIRED, 'The value to encrypt')
+            new InputOption('value', null, InputOption::VALUE_REQUIRED, 'The value to encrypt'),
+            new InputOption('key', null, InputOption::VALUE_OPTIONAL, 'The key to encrypt with')
         ];
     }
 
