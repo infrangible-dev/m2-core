@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Magento\Catalog\Model\Category;
@@ -11,7 +13,7 @@ use Magento\Framework\Exception\LocalizedException;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class EntityType
@@ -44,13 +46,13 @@ class EntityType
     public function getEntityType(string $entityTypeCode): ?Type
     {
         if (array_key_exists($entityTypeCode, $this->entityTypes)) {
-            return $this->entityTypes[ $entityTypeCode ];
+            return $this->entityTypes[$entityTypeCode];
         }
 
         $entityType = $this->eavConfig->getEntityType($entityTypeCode);
 
-        if ( ! empty($entityType)) {
-            $this->entityTypes[ $entityTypeCode ] = $entityType;
+        if (!empty($entityType)) {
+            $this->entityTypes[$entityTypeCode] = $entityType;
 
             return $entityType;
         }
@@ -74,11 +76,11 @@ class EntityType
     /**
      * @param Type $entityType
      *
-     * @return string|null
+     * @return string
      */
-    public function getEntityTypeTableByEntityType(Type $entityType): ?string
+    public function getEntityTypeTableByEntityType(Type $entityType): string
     {
-        return empty($entityType) ? null : $this->databaseHelper->getTableName($entityType->getEntityTable());
+        return $this->databaseHelper->getTableName($entityType->getEntityTable());
     }
 
     /**
@@ -147,7 +149,7 @@ class EntityType
     {
         $productEntityType = $this->getProductEntityType();
 
-        return empty($productEntityType) ? null : (int)$productEntityType->getDefaultAttributeSetId();
+        return empty($productEntityType) ? null : (int) $productEntityType->getDefaultAttributeSetId();
     }
 
     /**

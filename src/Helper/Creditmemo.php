@@ -1,31 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
+use FeWeDev\Base\Variables;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
-use Tofex\Help\Variables;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Creditmemo
 {
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var CreditmemoFactory */
     protected $creditMemoFactory;
 
     /**
-     * @param Variables         $variableHelper
+     * @param Variables         $variables
      * @param CreditmemoFactory $creditMemoFactory
      */
-    public function __construct(Variables $variableHelper, CreditmemoFactory $creditMemoFactory)
+    public function __construct(Variables $variables, CreditmemoFactory $creditMemoFactory)
     {
-        $this->variableHelper = $variableHelper;
+        $this->variables = $variables;
         $this->creditMemoFactory = $creditMemoFactory;
     }
 
@@ -45,24 +47,24 @@ class Creditmemo
         array $qtys = [],
         float $shippingAmount = null,
         float $adjustmentPositive = null,
-        float $adjustmentNegative = null): Order\Creditmemo
-    {
+        float $adjustmentNegative = null
+    ): Order\Creditmemo {
         $creditMemoData = [];
 
-        if ( ! $this->variableHelper->isEmpty($qtys)) {
-            $creditMemoData[ 'qtys' ] = $qtys;
+        if (!$this->variables->isEmpty($qtys)) {
+            $creditMemoData['qtys'] = $qtys;
         }
 
-        if ( ! $this->variableHelper->isEmpty($shippingAmount)) {
-            $creditMemoData[ 'shipping_amount' ] = $shippingAmount;
+        if (!$this->variables->isEmpty($shippingAmount)) {
+            $creditMemoData['shipping_amount'] = $shippingAmount;
         }
 
-        if ( ! $this->variableHelper->isEmpty($adjustmentPositive)) {
-            $creditMemoData[ 'adjustment_positive' ] = $adjustmentPositive;
+        if (!$this->variables->isEmpty($adjustmentPositive)) {
+            $creditMemoData['adjustment_positive'] = $adjustmentPositive;
         }
 
-        if ( ! $this->variableHelper->isEmpty($adjustmentNegative)) {
-            $creditMemoData[ 'adjustment_negative' ] = $adjustmentNegative;
+        if (!$this->variables->isEmpty($adjustmentNegative)) {
+            $creditMemoData['adjustment_negative'] = $adjustmentNegative;
         }
 
         return $this->creditMemoFactory->createByOrder($order, $creditMemoData);

@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Block\Adminhtml\System\Config\Form;
 
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
-use Tofex\Help\Arrays;
+use FeWeDev\Base\Arrays;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class AjaxButton
     extends Field
 {
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
     /** @var string */
     private $buttonId;
@@ -31,15 +33,15 @@ class AjaxButton
     private $dataHtmlIds;
 
     /**
-     * @param Arrays  $arrayHelper
+     * @param Arrays $arrays
      * @param Context $context
-     * @param array   $data
+     * @param array $data
      */
-    public function __construct(Arrays $arrayHelper, Context $context, array $data = [])
+    public function __construct(Arrays $arrays, Context $context, array $data = [])
     {
         parent::__construct($context, $data);
 
-        $this->arrayHelper = $arrayHelper;
+        $this->arrays = $arrays;
     }
 
     /**
@@ -63,10 +65,13 @@ class AjaxButton
         $originalData = $element->getData('original_data');
 
         $this->setButtonId($element->getHtmlId());
-        $this->setButtonLabel($this->arrayHelper->getValue($originalData, 'button_label'));
-        $this->setAjaxUrl($this->getUrl($this->arrayHelper->getValue($originalData, 'button_url'),
-            ['_current' => true]));
-        $this->setDataHtmlIds($this->arrayHelper->getValue($originalData, 'data_html_ids'));
+        $this->setButtonLabel($this->arrays->getValue($originalData, 'button_label'));
+        $this->setAjaxUrl(
+            $this->getUrl(
+                $this->arrays->getValue($originalData, 'button_url'), ['_current' => true]
+            )
+        );
+        $this->setDataHtmlIds($this->arrays->getValue($originalData, 'data_html_ids'));
 
         return $this->_toHtml();
     }

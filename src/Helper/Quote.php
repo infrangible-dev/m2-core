@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -10,7 +12,7 @@ use Magento\Quote\Model\ResourceModel\Quote\CollectionFactory;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Quote
@@ -56,7 +58,6 @@ class Quote
     public function loadQuote(int $quoteId): \Magento\Quote\Model\Quote
     {
         /** @var \Magento\Quote\Model\Quote $quote */
-        /** @noinspection PhpUnnecessaryLocalVariableInspection */
         $quote = $this->quoteRepository->get($quoteId);
 
         return $quote;

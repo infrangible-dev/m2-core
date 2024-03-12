@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
@@ -9,7 +11,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Url
@@ -49,8 +51,8 @@ class Url
         \Magento\Framework\Url $frontendUrl,
         \Magento\Backend\Model\Url $backendUrl,
         UniversalFactory $universalFactory,
-        FilterManager $filter)
-    {
+        FilterManager $filter
+    ) {
         $this->storeHelper = $storeHelper;
 
         $this->logging = $logging;
@@ -67,16 +69,16 @@ class Url
      */
     protected function getUrlModel(int $storeId): \Magento\Framework\Url
     {
-        if ( ! array_key_exists($storeId, $this->urls)) {
+        if (!array_key_exists($storeId, $this->urls)) {
             /** @var \Magento\Framework\Url $url */
             $url = $this->universalFactory->create(\Magento\Framework\Url::class);
 
             $url->setScope($storeId);
 
-            $this->urls[ $storeId ] = $url;
+            $this->urls[$storeId] = $url;
         }
 
-        return $this->urls[ $storeId ];
+        return $this->urls[$storeId];
     }
 
     /**
@@ -89,11 +91,11 @@ class Url
      */
     public function getUrl(string $route = '', bool $isSecure = null, array $params = [], int $storeId = null): string
     {
-        if ( ! array_key_exists('_secure', $params)) {
+        if (!array_key_exists('_secure', $params)) {
             try {
                 $store = $this->storeHelper->getStore();
 
-                $params[ '_secure' ] = $isSecure === null ? $store->isFrontUrlSecure() && $store->isCurrentlySecure() :
+                $params['_secure'] = $isSecure === null ? $store->isFrontUrlSecure() && $store->isCurrentlySecure() :
                     $isSecure !== false;
             } catch (Exception $exception) {
                 $this->logging->error($exception);

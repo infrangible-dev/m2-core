@@ -1,37 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Console\Command;
 
 use Exception;
+use FeWeDev\Base\Variables;
 use Magento\Framework\App\ObjectManagerFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManager;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Tofex\Help\Variables;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 abstract class Command
     extends \Symfony\Component\Console\Command\Command
 {
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var ObjectManagerFactory */
     protected $objectManagerFactory;
 
     /**
-     * @param Variables            $variableHelper
+     * @param Variables            $variables
      * @param ObjectManagerFactory $objectManagerFactory
      */
-    public function __construct(Variables $variableHelper, ObjectManagerFactory $objectManagerFactory)
+    public function __construct(Variables $variables, ObjectManagerFactory $objectManagerFactory)
     {
-        $this->variableHelper = $variableHelper;
+        $this->variables = $variables;
 
         $this->objectManagerFactory = $objectManagerFactory;
 
@@ -96,9 +98,9 @@ abstract class Command
     {
         foreach ($this->getDefinition()->getOptions() as $option) {
             if ($option->isValueRequired()) {
-                if ( ! $input->hasOption($option->getName()) ||
-                    $this->variableHelper->isEmpty($input->getOption($option->getName())) &&
-                    $this->variableHelper->isEmpty($option->getDefault())) {
+                if (!$input->hasOption($option->getName())
+                    || $this->variables->isEmpty($input->getOption($option->getName()))
+                    && $this->variables->isEmpty($option->getDefault())) {
                     throw new Exception(sprintf('Missing required option: %s', $option->getName()));
                 }
             }
@@ -106,8 +108,8 @@ abstract class Command
 
         $omParams = $_SERVER;
 
-        $omParams[ StoreManager::PARAM_RUN_CODE ] = 'admin';
-        $omParams[ Store::CUSTOM_ENTRY_POINT_PARAM ] = true;
+        $omParams[StoreManager::PARAM_RUN_CODE] = 'admin';
+        $omParams[Store::CUSTOM_ENTRY_POINT_PARAM] = true;
 
         $objectManager = $this->objectManagerFactory->create($omParams);
 

@@ -1,50 +1,52 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
+use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Files;
+use FeWeDev\Base\Variables;
+use FeWeDev\Xml\Reader;
+use FeWeDev\Xml\SimpleXml;
+use FeWeDev\Xml\Writer;
 use Magento\Framework\Filesystem\DirectoryList;
-use Tofex\Help\Arrays;
-use Tofex\Help\Files;
-use Tofex\Help\Variables;
-use Tofex\Xml\Reader;
-use Tofex\Xml\SimpleXml;
-use Tofex\Xml\Writer;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Xml
 {
     /** @var Files */
-    protected $filesHelper;
+    protected $files;
 
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var DirectoryList */
     protected $directoryList;
 
     /**
-     * @param Files         $filesHelper
-     * @param Arrays        $arrayHelper
-     * @param Variables     $variableHelper
+     * @param Files         $files
+     * @param Arrays        $arrays
+     * @param Variables     $variables
      * @param DirectoryList $directoryList
      */
     public function __construct(
-        Files $filesHelper,
-        Arrays $arrayHelper,
-        Variables $variableHelper,
-        DirectoryList $directoryList)
-    {
-        $this->filesHelper = $filesHelper;
-        $this->arrayHelper = $arrayHelper;
-        $this->variableHelper = $variableHelper;
+        Files $files,
+        Arrays $arrays,
+        Variables $variables,
+        DirectoryList $directoryList
+    ) {
+        $this->files = $files;
+        $this->arrays = $arrays;
+        $this->variables = $variables;
 
         $this->directoryList = $directoryList;
     }
@@ -64,11 +66,11 @@ class Xml
         string $fileName,
         bool $removeEmptyElements = true,
         int $retries = 0,
-        int $retryPause = 250): array
-    {
-        $simpleXml = new SimpleXml($this->variableHelper);
+        int $retryPause = 250
+    ): array {
+        $simpleXml = new SimpleXml($this->variables);
 
-        $xmlReader = new Reader($this->filesHelper, $this->arrayHelper, $simpleXml);
+        $xmlReader = new Reader($this->files, $this->arrays, $simpleXml);
 
         $xmlReader->setBasePath($basePath);
         $xmlReader->setFileName($fileName);
@@ -96,9 +98,9 @@ class Xml
         bool $append = false,
         array $characterDataElements = [],
         string $version = '1.0',
-        string $encoding = 'UTF-8')
-    {
-        $xmlWriter = new Writer($this->filesHelper, $this->arrayHelper);
+        string $encoding = 'UTF-8'
+    ) {
+        $xmlWriter = new Writer($this->files, $this->arrays, $this->variables);
 
         $xmlWriter->setBasePath($this->directoryList->getRoot());
         $xmlWriter->setFileName($fileName);
@@ -119,6 +121,7 @@ class Xml
      * @param string $encoding
      *
      * @return string
+     * @throws Exception
      */
     public function output(
         string $rootElement,
@@ -126,9 +129,9 @@ class Xml
         array $data,
         array $characterDataElements = [],
         string $version = '1.0',
-        string $encoding = 'UTF-8'): string
-    {
-        $xmlWriter = new Writer($this->filesHelper, $this->arrayHelper);
+        string $encoding = 'UTF-8'
+    ): string {
+        $xmlWriter = new Writer($this->files, $this->arrays, $this->variables);
 
         foreach ($characterDataElements as $characterDataElement) {
             $xmlWriter->addForceCharacterData($characterDataElement);

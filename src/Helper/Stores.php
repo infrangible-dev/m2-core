@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
+use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Variables;
 use Magento\Config\Model\Config\Backend\Image\Logo;
 use Magento\Config\Model\ResourceModel\ConfigFactory;
 use Magento\Directory\Helper\Data;
@@ -22,25 +26,20 @@ use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\Website;
 use Psr\Log\LoggerInterface;
-use Tofex\Help\Arrays;
-use Tofex\Help\Variables;
-use Zend_Locale_Data;
-use Zend_Locale_Exception;
-use Zend_Locale_Format;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Stores
     extends AbstractHelper
 {
     /** @var Models */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
     /** @var Database */
     protected $databaseHelper;
@@ -98,12 +97,12 @@ class Stores
         Filesystem $filesystem,
         Repository $assetRepository,
         RequestInterface $request,
-        PriceCurrencyInterface $priceCurrency)
-    {
+        PriceCurrencyInterface $priceCurrency
+    ) {
         parent::__construct($context);
 
-        $this->variableHelper = $variableHelper;
-        $this->arrayHelper = $arrayHelper;
+        $this->variables = $variableHelper;
+        $this->arrays = $arrayHelper;
         $this->databaseHelper = $databaseHelper;
         $this->instanceHelper = $instanceHelper;
 
@@ -131,7 +130,7 @@ class Stores
 
             $value = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE, $store->getCode());
 
-            if ($isFlag === true && ! is_null($value)) {
+            if ($isFlag === true && !is_null($value)) {
                 $value = $this->scopeConfig->isSetFlag($path, ScopeInterface::SCOPE_STORE, $store->getCode());
             }
 
@@ -160,7 +159,7 @@ class Stores
 
             $value = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_WEBSITE, $website->getCode());
 
-            if ($isFlag === true && ! is_null($value)) {
+            if ($isFlag === true && !is_null($value)) {
                 $value = $this->scopeConfig->isSetFlag($path, ScopeInterface::SCOPE_WEBSITE, $website->getCode());
             }
 
@@ -197,11 +196,11 @@ class Stores
     {
         $valueString = $this->getStoreConfig($configPath, null, false, $storeId);
 
-        if ( ! $this->variableHelper->isEmpty($valueString)) {
+        if (!$this->variables->isEmpty($valueString)) {
             if (strpos($valueString, $delimiter) !== false) {
                 $values = explode($delimiter, $valueString);
                 return array_map('trim', $values);
-            } else if (preg_match('/\n/', $valueString)) {
+            } elseif (preg_match('/\n/', $valueString)) {
                 $values = explode("\n", $valueString);
                 return array_map('trim', $values);
             } else {
@@ -228,28 +227,33 @@ class Stores
 
         $oldQueryResult = $writeAdapter->fetchAssoc($oldQuery);
 
-        if ( ! $this->variableHelper->isEmpty($oldQueryResult)) {
+        if (!$this->variables->isEmpty($oldQueryResult)) {
             foreach ($oldQueryResult as $oldData) {
                 $newQuery = $writeAdapter->select()->from($tableName);
 
                 $newQuery->where('path = ?', $newPath);
-                $newQuery->where('scope = ?', $this->arrayHelper->getValue($oldData, 'scope'));
-                $newQuery->where('scope_id = ?', $this->arrayHelper->getValue($oldData, 'scope_id'));
+                $newQuery->where('scope = ?', $this->arrays->getValue($oldData, 'scope'));
+                $newQuery->where('scope_id = ?', $this->arrays->getValue($oldData, 'scope_id'));
 
                 $newQueryResult = $writeAdapter->fetchAssoc($newQuery);
 
                 $newData = reset($newQueryResult);
 
-                if ( ! $this->variableHelper->isEmpty($newData)) {
+                if (!$this->variables->isEmpty($newData)) {
                     $writeAdapter->update($tableName, [
-                        'value' => $this->arrayHelper->getValue($oldData, 'value')
-                    ], sprintf('config_id = %d', $this->arrayHelper->getValue($newData, 'config_id')));
+                        'value' => $this->arrays->getValue($oldData, 'value')
+                    ],                    sprintf('config_id = %d', $this->arrays->getValue($newData, 'config_id')));
 
-                    $writeAdapter->delete($tableName,
-                        sprintf('config_id = %d', $this->arrayHelper->getValue($oldData, 'config_id')));
+                    $writeAdapter->delete(
+                        $tableName,
+                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id'))
+                    );
                 } else {
-                    $writeAdapter->update($tableName, ['path' => $newPath],
-                        sprintf('config_id = %d', $this->arrayHelper->getValue($oldData, 'config_id')));
+                    $writeAdapter->update(
+                        $tableName,
+                        ['path' => $newPath],
+                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id'))
+                    );
                 }
             }
         } // else no old data to move
@@ -263,8 +267,12 @@ class Stores
      */
     public function insertConfigValue(string $path, $value, string $scope = 'default', int $scopeId = 0)
     {
-        $this->configFactory->create()
-            ->saveConfig($path, is_array($value) ? implode(',', $value) : $value, $scope, $scopeId);
+        $this->configFactory->create()->saveConfig(
+            $path,
+            is_array($value) ? implode(',', $value) : $value,
+            $scope,
+            $scopeId
+        );
     }
 
     /**
@@ -272,8 +280,10 @@ class Stores
      */
     public function removeConfigValue(string $path)
     {
-        $this->databaseHelper->getDefaultConnection()
-            ->delete($this->databaseHelper->getTableName('core_config_data'), sprintf('path = "%s"', $path));
+        $this->databaseHelper->getDefaultConnection()->delete(
+            $this->databaseHelper->getTableName('core_config_data'),
+            sprintf('path = "%s"', $path)
+        );
     }
 
     /**
@@ -397,9 +407,9 @@ class Stores
 
         $storeLogoPath = $this->getStoreConfig('design/header/logo_src');
 
-        $path = $folderName . '/' . $storeLogoPath;
+        $path = $folderName.'/'.$storeLogoPath;
 
-        $logoUrl = $this->getMediaUrl() . $path;
+        $logoUrl = $this->getMediaUrl().$path;
 
         $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
 
@@ -431,13 +441,17 @@ class Stores
                 $this->logging->info(sprintf('Resetting section: %s', $section));
 
                 if ($isDefault) {
-                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData(
+                        $this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%"', $section));
+                        sprintf('path like "%s/%%"', $section)
+                    );
                 } else {
-                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData(
+                        $this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%" AND scope = "stores" AND scope_id = %d', $section, $store->getId()));
+                        sprintf('path like "%s/%%" AND scope = "stores" AND scope_id = %d', $section, $store->getId())
+                    );
                 }
             }
 
@@ -447,8 +461,12 @@ class Stores
                 $this->logging->info(sprintf('Importing group: %s/%s', $section, $group));
 
                 foreach ($groupData as $field => $value) {
-                    $this->insertConfigValue(sprintf('%s/%s/%s', $section, $group, $field), $value,
-                        $isDefault ? 'default' : 'stores', $isDefault ? 0 : $store->getId());
+                    $this->insertConfigValue(
+                        sprintf('%s/%s/%s', $section, $group, $field),
+                        $value,
+                        $isDefault ? 'default' : 'stores',
+                        $isDefault ? 0 : $store->getId()
+                    );
                 }
             }
         }
@@ -465,7 +483,7 @@ class Stores
         $data = [];
 
         foreach ($sections as $section) {
-            $data[ $section ] = $this->getStoreConfig($section, [], false, $store->getId());
+            $data[$section] = $this->getStoreConfig($section, [], false, $store->getId());
         }
 
         return $data;
@@ -474,22 +492,15 @@ class Stores
     /**
      * @param string $value
      *
-     * @return string
-     * @throws Zend_Locale_Exception
+     * @return int|float
      */
     public function getNumber(string $value)
     {
         $locale = $this->getStoreConfig(Data::XML_PATH_DEFAULT_LOCALE, 'en_US');
 
-        try {
-            return Zend_Locale_Format::getNumber($value, ['locale' => $locale]);
-        } catch (Zend_Locale_Exception $exception) {
-            if (is_numeric($value)) {
-                return $value;
-            }
+        $formatter = \NumberFormatter::create($locale, \NumberFormatter::DECIMAL);
 
-            throw new $exception;
-        }
+        return $formatter->parse($value);
     }
 
     /**
@@ -502,17 +513,12 @@ class Stores
     {
         $locale = $this->getStoreConfig(Data::XML_PATH_DEFAULT_LOCALE, 'en_US');
 
-        try {
-            $value = Zend_Locale_Format::toNumber(sprintf('%F', $value), [
-                'locale'        => $locale,
-                'number_format' => Zend_Locale_Data::getContent($locale, 'decimalnumber'),
-                'precision'     => $precision
-            ]);
-        } catch (Zend_Locale_Exception $exception) {
-            $this->logging->error($exception);
-        }
+        $formatter = \NumberFormatter::create($locale, \NumberFormatter::DECIMAL);
+        $formatter->setAttribute(\NumberFormatter::FRACTION_DIGITS, $precision);
 
-        return $value;
+        $parsed = $formatter->parse($value);
+
+        return $parsed->format($parsed);
     }
 
     /**
@@ -524,13 +530,17 @@ class Stores
     public function formatPrice(float $price, bool $includeContainer = true): string
     {
         try {
-            return $this->priceCurrency->format($price, $includeContainer, PriceCurrencyInterface::DEFAULT_PRECISION,
-                $this->getStore());
+            return $this->priceCurrency->format(
+                $price,
+                $includeContainer,
+                PriceCurrencyInterface::DEFAULT_PRECISION,
+                $this->getStore()
+            );
         } catch (NoSuchEntityException $exception) {
             $this->logging->error($exception);
         }
 
-        return $price;
+        return strval($price);
     }
 
     /**
@@ -563,7 +573,7 @@ class Stores
             if ($store->getCurrentCurrency() && $format) {
                 $value = $this->formatPrice($value, false);
             }
-        } catch (NoSuchEntityException | Exception $exception) {
+        } catch (NoSuchEntityException|Exception $exception) {
             $this->logging->error($exception);
         }
 

@@ -1,46 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
-use Tofex\Help\Arrays;
-use Tofex\Help\Json;
+use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Json;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Config
 {
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
-    /** @var \Tofex\Help\Files */
-    protected $filesHelper;
+    /** @var \FeWeDev\Base\Files */
+    protected $files;
 
     /** @var Stores */
     protected $storeHelper;
 
     /** @var Json */
-    protected $jsonHelper;
+    protected $json;
 
     /**
-     * @param Arrays            $arrayHelper
-     * @param \Tofex\Help\Files $filesHelper
-     * @param Stores            $storeHelper
-     * @param Json              $jsonHelper
+     * @param Arrays              $arrays
+     * @param \FeWeDev\Base\Files $files
+     * @param Stores              $storeHelper
+     * @param Json                $json
      */
     public function __construct(
-        Arrays $arrayHelper,
-        \Tofex\Help\Files $filesHelper,
+        Arrays $arrays,
+        \FeWeDev\Base\Files $files,
         Stores $storeHelper,
-        Json $jsonHelper)
-    {
-        $this->arrayHelper = $arrayHelper;
-        $this->filesHelper = $filesHelper;
+        Json $json
+    ) {
+        $this->arrays = $arrays;
+        $this->files = $files;
         $this->storeHelper = $storeHelper;
-        $this->jsonHelper = $jsonHelper;
+        $this->json = $json;
     }
 
     /**
@@ -64,7 +66,7 @@ class Config
      */
     public function importConfigJsonString(string $jsonString)
     {
-        $config = $this->jsonHelper->decode($jsonString);
+        $config = $this->json->decode($jsonString);
 
         if (is_array($config) && $this->isValidConfig($config)) {
             $this->importConfig($config);
@@ -85,24 +87,37 @@ class Config
             }
 
             foreach ($scopesConfig as $scopeId => $scopeConfig) {
-                if ( ! ctype_digit(strval($scopeId))) {
+                if (!ctype_digit(strval($scopeId))) {
                     throw new Exception(sprintf('Invalid scope id: %s', $scopeId));
                 }
 
-                if ( ! is_array($scopeConfig)) {
+                if (!is_array($scopeConfig)) {
                     throw new Exception(sprintf('Invalid config for scope: %s with id: %s', $scope, $scopeId));
                 }
 
                 foreach ($scopeConfig as $section => $sectionConfig) {
-                    if ( ! is_array($sectionConfig)) {
-                        throw new Exception(sprintf('Invalid section config for scope: %s with id: %s and section: %s',
-                            $scope, $scopeId, $section));
+                    if (!is_array($sectionConfig)) {
+                        throw new Exception(
+                            sprintf(
+                                'Invalid section config for scope: %s with id: %s and section: %s',
+                                $scope,
+                                $scopeId,
+                                $section
+                            )
+                        );
                     }
 
                     foreach ($sectionConfig as $group => $groupConfig) {
-                        if ( ! is_array($groupConfig)) {
-                            throw new Exception(sprintf('Invalid group config for scope: %s with id: %s and section: %s, group: %s',
-                                $scope, $scopeId, $section, $group));
+                        if (!is_array($groupConfig)) {
+                            throw new Exception(
+                                sprintf(
+                                    'Invalid group config for scope: %s with id: %s and section: %s, group: %s',
+                                    $scope,
+                                    $scopeId,
+                                    $section,
+                                    $group
+                                )
+                            );
                         }
                     }
                 }
@@ -176,10 +191,10 @@ class Config
     {
         $directoryName = dirname($fileName);
 
-        $this->filesHelper->createDirectory($directoryName);
+        $this->files->createDirectory($directoryName);
 
         if (file_exists($directoryName)) {
-            $output = $this->jsonHelper->encode($this->getScopeConfig($path), true, true);
+            $output = $this->json->encode($this->getScopeConfig($path), true, true);
 
             if ($output === false) {
                 throw new Exception(sprintf('Could not export configuration because: %s', json_last_error_msg()));
@@ -206,38 +221,38 @@ class Config
 
         $defaultConfig = $this->storeHelper->getStoreConfig($path, [], false, 0);
 
-        if ( ! empty($defaultConfig)) {
-            $config = $this->arrayHelper->addDeepValue($config, $pathElements, $defaultConfig);
+        if (!empty($defaultConfig)) {
+            $config = $this->arrays->addDeepValue($config, $pathElements, $defaultConfig);
         }
 
         foreach ($this->storeHelper->getWebsites() as $website) {
             $websiteConfig = $this->storeHelper->getWebsiteConfig($path, [], false, $website->getId());
 
-            $websiteConfigDiff = $this->arrayHelper->arrayDiffRecursive($defaultConfig, $websiteConfig);
+            $websiteConfigDiff = $this->arrays->arrayDiffRecursive($defaultConfig, $websiteConfig);
 
-            if ( ! empty($websiteConfigDiff)) {
+            if (!empty($websiteConfigDiff)) {
                 $pathElements = empty($path) ? [] : explode('/', $path);
                 array_unshift($pathElements, $website->getId());
                 array_unshift($pathElements, 'website');
 
-                $config = $this->arrayHelper->addDeepValue($config, $pathElements, $websiteConfigDiff);
+                $config = $this->arrays->addDeepValue($config, $pathElements, $websiteConfigDiff);
             }
 
             foreach ($website->getStores() as $store) {
                 $storeConfig = $this->storeHelper->getStoreConfig($path, [], false, $store->getId());
 
-                $storeConfigDiff = $this->arrayHelper->arrayDiffRecursive($websiteConfig, $storeConfig);
+                $storeConfigDiff = $this->arrays->arrayDiffRecursive($websiteConfig, $storeConfig);
 
-                if ( ! empty($storeConfigDiff)) {
+                if (!empty($storeConfigDiff)) {
                     $pathElements = empty($path) ? [] : explode('/', $path);
                     array_unshift($pathElements, $store->getId());
                     array_unshift($pathElements, 'store');
 
-                    $config = $this->arrayHelper->addDeepValue($config, $pathElements, $storeConfigDiff);
+                    $config = $this->arrays->addDeepValue($config, $pathElements, $storeConfigDiff);
                 }
             }
         }
 
-        return $this->arrayHelper->cleanStrings($config);
+        return $this->arrays->cleanStrings($config);
     }
 }

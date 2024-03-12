@@ -1,8 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
+use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Variables;
+use FeWeDev\Xml\SimpleXml;
 use Magento\Cms\Model\Block;
 use Magento\Cms\Model\BlockFactory;
 use Magento\Cms\Model\Page;
@@ -11,28 +16,25 @@ use Magento\Cms\Model\ResourceModel\Page\Collection;
 use Magento\Cms\Model\ResourceModel\Page\CollectionFactory;
 use Psr\Log\LoggerInterface;
 use SimpleXMLElement;
-use Tofex\Help\Arrays;
-use Tofex\Help\Variables;
-use Tofex\Xml\SimpleXml;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Cms
 {
     /** string for cms block identifier */
-    const STRING_IDENTIFIER = 'identifier';
+    public const STRING_IDENTIFIER = 'identifier';
 
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
     /** @var Files */
-    protected $filesHelper;
+    protected $files;
 
     /** @var LoggerInterface */
     protected $logging;
@@ -59,9 +61,9 @@ class Cms
     protected $simpleXml;
 
     /**
-     * @param Variables                                                $variableHelper
-     * @param Arrays                                                   $arrayHelper
-     * @param Files                                                    $filesHelper
+     * @param Variables                                                $variables
+     * @param Arrays                                                   $arrays
+     * @param Files                                                    $files
      * @param LoggerInterface                                          $logging
      * @param PageFactory                                              $cmsPageFactory
      * @param \Magento\Cms\Model\ResourceModel\PageFactory             $cmsPageResourceFactory
@@ -72,9 +74,9 @@ class Cms
      * @param SimpleXml                                                $simpleXml
      */
     public function __construct(
-        Variables $variableHelper,
-        Arrays $arrayHelper,
-        Files $filesHelper,
+        Variables $variables,
+        Arrays $arrays,
+        Files $files,
         LoggerInterface $logging,
         PageFactory $cmsPageFactory,
         \Magento\Cms\Model\ResourceModel\PageFactory $cmsPageResourceFactory,
@@ -82,11 +84,11 @@ class Cms
         BlockFactory $cmsBlockFactory,
         \Magento\Cms\Model\ResourceModel\BlockFactory $cmsBlockResourceFactory,
         \Magento\Cms\Model\ResourceModel\Block\CollectionFactory $cmsBlockCollectionFactory,
-        SimpleXml $simpleXml)
-    {
-        $this->variableHelper = $variableHelper;
-        $this->arrayHelper = $arrayHelper;
-        $this->filesHelper = $filesHelper;
+        SimpleXml $simpleXml
+    ) {
+        $this->variables = $variables;
+        $this->arrays = $arrays;
+        $this->files = $files;
 
         $this->logging = $logging;
         $this->cmsPageFactory = $cmsPageFactory;
@@ -130,7 +132,7 @@ class Cms
     {
         $cmsPage = $this->newCmsPage();
 
-        if ( ! $this->variableHelper->isEmpty($storeId)) {
+        if (!$this->variables->isEmpty($storeId)) {
             $cmsPage->setData('store_id', $storeId);
         }
 
@@ -189,7 +191,7 @@ class Cms
     {
         $cmsBlock = $this->newCmsBlock();
 
-        if ( ! $this->variableHelper->isEmpty($storeId)) {
+        if (!$this->variables->isEmpty($storeId)) {
             $cmsBlock->setData('store_id', $storeId);
         }
 
@@ -225,7 +227,7 @@ class Cms
      */
     public function importPagesFromXmlFile(string $xmlFileName, bool $overwriteExisting = false): array
     {
-        $fileName = $this->filesHelper->determineFilePath($xmlFileName);
+        $fileName = $this->files->determineFilePath($xmlFileName);
 
         $xmlElement = $this->simpleXml->simpleXmlLoadFile($fileName);
 
@@ -237,6 +239,7 @@ class Cms
      * @param bool             $overwriteExisting
      *
      * @return string[]
+     * @throws Exception
      */
     public function importPagesFromXml(SimpleXMLElement $xml, bool $overwriteExisting = false): array
     {
@@ -246,7 +249,7 @@ class Cms
         foreach ($xml->children()->children() as $pageXml) {
             $imported = $this->importPageFromXml($pageXml, $overwriteExisting);
 
-            if ( ! $imported) {
+            if (!$imported) {
                 $notImported[] = $pageXml->{static::STRING_IDENTIFIER};
             }
         }
@@ -259,6 +262,7 @@ class Cms
      * @param bool             $overwriteExisting
      *
      * @return bool
+     * @throws Exception
      */
     public function importPageFromXml(SimpleXMLElement $pageXml, bool $overwriteExisting): bool
     {
@@ -275,11 +279,11 @@ class Cms
      */
     public function importPage(array $pageData, bool $overwriteExisting = false): bool
     {
-        $pageIdentifier = $this->arrayHelper->getValue($pageData, static::STRING_IDENTIFIER);
+        $pageIdentifier = $this->arrays->getValue($pageData, static::STRING_IDENTIFIER);
 
-        $stores = $this->arrayHelper->getValue($pageData, 'stores:item', []);
+        $stores = $this->arrays->getValue($pageData, 'stores:item', []);
 
-        if ($this->variableHelper->isEmpty($stores)) {
+        if ($this->variables->isEmpty($stores)) {
             $storeIds = [0];
         } else {
             $storeIds = is_array($stores) ? $stores : [$stores];
@@ -292,7 +296,7 @@ class Cms
 
         $oldPages->load();
 
-        if (count($oldPages) > 0 && ! $overwriteExisting) {
+        if (count($oldPages) > 0 && !$overwriteExisting) {
             // page already exists and we are not allowed to overwrite
             $this->logging->info(sprintf('Skipping existing pages with identifier: %s', $pageIdentifier));
 
@@ -304,26 +308,32 @@ class Cms
             try {
                 $this->cmsPageResourceFactory->create()->delete($oldPage);
 
-                $this->logging->info(sprintf('Removing pages(s) with identifier: %s and title: %s for stores: %s',
-                    $oldPage->getIdentifier(), $oldPage->getTitle(), implode(', ', $storeIds)));
+                $this->logging->info(
+                    sprintf(
+                        'Removing pages(s) with identifier: %s and title: %s for stores: %s',
+                        $oldPage->getIdentifier(),
+                        $oldPage->getTitle(),
+                        implode(', ', $storeIds)
+                    )
+                );
             } catch (Exception $exception) {
                 $this->logging->error($exception);
             }
         }
 
-        $layoutUpdateXml = $this->arrayHelper->getValue($pageData, 'layout_update_xml');
+        $layoutUpdateXml = $this->arrays->getValue($pageData, 'layout_update_xml');
 
-        if ($this->variableHelper->isEmpty($layoutUpdateXml)) {
+        if ($this->variables->isEmpty($layoutUpdateXml)) {
             $layoutUpdateXml = null;
         }
 
         $pageModelData = [
-            'title'             => (string)$this->arrayHelper->getValue($pageData, 'title'),
+            'title'             => (string) $this->arrays->getValue($pageData, 'title'),
             'identifier'        => $pageIdentifier,
-            'content'           => (string)$this->arrayHelper->getValue($pageData, 'content'),
-            'is_active'         => (int)$this->arrayHelper->getValue($pageData, 'is_active', true),
+            'content'           => (string) $this->arrays->getValue($pageData, 'content'),
+            'is_active'         => (int) $this->arrays->getValue($pageData, 'is_active', true),
             'stores'            => $storeIds,
-            'page_layout'       => (string)$this->arrayHelper->getValue($pageData, 'page_layout'),
+            'page_layout'       => (string) $this->arrays->getValue($pageData, 'page_layout'),
             'layout_update_xml' => $layoutUpdateXml
         ];
 
@@ -331,15 +341,26 @@ class Cms
         $newPage->setData($pageModelData);
 
         try {
-            $this->logging->info(sprintf('Saving page with identifier: %s and title: %s for stores: %s',
-                $newPage->getIdentifier(), $newPage->getTitle(), implode(', ', $storeIds)));
+            $this->logging->info(
+                sprintf(
+                    'Saving page with identifier: %s and title: %s for stores: %s',
+                    $newPage->getIdentifier(),
+                    $newPage->getTitle(),
+                    implode(', ', $storeIds)
+                )
+            );
 
             $this->cmsPageResourceFactory->create()->save($newPage);
 
             return true;
         } catch (Exception $exception) {
-            $this->logging->error(sprintf('Could not save page with identifier: %s because: %s', $pageIdentifier,
-                $exception->getMessage()));
+            $this->logging->error(
+                sprintf(
+                    'Could not save page with identifier: %s because: %s',
+                    $pageIdentifier,
+                    $exception->getMessage()
+                )
+            );
             $this->logging->error($exception);
 
             return false;
@@ -355,7 +376,7 @@ class Cms
      */
     public function importBlocksFromXmlFile(string $xmlFileName, bool $overwriteExisting = false): array
     {
-        $fileName = $this->filesHelper->determineFilePath($xmlFileName);
+        $fileName = $this->files->determineFilePath($xmlFileName);
 
         $xmlElement = $this->simpleXml->simpleXmlLoadFile($fileName);
 
@@ -367,6 +388,7 @@ class Cms
      * @param bool             $overwriteExisting
      *
      * @return string[]
+     * @throws Exception
      */
     public function importBlocksFromXml(SimpleXMLElement $xml, bool $overwriteExisting = false): array
     {
@@ -376,7 +398,7 @@ class Cms
         foreach ($xml->children()->children() as $blockXml) {
             $imported = $this->importBlockFromXml($blockXml, $overwriteExisting);
 
-            if ( ! $imported) {
+            if (!$imported) {
                 $notImported[] = $blockXml->{static::STRING_IDENTIFIER};
             }
         }
@@ -389,6 +411,7 @@ class Cms
      * @param bool             $overwriteExisting
      *
      * @return bool
+     * @throws Exception
      */
     public function importBlockFromXml(SimpleXMLElement $blockXml, bool $overwriteExisting): bool
     {
@@ -405,11 +428,11 @@ class Cms
      */
     public function importBlock(array $blockData, bool $overwriteExisting = false): bool
     {
-        $blockIdentifier = $this->arrayHelper->getValue($blockData, static::STRING_IDENTIFIER);
+        $blockIdentifier = $this->arrays->getValue($blockData, static::STRING_IDENTIFIER);
 
-        $stores = $this->arrayHelper->getValue($blockData, 'stores:item', []);
+        $stores = $this->arrays->getValue($blockData, 'stores:item', []);
 
-        if ($this->variableHelper->isEmpty($stores)) {
+        if ($this->variables->isEmpty($stores)) {
             $storeIds = [0];
         } else {
             $storeIds = is_array($stores) ? $stores : [$stores];
@@ -422,7 +445,7 @@ class Cms
 
         $oldBlocks->load();
 
-        if (count($oldBlocks) > 0 && ! $overwriteExisting) {
+        if (count($oldBlocks) > 0 && !$overwriteExisting) {
             // block already exists and we are not allowed to overwrite
             $this->logging->info(sprintf('Skipping existing block with identifier: %s', $blockIdentifier));
 
@@ -434,18 +457,24 @@ class Cms
             try {
                 $this->cmsBlockResourceFactory->create()->delete($oldBlock);
 
-                $this->logging->info(sprintf('Removing block(s) with identifier: %s and title: %s for stores: %s',
-                    $oldBlock->getIdentifier(), $oldBlock->getTitle(), implode(', ', $storeIds)));
+                $this->logging->info(
+                    sprintf(
+                        'Removing block(s) with identifier: %s and title: %s for stores: %s',
+                        $oldBlock->getIdentifier(),
+                        $oldBlock->getTitle(),
+                        implode(', ', $storeIds)
+                    )
+                );
             } catch (Exception $exception) {
                 $this->logging->error($exception);
             }
         }
 
         $blockModelData = [
-            'title'      => (string)$this->arrayHelper->getValue($blockData, 'title'),
+            'title'      => (string) $this->arrays->getValue($blockData, 'title'),
             'identifier' => $blockIdentifier,
-            'content'    => (string)$this->arrayHelper->getValue($blockData, 'content'),
-            'is_active'  => (int)$this->arrayHelper->getValue($blockData, 'is_active', true),
+            'content'    => (string) $this->arrays->getValue($blockData, 'content'),
+            'is_active'  => (int) $this->arrays->getValue($blockData, 'is_active', true),
             'stores'     => $storeIds
         ];
 
@@ -453,15 +482,26 @@ class Cms
         $newBlock->setData($blockModelData);
 
         try {
-            $this->logging->info(sprintf('Saving block with identifier: %s and title: %s for stores: %s',
-                $newBlock->getIdentifier(), $newBlock->getTitle(), implode(', ', $storeIds)));
+            $this->logging->info(
+                sprintf(
+                    'Saving block with identifier: %s and title: %s for stores: %s',
+                    $newBlock->getIdentifier(),
+                    $newBlock->getTitle(),
+                    implode(', ', $storeIds)
+                )
+            );
 
             $this->cmsBlockResourceFactory->create()->save($newBlock);
 
             return true;
         } catch (Exception $exception) {
-            $this->logging->error(sprintf('Could not save block with identifier: %s because: %s', $blockIdentifier,
-                $exception->getMessage()));
+            $this->logging->error(
+                sprintf(
+                    'Could not save block with identifier: %s because: %s',
+                    $blockIdentifier,
+                    $exception->getMessage()
+                )
+            );
             $this->logging->error($exception);
 
             return false;

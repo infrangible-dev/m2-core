@@ -1,8 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
+use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Variables;
+use Magento\Bundle\Model\Product\Price;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\CatalogInventory\Model\Configuration;
@@ -15,23 +20,21 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Tax\Helper\Data;
 use Psr\Log\LoggerInterface;
-use Tofex\Help\Arrays;
-use Tofex\Help\Variables;
 use Zend_Db_Select;
 use Zend_Db_Select_Exception;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Export
 {
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
     /** @var Database */
     protected $databaseHelper;
@@ -82,8 +85,8 @@ class Export
     private $maxBestsellerRating;
 
     /**
-     * @param Variables                          $variableHelper
-     * @param Arrays                             $arrayHelper
+     * @param Variables                          $variables
+     * @param Arrays                             $arrays
      * @param Database                           $databaseHelper
      * @param Stores                             $storeHelper
      * @param \Infrangible\Core\Helper\Attribute $attributeHelper
@@ -98,8 +101,8 @@ class Export
      * @param Config                             $eavConfig
      */
     public function __construct(
-        Variables $variableHelper,
-        Arrays $arrayHelper,
+        Variables $variables,
+        Arrays $arrays,
         Database $databaseHelper,
         Stores $storeHelper,
         \Infrangible\Core\Helper\Attribute $attributeHelper,
@@ -111,12 +114,12 @@ class Export
         LoggerInterface $logging,
         Visibility $productVisible,
         Status $productStatus,
-        Config $eavConfig)
-    {
+        Config $eavConfig
+    ) {
         $this->databaseHelper = $databaseHelper;
         $this->storeHelper = $storeHelper;
-        $this->variableHelper = $variableHelper;
-        $this->arrayHelper = $arrayHelper;
+        $this->variables = $variables;
+        $this->arrays = $arrays;
         $this->attributeHelper = $attributeHelper;
         $this->productHelper = $productHelper;
         $this->categoryHelper = $categoryHelper;
@@ -146,16 +149,21 @@ class Export
         bool $onlyWithStock = true,
         array $productIds = [],
         int $lastProductId = 0,
-        int $limit = 100): array
-    {
+        int $limit = 100
+    ): array {
         $select = $this->getExportableProductsSelect($storeId, $onlyWithStock, $productIds, $lastProductId, $limit);
 
         $queryResult = $this->databaseHelper->fetchAssoc($select, $this->databaseHelper->getDefaultConnection());
 
         if (count($queryResult) > 0) {
-            $this->logging->info(sprintf('Found %d searchable product(s) in store with id: %d', count($queryResult),
-                $storeId));
-        } else if ($lastProductId === 0) {
+            $this->logging->info(
+                sprintf(
+                    'Found %d searchable product(s) in store with id: %d',
+                    count($queryResult),
+                    $storeId
+                )
+            );
+        } elseif ($lastProductId === 0) {
             $this->logging->info(sprintf('Found no searchable products in store with id: %d', $storeId));
         }
 
@@ -178,92 +186,145 @@ class Export
         bool $onlyWithStock = true,
         array $productIds = [],
         int $lastProductId = 0,
-        int $limit = 100): Select
-    {
+        int $limit = 100
+    ): Select {
         // status and visibility filter
         $visibility = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'visibility');
         $status = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'status');
 
-        $configManageStock = (int)$this->storeHelper->getStoreConfig(Configuration::XML_PATH_MANAGE_STOCK, false, true);
+        $configManageStock =
+            (int) $this->storeHelper->getStoreConfig(Configuration::XML_PATH_MANAGE_STOCK, false, true);
 
         $adapter = $this->databaseHelper->getDefaultConnection();
 
         $select = $adapter->select();
 
-        $select->useStraightJoin(true);
+        $select->useStraightJoin();
 
         $select->from(['e' => $this->databaseHelper->getTableName('catalog_product_entity')], ['entity_id', 'type_id']);
 
         if ($onlyWithStock || $storeId > 0) {
             $select->joinLeft(['super_link' => $this->databaseHelper->getTableName('catalog_product_super_link')],
-                'super_link.parent_id = e.entity_id', []);
+                              'super_link.parent_id = e.entity_id',
+                              []);
         }
 
         if ($storeId > 0) {
             $websiteId = $this->storeHelper->getStore($storeId)->getWebsiteId();
 
             $select->join(['website' => $this->databaseHelper->getTableName('catalog_product_website')],
-                $adapter->quoteInto('website.product_id = e.entity_id AND website.website_id = ?', $websiteId), []);
+                          $adapter->quoteInto(
+                              'website.product_id = e.entity_id AND website.website_id = ?',
+                              $websiteId
+                          ),
+                          []);
 
             $select->joinLeft(['simple_website' => $this->databaseHelper->getTableName('catalog_product_website')],
-                $adapter->quoteInto('simple_website.product_id = super_link.product_id AND simple_website.website_id = ?',
-                    $websiteId), []);
+                              $adapter->quoteInto(
+                                  'simple_website.product_id = super_link.product_id AND simple_website.website_id = ?',
+                                  $websiteId
+                              ),
+                              []);
         }
 
         if ($onlyWithStock) {
             $select->join(['stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
-                $adapter->quoteInto('stock_item.product_id = e.entity_id AND stock_item.stock_id = ?',
-                    $this->getStockId($storeId)), []);
+                          $adapter->quoteInto(
+                              'stock_item.product_id = e.entity_id AND stock_item.stock_id = ?',
+                              $this->getStockId($storeId)
+                          ),
+                          []);
 
-            $select->joinLeft(['simple_stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
-                sprintf('%s AND %s',
-                    $adapter->quoteInto('simple_stock_item.product_id = super_link.product_id AND stock_item.stock_id = ?',
-                        $this->getStockId($storeId)),
-                    $adapter->quoteInto('((simple_stock_item.use_config_manage_stock = 1 and simple_stock_item.is_in_stock = 1) OR simple_stock_item.use_config_manage_stock = 0 OR ? = 0)',
-                        $configManageStock ? 1 : 0)), []);
+            $select->joinLeft(
+                ['simple_stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')], sprintf(
+                '%s AND %s',
+                $adapter->quoteInto(
+                    'simple_stock_item.product_id = super_link.product_id AND stock_item.stock_id = ?',
+                    $this->getStockId(
+                        $storeId
+                    )
+                ),
+                $adapter->quoteInto(
+                    '((simple_stock_item.use_config_manage_stock = 1 and simple_stock_item.is_in_stock = 1) OR simple_stock_item.use_config_manage_stock = 0 OR ? = 0)',
+                    $configManageStock ? 1 : 0
+                )
+            ), []
+            );
         }
 
         $select->joinLeft(['status_admin' => $status->getBackendTable()],
-            $adapter->quoteInto('status_admin.entity_id = e.entity_id AND status_admin.attribute_id = ? AND status_admin.store_id = 0',
-                $status->getAttributeId()), []);
+                          $adapter->quoteInto(
+                              'status_admin.entity_id = e.entity_id AND status_admin.attribute_id = ? AND status_admin.store_id = 0',
+                              $status->getAttributeId()
+                          ),
+                          []);
 
-        $select->joinLeft(['status_store' => $status->getBackendTable()], sprintf('%s AND %s',
-            $adapter->quoteInto('status_store.entity_id = e.entity_id AND status_store.attribute_id = ?',
-                $status->getAttributeId()), $adapter->quoteInto('status_store.store_id = ?', $storeId)), []);
+        $select->joinLeft(['status_store' => $status->getBackendTable()],
+                          sprintf(
+                              '%s AND %s',
+                              $adapter->quoteInto(
+                                  'status_store.entity_id = e.entity_id AND status_store.attribute_id = ?',
+                                  $status->getAttributeId()
+                              ),
+                              $adapter->quoteInto('status_store.store_id = ?', $storeId)
+                          ),
+                          []);
 
         $select->joinLeft(['visibility_admin' => $visibility->getBackendTable()],
-            $adapter->quoteInto('visibility_admin.entity_id = e.entity_id AND visibility_admin.attribute_id = ? AND visibility_admin.store_id = 0',
-                $visibility->getAttributeId()), []);
+                          $adapter->quoteInto(
+                              'visibility_admin.entity_id = e.entity_id AND visibility_admin.attribute_id = ? AND visibility_admin.store_id = 0',
+                              $visibility->getAttributeId()
+                          ),
+                          []);
 
-        $select->joinLeft(['visibility_store' => $visibility->getBackendTable()], sprintf('%s AND %s',
-            $adapter->quoteInto('visibility_store.entity_id = e.entity_id AND visibility_store.attribute_id = ?',
-                $visibility->getAttributeId()), $adapter->quoteInto('visibility_store.store_id = ?', $storeId)), []);
+        $select->joinLeft(['visibility_store' => $visibility->getBackendTable()],
+                          sprintf(
+                              '%s AND %s',
+                              $adapter->quoteInto(
+                                  'visibility_store.entity_id = e.entity_id AND visibility_store.attribute_id = ?',
+                                  $visibility->getAttributeId()
+                              ),
+                              $adapter->quoteInto('visibility_store.store_id = ?', $storeId)
+                          ),
+                          []);
 
-        if ( ! empty($productIds)) {
+        if (!empty($productIds)) {
             $select->where('`e`.`entity_id` IN( ? )', $productIds);
         }
 
         $select->where('`e`.`entity_id` > ?', $lastProductId);
 
         if ($onlyWithStock) {
-            $select->where($adapter->quoteInto('(`e`.`type_id` <> "configurable" AND ((stock_item.is_in_stock = 1 AND stock_item.use_config_manage_stock = 1) OR stock_item.use_config_manage_stock = 0 or ? = 0)) OR (`e`.`type_id` = "configurable")',
-                $configManageStock ? 1 : 0));
+            $select->where(
+                $adapter->quoteInto(
+                    '(`e`.`type_id` <> "configurable" AND ((stock_item.is_in_stock = 1 AND stock_item.use_config_manage_stock = 1) OR stock_item.use_config_manage_stock = 0 or ? = 0)) OR (`e`.`type_id` = "configurable")',
+                    $configManageStock ? 1 : 0
+                )
+            );
         }
 
-        $select->where('(status_admin.value = ? AND status_store.value IS NULL) OR status_store.value = ?',
-            $this->productStatus->getVisibleStatusIds());
+        $select->where(
+            '(status_admin.value = ? AND status_store.value IS NULL) OR status_store.value = ?',
+            $this->productStatus->getVisibleStatusIds()
+        );
 
-        $select->where('(visibility_admin.value IN (?) AND visibility_store.value IS NULL) OR visibility_store.value IN (?)',
-            $this->productVisible->getVisibleInSiteIds());
+        $select->where(
+            '(visibility_admin.value IN (?) AND visibility_store.value IS NULL) OR visibility_store.value IN (?)',
+            $this->productVisible->getVisibleInSiteIds()
+        );
 
         $select->group('e.entity_id');
 
         if ($storeId > 0) {
-            $select->having('`e`.`type_id` <> "configurable" OR (`e`.`type_id` = "configurable" AND count(simple_website.product_id) > 0)');
+            $select->having(
+                '`e`.`type_id` <> "configurable" OR (`e`.`type_id` = "configurable" AND count(simple_website.product_id) > 0)'
+            );
         }
 
         if ($onlyWithStock) {
-            $select->having('`e`.`type_id` <> "configurable" OR (`e`.`type_id` = "configurable" AND count(simple_stock_item.product_id) > 0)');
+            $select->having(
+                '`e`.`type_id` <> "configurable" OR (`e`.`type_id` = "configurable" AND count(simple_stock_item.product_id) > 0)'
+            );
         }
 
         $select->limit($limit);
@@ -299,9 +360,9 @@ class Export
     public function getSearchableAttributes(
         string $backendType = null,
         array $excludeAttributeCodes = [],
-        array $attributeConditions = []): array
-    {
-        if ( ! $this->variableHelper->isEmpty($backendType)) {
+        array $attributeConditions = []
+    ): array {
+        if (!$this->variables->isEmpty($backendType)) {
             return $this->collectSearchableAttributesByType($backendType, $excludeAttributeCodes, $attributeConditions);
         } else {
             return $this->collectSearchableAttributes($attributeConditions);
@@ -318,7 +379,7 @@ class Export
     {
         $key = md5(json_encode($attributeConditions));
 
-        if ( ! array_key_exists($key, $this->searchableAttributes)) {
+        if (!array_key_exists($key, $this->searchableAttributes)) {
             $productAttributeCollection = $this->attributeHelper->getProductAttributeCollection();
 
             $conditions = [
@@ -350,10 +411,10 @@ class Export
                 $attribute->setEntity($entity);
             }
 
-            $this->searchableAttributes[ $key ] = $attributes;
+            $this->searchableAttributes[$key] = $attributes;
         }
 
-        return $this->searchableAttributes[ $key ];
+        return $this->searchableAttributes[$key];
     }
 
     /**
@@ -367,29 +428,28 @@ class Export
     private function collectSearchableAttributesByType(
         string $backendType = null,
         array $excludeAttributeCodes = [],
-        array $attributeConditions = []): array
-    {
+        array $attributeConditions = []
+    ): array {
         $key = md5(json_encode([$backendType, $excludeAttributeCodes, $attributeConditions]));
 
-        if ( ! array_key_exists($key, $this->searchableAttributesByType)) {
+        if (!array_key_exists($key, $this->searchableAttributesByType)) {
             $searchableAttributes = $this->collectSearchableAttributes($attributeConditions);
 
             $attributes = [];
 
-            /** @var Attribute $attribute */
             foreach ($searchableAttributes as $attributeId => $attribute) {
-                if (array_search($attribute->getAttributeCode(), $excludeAttributeCodes) !== false) {
+                if (in_array($attribute->getAttributeCode(), $excludeAttributeCodes)) {
                     continue;
                 }
                 if ($attribute->getBackendType() == $backendType) {
-                    $attributes[ $attributeId ] = $attribute;
+                    $attributes[$attributeId] = $attribute;
                 }
             }
 
-            $this->searchableAttributesByType[ $key ] = $attributes;
+            $this->searchableAttributesByType[$key] = $attributes;
         }
 
-        return $this->searchableAttributesByType[ $key ];
+        return $this->searchableAttributesByType[$key];
     }
 
     /**
@@ -403,14 +463,17 @@ class Export
     public function getSearchableAttributesByTypes(
         bool $onlyAttributeIds = true,
         array $excludeAttributeCodes = [],
-        array $attributeConditions = []): array
-    {
+        array $attributeConditions = []
+    ): array {
         $result = [];
 
         foreach (['int', 'varchar', 'text', 'decimal', 'datetime'] as $backendType) {
-            $result[ $backendType ] =
-                $this->getSearchableAttributesByType($backendType, $onlyAttributeIds, $excludeAttributeCodes,
-                    $attributeConditions);
+            $result[$backendType] = $this->getSearchableAttributesByType(
+                $backendType,
+                $onlyAttributeIds,
+                $excludeAttributeCodes,
+                $attributeConditions
+            );
         }
 
         return $result;
@@ -429,8 +492,8 @@ class Export
         string $useBackendType,
         bool $onlyAttributeIds = true,
         array $excludeAttributeCodes = [],
-        array $attributeConditions = []): array
-    {
+        array $attributeConditions = []
+    ): array {
         $attributes = $this->getSearchableAttributes($useBackendType, $excludeAttributeCodes, $attributeConditions);
 
         return $onlyAttributeIds ? array_keys($attributes) : $attributes;
@@ -455,13 +518,18 @@ class Export
         int $storeId,
         array $attributeConditions = [],
         array $requiredEavAttributeCodes = [],
-        bool $limitActiveCategoriesToStore = true): array
-    {
+        bool $limitActiveCategoriesToStore = true
+    ): array {
         $searchableAttributes = $this->getExportableAttributes($attributeConditions, $requiredEavAttributeCodes);
 
-        $attributeValues = $this->getCurrentAttributeValues($this->databaseHelper->getDefaultConnection(),
-            \Magento\Catalog\Model\Product::ENTITY, $storeId, array_keys($searchableAttributes), $productIds,
-            ['entity_id' => true, 'store_id' => true]);
+        $attributeValues = $this->getCurrentAttributeValues(
+            $this->databaseHelper->getDefaultConnection(),
+            \Magento\Catalog\Model\Product::ENTITY,
+            $storeId,
+            array_keys($searchableAttributes),
+            $productIds,
+            ['entity_id' => true, 'store_id' => true]
+        );
 
         $bestsellerRatings = $this->getBestsellerRatings($dbAdapter, $productIds, $storeId);
         $categoryPaths = $this->getCategoriesPaths($dbAdapter, $productIds, $storeId, $limitActiveCategoriesToStore);
@@ -479,47 +547,46 @@ class Export
 
         foreach ($attributeValues as $productId => $productAttributeValues) {
             foreach ($productAttributeValues as $attributeCode => $attributeValue) {
-                if ( ! $this->variableHelper->isEmpty($attributeValue)) {
-                    $attribute = $this->arrayHelper->getValue($searchableAttributes, $attributeCode);
+                if (!$this->variables->isEmpty($attributeValue)) {
+                    $attribute = $this->arrays->getValue($searchableAttributes, $attributeCode);
 
                     if ($attribute instanceof Attribute && $attribute->usesSource()) {
                         $attributeValue = [
                             'id'    => $attributeValue,
-                            'value' => $this->attributeHelper->getAttributeOptionValue(\Magento\Catalog\Model\Product::ENTITY,
-                                $attributeCode, $storeId, $attributeValue)
+                            'value' => $this->attributeHelper->getAttributeOptionValue(
+                                \Magento\Catalog\Model\Product::ENTITY,
+                                $attributeCode,
+                                $storeId,
+                                $attributeValue
+                            )
                         ];
                     }
 
-                    $productsData[ $productId ][ $attributeCode ] = $attributeValue;
+                    $productsData[$productId][$attributeCode] = $attributeValue;
                 }
             }
 
-            $productsData[ $productId ][ 'bestseller_rating' ] =
-                $this->arrayHelper->getValue($bestsellerRatings, $productId);
+            $productsData[$productId]['bestseller_rating'] = $this->arrays->getValue($bestsellerRatings, $productId);
 
-            $productsData[ $productId ][ 'category_paths' ] =
-                $this->arrayHelper->getValue($categoryPaths, $productId, []);
+            $productsData[$productId]['category_paths'] = $this->arrays->getValue($categoryPaths, $productId, []);
 
-            $productsData[ $productId ][ 'url_rewrites' ] = $this->arrayHelper->getValue($urlRewrites, $productId, []);
+            $productsData[$productId]['url_rewrites'] = $this->arrays->getValue($urlRewrites, $productId, []);
 
-            $productsData[ $productId ][ 'gallery_images' ] =
-                $this->arrayHelper->getValue($galleryImages, $productId, []);
+            $productsData[$productId]['gallery_images'] = $this->arrays->getValue($galleryImages, $productId, []);
 
-            $productsData[ $productId ][ 'indexed_prices' ] =
-                $this->arrayHelper->getValue($indexedPrices, $productId, []);
+            $productsData[$productId]['indexed_prices'] = $this->arrays->getValue($indexedPrices, $productId, []);
 
-            $productsData[ $productId ][ 'stock_item' ] = $this->arrayHelper->getValue($stockItems, $productId, []);
+            $productsData[$productId]['stock_item'] = $this->arrays->getValue($stockItems, $productId, []);
 
-            $productsData[ $productId ][ 'review_summary' ] =
-                $this->arrayHelper->getValue($reviewSummary, $productId, []);
+            $productsData[$productId]['review_summary'] = $this->arrays->getValue($reviewSummary, $productId, []);
 
-            $typeId = $this->arrayHelper->getValue($productAttributeValues, 'type_id');
+            $typeId = $this->arrays->getValue($productAttributeValues, 'type_id');
 
             if ($typeId === 'configurable') {
                 $configurableProductIds[] = $productId;
-            } else if ($typeId === 'bundle') {
+            } elseif ($typeId === 'bundle') {
                 $bundleProductIds[] = $productId;
-            } else if ($typeId === 'grouped') {
+            } elseif ($typeId === 'grouped') {
                 $groupProductIds[] = $productId;
             }
         }
@@ -527,54 +594,88 @@ class Export
         $showOutOfStock = $this->storeHelper->getStoreConfig('cataloginventory/options/show_out_of_stock', false, true);
 
         if (count($configurableProductIds) > 0) {
-            $childIds = $this->productHelper->getChildIds($this->databaseHelper->getDefaultConnection(),
-                $configurableProductIds, true, ! $showOutOfStock, true, true, false, $storeId);
+            $childIds = $this->productHelper->getChildIds(
+                $this->databaseHelper->getDefaultConnection(),
+                $configurableProductIds,
+                true,
+                !$showOutOfStock,
+                true,
+                true,
+                false,
+                $storeId
+            );
 
             if (count($childIds) > 0) {
                 $this->logging->debug(sprintf('Found %d child product(s)', count($childIds)));
 
-                $childProductsData =
-                    $this->getProductsData($dbAdapter, array_keys($childIds), $storeId, $attributeConditions,
-                        $requiredEavAttributeCodes, $limitActiveCategoriesToStore);
+                $childProductsData = $this->getProductsData(
+                    $dbAdapter,
+                    array_keys($childIds),
+                    $storeId,
+                    $attributeConditions,
+                    $requiredEavAttributeCodes,
+                    $limitActiveCategoriesToStore
+                );
 
                 foreach ($childIds as $childId => $parentId) {
-                    $productsData[ $parentId ][ 'children' ][] = $childProductsData[ $childId ];
+                    $productsData[$parentId]['children'][] = $childProductsData[$childId];
                 }
             }
         }
 
         if (count($bundleProductIds) > 0) {
-            $bundledIds =
-                $this->productHelper->getBundledIds($this->databaseHelper->getDefaultConnection(), $bundleProductIds,
-                    true, ! $showOutOfStock, true, $storeId);
+            $bundledIds = $this->productHelper->getBundledIds(
+                $this->databaseHelper->getDefaultConnection(),
+                $bundleProductIds,
+                true,
+                !$showOutOfStock,
+                true,
+                $storeId
+            );
 
             if (count($bundledIds) > 0) {
                 $this->logging->debug(sprintf('Found %d bundled product(s)', count($bundledIds)));
 
-                $bundledProductsData =
-                    $this->getProductsData($dbAdapter, array_keys($bundledIds), $storeId, $attributeConditions,
-                        $requiredEavAttributeCodes, $limitActiveCategoriesToStore);
+                $bundledProductsData = $this->getProductsData(
+                    $dbAdapter,
+                    array_keys($bundledIds),
+                    $storeId,
+                    $attributeConditions,
+                    $requiredEavAttributeCodes,
+                    $limitActiveCategoriesToStore
+                );
 
                 foreach ($bundledIds as $bundledId => $parentId) {
-                    $productsData[ $parentId ][ 'bundled' ][] = $bundledProductsData[ $bundledId ];
+                    $productsData[$parentId]['bundled'][] = $bundledProductsData[$bundledId];
                 }
             }
         }
 
         if (count($groupProductIds) > 0) {
-            $groupedIds =
-                $this->productHelper->getGroupedIds($this->databaseHelper->getDefaultConnection(), $groupProductIds,
-                    true, ! $showOutOfStock, true, false, $storeId);
+            $groupedIds = $this->productHelper->getGroupedIds(
+                $this->databaseHelper->getDefaultConnection(),
+                $groupProductIds,
+                true,
+                !$showOutOfStock,
+                true,
+                false,
+                $storeId
+            );
 
             if (count($groupedIds) > 0) {
                 $this->logging->debug(sprintf('Found %d grouped product(s)', count($groupedIds)));
 
-                $groupedProductsData =
-                    $this->getProductsData($dbAdapter, array_keys($groupedIds), $storeId, $attributeConditions,
-                        $requiredEavAttributeCodes, $limitActiveCategoriesToStore);
+                $groupedProductsData = $this->getProductsData(
+                    $dbAdapter,
+                    array_keys($groupedIds),
+                    $storeId,
+                    $attributeConditions,
+                    $requiredEavAttributeCodes,
+                    $limitActiveCategoriesToStore
+                );
 
                 foreach ($groupedIds as $groupedId => $parentId) {
-                    $productsData[ $parentId ][ 'grouped' ][] = $groupedProductsData[ $groupedId ];
+                    $productsData[$parentId]['grouped'][] = $groupedProductsData[$groupedId];
                 }
             }
         }
@@ -591,28 +692,29 @@ class Export
      */
     public function getExportableAttributes(
         array $attributeConditions = [],
-        array $requiredEavAttributeCodes = []): array
-    {
+        array $requiredEavAttributeCodes = []
+    ): array {
         $key = md5(json_encode([$attributeConditions, $requiredEavAttributeCodes]));
 
-        if ( ! array_key_exists($key, $this->exportableAttributes)) {
-            $this->exportableAttributes[ $key ] = [];
+        if (!array_key_exists($key, $this->exportableAttributes)) {
+            $this->exportableAttributes[$key] = [];
 
             foreach ($this->getSearchableAttributes(null, [], $attributeConditions) as $attribute) {
-                $this->exportableAttributes[ $key ][ $attribute->getAttributeCode() ] = $attribute;
+                $this->exportableAttributes[$key][$attribute->getAttributeCode()] = $attribute;
             }
 
-            $this->exportableAttributes[ $key ][ 'updated_at' ] =
+            $this->exportableAttributes[$key]['updated_at'] =
                 $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'updated_at');
 
             foreach ($requiredEavAttributeCodes as $requiredEavAttributeCode) {
-                $this->exportableAttributes[ $key ][ $requiredEavAttributeCode ] =
-                    $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY,
-                        $requiredEavAttributeCode);
+                $this->exportableAttributes[$key][$requiredEavAttributeCode] = $this->attributeHelper->getAttribute(
+                    \Magento\Catalog\Model\Product::ENTITY,
+                    $requiredEavAttributeCode
+                );
             }
         }
 
-        return $this->exportableAttributes[ $key ];
+        return $this->exportableAttributes[$key];
     }
 
     /**
@@ -626,28 +728,37 @@ class Export
      */
     public function getBestsellerRatings(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
     {
-        $bestseller = $dbAdapter->select()
-            ->from($this->databaseHelper->getTableName('sales_bestsellers_aggregated_monthly'),
-                ['product_id', 'rating_pos']);
+        $bestseller = $dbAdapter->select()->from(
+            $this->databaseHelper->getTableName('sales_bestsellers_aggregated_monthly'), ['product_id', 'rating_pos']
+        );
 
-        $bestseller->where($dbAdapter->prepareSqlCondition('product_id', ['in' => $productIds]), null,
-            Select::TYPE_CONDITION);
+        $bestseller->where(
+            $dbAdapter->prepareSqlCondition('product_id', ['in' => $productIds]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
-        $bestseller->where($dbAdapter->prepareSqlCondition('period', ['eq' => sprintf('%s-01', date('Y-m'))]), null,
-            Select::TYPE_CONDITION);
+        $bestseller->where(
+            $dbAdapter->prepareSqlCondition('period', ['eq' => sprintf('%s-01', date('Y-m'))]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
-        $bestseller->where($dbAdapter->prepareSqlCondition('store_id', ['eq' => $storeId]), null,
-            Select::TYPE_CONDITION);
+        $bestseller->where(
+            $dbAdapter->prepareSqlCondition('store_id', ['eq' => $storeId]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
         $bestseller->order(['id DESC']);
 
         $queryResult = $this->databaseHelper->fetchPairs($bestseller, $dbAdapter);
 
         foreach ($productIds as $productId) {
-            $bestseller = $this->arrayHelper->getValue($queryResult, $productId);
+            $bestseller = $this->arrays->getValue($queryResult, $productId);
 
-            $queryResult[ $productId ] =
-                ! empty($bestseller) ? (int)$bestseller : $this->getMaxBestsellerRating($dbAdapter, $storeId);
+            $queryResult[$productId] =
+                !empty($bestseller) ? (int) $bestseller : $this->getMaxBestsellerRating($dbAdapter, $storeId);
         }
 
         return $queryResult;
@@ -667,15 +778,23 @@ class Export
 
             $bestseller = $dbAdapter->select()->from([$tableLabel => $tableName], ['max(rating_pos)']);
 
-            $bestseller->where($dbAdapter->prepareSqlCondition($tableLabel . '.period',
-                ['eq' => sprintf('%s-01', date('Y-m'))]), null, Select::TYPE_CONDITION);
+            $bestseller->where(
+                $dbAdapter->prepareSqlCondition(
+                    $tableLabel.'.period', ['eq' => sprintf('%s-01', date('Y-m'))]
+                ),
+                null,
+                Select::TYPE_CONDITION
+            );
 
-            $bestseller->where($dbAdapter->prepareSqlCondition($tableLabel . '.store_id', ['eq' => $storeId]), null,
-                Select::TYPE_CONDITION);
+            $bestseller->where(
+                $dbAdapter->prepareSqlCondition($tableLabel.'.store_id', ['eq' => $storeId]),
+                null,
+                Select::TYPE_CONDITION
+            );
 
             $bestseller = $this->databaseHelper->fetchOne($bestseller, $dbAdapter);
 
-            $this->maxBestsellerRating = empty($bestseller) ? 1 : (((int)$bestseller) + 1);
+            $this->maxBestsellerRating = empty($bestseller) ? 1 : (((int) $bestseller) + 1);
         }
 
         return $this->maxBestsellerRating;
@@ -697,8 +816,8 @@ class Export
         AdapterInterface $dbAdapter,
         array $productIds,
         int $storeId,
-        bool $limitActiveCategoriesToStore = true): array
-    {
+        bool $limitActiveCategoriesToStore = true
+    ): array {
         $storeCategoryIds =
             $this->categoryHelper->getActiveCategoryIds($dbAdapter, $storeId, $limitActiveCategoriesToStore);
         $storeCategoryIds = array_flip($storeCategoryIds);
@@ -709,13 +828,13 @@ class Export
 
         foreach ($categoryIds as $productId => $productCategoryIds) {
             foreach ($productCategoryIds as $productCategoryId) {
-                if ( ! array_key_exists($productCategoryId, $storeCategoryIds)) {
+                if (!array_key_exists($productCategoryId, $storeCategoryIds)) {
                     continue;
                 }
 
                 $categoryName = $this->categoryHelper->getCategoryName($dbAdapter, $productCategoryId, $storeId);
 
-                if ($this->variableHelper->isEmpty($categoryName)) {
+                if ($this->variables->isEmpty($categoryName)) {
                     $categoryName = $this->categoryHelper->getCategoryName($dbAdapter, $productCategoryId, 0);
                 }
 
@@ -724,7 +843,7 @@ class Export
                 $parentCategoryIds =
                     $this->categoryHelper->getParentEntityIds($dbAdapter, [$productCategoryId], 0, true);
 
-                $categoryPaths[ $productId ][ $productCategoryId ] =
+                $categoryPaths[$productId][$productCategoryId] =
                     ['name' => $categoryName, 'url' => $categoryUrl, 'parent_id' => reset($parentCategoryIds)];
             }
         }
@@ -751,19 +870,22 @@ class Export
         $urlRewriteQuery->where('store_id = ?', $storeId, Select::TYPE_CONDITION);
         $urlRewriteQuery->where('is_autogenerated = ?', 1);
 
-        $urlRewriteQuery->joinLeft($this->databaseHelper->getTableName('catalog_url_rewrite_product_category'),
-            'catalog_url_rewrite_product_category.url_rewrite_id = url_rewrite.url_rewrite_id', ['category_id']);
+        $urlRewriteQuery->joinLeft(
+            $this->databaseHelper->getTableName('catalog_url_rewrite_product_category'),
+            'catalog_url_rewrite_product_category.url_rewrite_id = url_rewrite.url_rewrite_id',
+            ['category_id']
+        );
 
         $queryResult = $this->databaseHelper->fetchAll($urlRewriteQuery);
 
         $result = [];
 
         foreach ($queryResult as $queryRow) {
-            $productId = $this->arrayHelper->getValue($queryRow, 'entity_id');
-            $requestPath = $this->arrayHelper->getValue($queryRow, 'request_path');
-            $categoryId = (int)$this->arrayHelper->getValue($queryRow, 'category_id');
+            $productId = $this->arrays->getValue($queryRow, 'entity_id');
+            $requestPath = $this->arrays->getValue($queryRow, 'request_path');
+            $categoryId = (int) $this->arrays->getValue($queryRow, 'category_id');
 
-            $result[ $productId ][ $categoryId ] = $requestPath;
+            $result[$productId][$categoryId] = $requestPath;
         }
 
         return $result;
@@ -782,8 +904,8 @@ class Export
         AdapterInterface $dbAdapter,
         array $productIds,
         int $storeId,
-        bool $includeDisabled = true): array
-    {
+        bool $includeDisabled = true
+    ): array {
         $galleryTableName = $this->databaseHelper->getTableName('catalog_product_entity_media_gallery');
         $galleryValueTableName = $this->databaseHelper->getTableName('catalog_product_entity_media_gallery_value');
         $galleryValueToEntityTableName =
@@ -792,47 +914,81 @@ class Export
         $galleryQuery = $dbAdapter->select()->from(['gallery_value' => $galleryTableName], [
             'value_id',
             'value',
-            sprintf('IF(%s IS NOT NULL, %s, %s) as position',
+            sprintf(
+                'IF(%s IS NOT NULL, %s, %s) as position',
                 $dbAdapter->quoteIdentifier('gallery_value_store.position'),
                 $dbAdapter->quoteIdentifier('gallery_value_store.position'),
-                $dbAdapter->quoteIdentifier('gallery_value_default.position')),
-            sprintf('IF(%s IS NOT NULL, %s, %s) as disabled',
+                $dbAdapter->quoteIdentifier('gallery_value_default.position')
+            ),
+            sprintf(
+                'IF(%s IS NOT NULL, %s, %s) as disabled',
                 $dbAdapter->quoteIdentifier('gallery_value_store.disabled'),
                 $dbAdapter->quoteIdentifier('gallery_value_store.disabled'),
-                $dbAdapter->quoteIdentifier('gallery_value_default.disabled')),
-            sprintf('IF(%s IS NOT NULL, %s, %s) as label', $dbAdapter->quoteIdentifier('gallery_value_store.label'),
+                $dbAdapter->quoteIdentifier('gallery_value_default.disabled')
+            ),
+            sprintf(
+                'IF(%s IS NOT NULL, %s, %s) as label',
                 $dbAdapter->quoteIdentifier('gallery_value_store.label'),
-                $dbAdapter->quoteIdentifier('gallery_value_default.label'))
+                $dbAdapter->quoteIdentifier('gallery_value_store.label'),
+                $dbAdapter->quoteIdentifier('gallery_value_default.label')
+            )
         ]);
 
         $galleryQuery->joinLeft(['gallery_value_default' => $galleryValueTableName],
-            sprintf('%s = %s AND %s = %d', $dbAdapter->quoteIdentifier('gallery_value.value_id'),
-                $dbAdapter->quoteIdentifier('gallery_value_default.value_id'),
-                $dbAdapter->quoteIdentifier('gallery_value_default.store_id'), 0), []);
+                                sprintf(
+                                    '%s = %s AND %s = %d',
+                                    $dbAdapter->quoteIdentifier('gallery_value.value_id'),
+                                    $dbAdapter->quoteIdentifier('gallery_value_default.value_id'),
+                                    $dbAdapter->quoteIdentifier('gallery_value_default.store_id'),
+                                    0
+                                ),
+                                []);
 
         $galleryQuery->joinLeft(['gallery_value_store' => $galleryValueTableName],
-            sprintf('%s = %s AND %s = %d', $dbAdapter->quoteIdentifier('gallery_value.value_id'),
-                $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
-                $dbAdapter->quoteIdentifier('gallery_value_store.value_id'), $storeId), []);
+                                sprintf(
+                                    '%s = %s AND %s = %d',
+                                    $dbAdapter->quoteIdentifier('gallery_value.value_id'),
+                                    $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
+                                    $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
+                                    $storeId
+                                ),
+                                []);
 
         $galleryQuery->join(['gallery_value_to_entity' => $galleryValueToEntityTableName],
-            sprintf('%s = %s', $dbAdapter->quoteIdentifier('gallery_value.value_id'),
-                $dbAdapter->quoteIdentifier('gallery_value_to_entity.value_id')),
-            ['gallery_value_to_entity.entity_id']);
+                            sprintf(
+                                '%s = %s',
+                                $dbAdapter->quoteIdentifier('gallery_value.value_id'),
+                                $dbAdapter->quoteIdentifier('gallery_value_to_entity.value_id')
+                            ),
+                            ['gallery_value_to_entity.entity_id']);
 
         $attribute = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'media_gallery');
 
-        $galleryQuery->where($dbAdapter->prepareSqlCondition('gallery_value.attribute_id',
-            ['eq' => $attribute->getId()]), null, Select::TYPE_CONDITION);
+        $galleryQuery->where(
+            $dbAdapter->prepareSqlCondition(
+                'gallery_value.attribute_id', ['eq' => $attribute->getId()]
+            ),
+            null,
+            Select::TYPE_CONDITION
+        );
 
-        $galleryQuery->where($dbAdapter->prepareSqlCondition('gallery_value_to_entity.entity_id',
-            ['in' => $productIds]), null, Select::TYPE_CONDITION);
+        $galleryQuery->where(
+            $dbAdapter->prepareSqlCondition(
+                'gallery_value_to_entity.entity_id', ['in' => $productIds]
+            ),
+            null,
+            Select::TYPE_CONDITION
+        );
 
-        $galleryQuery->where(sprintf('%s IS NOT NULL OR %s IS NOT NULL',
-            $dbAdapter->quoteIdentifier('gallery_value_default.value_id'),
-            $dbAdapter->quoteIdentifier('gallery_value_store.value_id')));
+        $galleryQuery->where(
+            sprintf(
+                '%s IS NOT NULL OR %s IS NOT NULL',
+                $dbAdapter->quoteIdentifier('gallery_value_default.value_id'),
+                $dbAdapter->quoteIdentifier('gallery_value_store.value_id')
+            )
+        );
 
-        if ( ! $includeDisabled) {
+        if (!$includeDisabled) {
             $galleryQuery->having('disabled = 0');
         }
 
@@ -841,10 +997,10 @@ class Export
         $result = [];
 
         foreach ($queryResult as $queryRow) {
-            $productId = $this->arrayHelper->getValue($queryRow, 'entity_id');
-            $valueId = $this->arrayHelper->getValue($queryRow, 'value_id');
+            $productId = $this->arrays->getValue($queryRow, 'entity_id');
+            $valueId = $this->arrays->getValue($queryRow, 'value_id');
 
-            $result[ $productId ][ $valueId ] = $queryRow;
+            $result[$productId][$valueId] = $queryRow;
         }
 
         return $result;
@@ -871,24 +1027,34 @@ class Export
                 'max_price'
             ]);
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition('entity_id', ['in' => $productIds]), null,
-            Select::TYPE_CONDITION);
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition('entity_id', ['in' => $productIds]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition('customer_group_id', ['eq' => '0']), null,
-            Select::TYPE_CONDITION);
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition('customer_group_id', ['eq' => '0']),
+            null,
+            Select::TYPE_CONDITION
+        );
 
         $store = $this->storeHelper->getStore($storeId);
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition('website_id', ['eq' => $store->getWebsite()->getId()]),
-            null, Select::TYPE_CONDITION);
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition('website_id', ['eq' => $store->getWebsite()->getId()]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
         $queryResult = $this->databaseHelper->fetchAssoc($categoryQuery);
 
         foreach ($productIds as $productId) {
-            if ( ! array_key_exists($productId, $queryResult)) {
+            if (!array_key_exists($productId, $queryResult)) {
                 $product = $this->productHelper->loadProduct($productId, $storeId);
 
                 if ($product->getTypeId() === 'bundle') {
+                    /** @var Price $priceModel */
                     $priceModel = $product->getPriceModel();
 
                     if ($this->taxHelper->displayPriceIncludingTax()) {
@@ -897,14 +1063,14 @@ class Export
                         [$minimalPrice, $maximalPrice] = $priceModel->getTotalPrices($product, null, null, false);
                     }
 
-                    $queryResult[ $productId ] = [
+                    $queryResult[$productId] = [
                         'price'       => $product->getPrice(),
                         'min_price'   => $minimalPrice,
                         'max_price'   => $maximalPrice,
                         'final_price' => $minimalPrice
                     ];
                 } else {
-                    $queryResult[ $productId ] = [
+                    $queryResult[$productId] = [
                         'price'       => $product->getPrice(),
                         'min_price'   => $product->getFinalPrice(),
                         'max_price'   => $product->getFinalPrice(),
@@ -943,14 +1109,14 @@ class Export
         $stockItemFields = [];
 
         foreach ($this->getStockItemFields() as $stockItemField) {
-            if ( ! array_key_exists($stockItemField, $stockStatusFields)) {
+            if (!array_key_exists($stockItemField, $stockStatusFields)) {
                 $stockItemFields[] = sprintf('stock_item.%s', $stockItemField);
             }
         }
 
         $select->join(['stock_item' => $stockItemTable],
-            'stock_status.product_id = stock_item.product_id AND stock_status.stock_id = stock_item.stock_id',
-            $stockItemFields);
+                      'stock_status.product_id = stock_item.product_id AND stock_status.stock_id = stock_item.stock_id',
+                      $stockItemFields);
 
         $select->where('stock_status.product_id IN (?)', $productIds);
         $select->where('stock_status.stock_id = ?', $this->getStockId($storeId));
@@ -980,10 +1146,12 @@ class Export
 
         $entityIdSelect->where('entity_code = ?', 'product');
 
-        $entityId = (int)$this->databaseHelper->fetchOne($entityIdSelect);
+        $entityId = (int) $this->databaseHelper->fetchOne($entityIdSelect);
 
-        $select = $dbAdapter->select()->from($this->databaseHelper->getTableName('review_entity_summary'),
-            ['entity_pk_value', 'reviews_count', 'rating_summary']);
+        $select = $dbAdapter->select()->from(
+            $this->databaseHelper->getTableName('review_entity_summary'),
+            ['entity_pk_value', 'reviews_count', 'rating_summary']
+        );
 
         $select->where('entity_pk_value IN (?)', $productIds);
         $select->where('entity_type = ?', $entityId);
@@ -1010,8 +1178,8 @@ class Export
         int $storeId,
         array $attributeCodes,
         array $entityIds,
-        array $specialAttributes): array
-    {
+        array $specialAttributes
+    ): array {
         if (empty($attributeCodes) || empty($entityIds)) {
             return [];
         }
@@ -1024,20 +1192,22 @@ class Export
             if ($entityTypeCode == \Magento\Catalog\Model\Product::ENTITY) {
                 $collection = $this->productHelper->getProductCollection();
                 $collection->setStoreId($storeId);
-            } else if ($entityTypeCode == \Magento\Catalog\Model\Category::ENTITY) {
+            } elseif ($entityTypeCode == \Magento\Catalog\Model\Category::ENTITY) {
                 $collection = $this->categoryHelper->getCategoryCollection();
                 $collection->setStoreId($storeId);
-            } else if ($entityTypeCode == 'customer') {
+            } elseif ($entityTypeCode == 'customer') {
                 $collection = $this->customerHelper->getCustomerCollection();
-            } else if ($entityTypeCode == 'customer_address') {
+            } elseif ($entityTypeCode == 'customer_address') {
                 $collection = $this->addressHelper->getAddressCollection();
             } else {
                 throw new Exception(sprintf('Entity type: %s not implemented yet', $entityTypeCode));
             }
 
             foreach ($attributeChunk as $attributeCode) {
-                $collection->addAttributeToSelect($attributeCode,
-                    in_array($attributeCode, array_keys($specialAttributes)) ? false : 'left');
+                $collection->addAttributeToSelect(
+                    $attributeCode,
+                    in_array($attributeCode, array_keys($specialAttributes)) ? false : 'left'
+                );
             }
 
             if (count($entityIds) == 1) {
@@ -1051,8 +1221,8 @@ class Export
             $columns = $collection->getSelect()->getPart(Zend_Db_Select::COLUMNS);
 
             foreach ($columns as $key => $column) {
-                if (array_key_exists(1, $column) && $column[ 1 ] == 'entity_id') {
-                    unset($columns[ $key ]);
+                if (array_key_exists(1, $column) && $column[1] == 'entity_id') {
+                    unset($columns[$key]);
                 }
             }
 
@@ -1063,8 +1233,8 @@ class Export
             $queryResult = $this->databaseHelper->fetchAssoc($collection->getSelect(), $dbAdapter);
 
             foreach ($queryResult as $key => $row) {
-                $currentValues[ $key ] =
-                    array_key_exists($key, $currentValues) ? array_merge($currentValues[ $key ], $row) : $row;
+                $currentValues[$key] =
+                    array_key_exists($key, $currentValues) ? array_merge($currentValues[$key], $row) : $row;
             }
         }
 

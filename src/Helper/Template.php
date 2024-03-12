@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Magento\Email\Model\ResourceModel\Template\CollectionFactory;
@@ -7,7 +9,7 @@ use Magento\Framework\Data\Collection;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Template
@@ -38,7 +40,7 @@ class Template
 
         /** @var \Magento\Email\Model\Template $mailTemplate */
         foreach ($mailTemplates as $mailTemplate) {
-            $result[ $mailTemplate->getId() ] = $mailTemplate->getTemplateCode();
+            $result[$mailTemplate->getId()] = $mailTemplate->getTemplateCode();
         }
 
         return $result;

@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Model\Config\Source\Carrier;
 
+use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Carrier;
 use Infrangible\Core\Helper\Stores;
 use Magento\Framework\Data\OptionSourceInterface;
-use Tofex\Help\Variables;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Active
     implements OptionSourceInterface
 {
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var Stores */
     protected $storeHelper;
@@ -31,16 +33,16 @@ class Active
     private $withDefault = true;
 
     /**
-     * @param Variables $variableHelper
+     * @param Variables $variables
      * @param Stores    $storeHelper
      * @param Carrier   $carrierHelper
      */
     public function __construct(
-        Variables $variableHelper,
+        Variables $variables,
         Stores $storeHelper,
-        Carrier $carrierHelper)
-    {
-        $this->variableHelper = $variableHelper;
+        Carrier $carrierHelper
+    ) {
+        $this->variables = $variables;
         $this->storeHelper = $storeHelper;
         $this->carrierHelper = $carrierHelper;
     }
@@ -61,7 +63,7 @@ class Active
 
             $options[] = [
                 'value' => $code,
-                'label' => $this->variableHelper->isEmpty($name) ? $code : sprintf('%s [%s]', $name, $code)
+                'label' => $this->variables->isEmpty($name) ? $code : sprintf('%s [%s]', $name, $code)
             ];
         }
 
@@ -82,7 +84,7 @@ class Active
         foreach ($activeCarriers as $code => $carrier) {
             $name = $carrier->getConfigData('name');
 
-            $options[ $code ] = $this->variableHelper->isEmpty($name) ? $code : sprintf('%s [%s]', $name, $code);
+            $options[$code] = $this->variables->isEmpty($name) ? $code : sprintf('%s [%s]', $name, $code);
         }
 
         return $options;

@@ -1,8 +1,12 @@
 <?php /** @noinspection PhpDeprecationInspection */
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Controller\Adminhtml;
 
 use Exception;
+use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Json;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Request\Http;
@@ -10,22 +14,20 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Exception\NotFoundException;
 use Psr\Log\LoggerInterface;
-use Tofex\Help\Arrays;
-use Tofex\Help\Json;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 abstract class Ajax
     extends Action
 {
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
     /** @var Json */
-    protected $jsonHelper;
+    protected $json;
 
     /** @var LoggerInterface */
     protected $logging;
@@ -40,34 +42,34 @@ abstract class Ajax
     private $responseValues = [];
 
     /**
-     * @param Arrays          $arrayHelper
-     * @param Json            $jsonHelper
-     * @param Context         $context
+     * @param Arrays $arrays
+     * @param Json $json
+     * @param Context $context
      * @param LoggerInterface $logging
      */
     public function __construct(
-        Arrays $arrayHelper,
-        Json $jsonHelper,
+        Arrays $arrays,
+        Json $json,
         Context $context,
-        LoggerInterface $logging)
-    {
+        LoggerInterface $logging
+    ) {
         parent::__construct($context);
 
-        $this->arrayHelper = $arrayHelper;
-        $this->jsonHelper = $jsonHelper;
+        $this->arrays = $arrays;
+        $this->json = $json;
 
         $this->logging = $logging;
     }
 
     /**
      * @param string $key
-     * @param mixed  $value
+     * @param mixed $value
      */
     protected function addResponseValue(string $key, $value)
     {
-        $keys = preg_split('/:/', $key);
+        $keys = explode(':', $key);
 
-        $this->responseValues = $this->arrayHelper->addDeepValue($this->responseValues, $keys, $value);
+        $this->responseValues = $this->arrays->addDeepValue($this->responseValues, $keys, $value);
     }
 
     /**
@@ -87,8 +89,8 @@ abstract class Ajax
      */
     protected function getResponseValue(string $key)
     {
-        if (isset ($this->responseValues[ $key ])) {
-            return $this->responseValues[ $key ];
+        if (isset ($this->responseValues[$key])) {
+            return $this->responseValues[$key];
         }
 
         return null;
@@ -159,7 +161,7 @@ abstract class Ajax
             }
 
             $responseData =
-                $this->arrayHelper->mergeArrays(['success' => $this->responseResult], $this->responseValues);
+                $this->arrays->mergeArrays(['success' => $this->responseResult], $this->responseValues);
 
             /** @var \Magento\Framework\App\Response\Http $response */
             $response = $this->getResponse();
@@ -167,7 +169,7 @@ abstract class Ajax
             $response->setHttpResponseCode($this->responseCode);
             $response->setHeader('Content-type', 'application/json');
 
-            $response->setBody($this->jsonHelper->encode($responseData));
+            $response->setBody($this->json->encode($responseData));
 
             return $response;
         } else {

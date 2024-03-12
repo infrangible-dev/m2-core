@@ -1,26 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
+use FeWeDev\Base\Variables;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Io\File;
 use Psr\Log\LoggerInterface;
-use Tofex\Help\Variables;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Files
 {
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
-    /** @var \Tofex\Help\Files */
-    protected $fileHelper;
+    /** @var \FeWeDev\Base\Files */
+    protected $files;
 
     /** @var LoggerInterface */
     protected $logging;
@@ -32,21 +34,21 @@ class Files
     protected $file;
 
     /**
-     * @param Variables         $variableHelper
-     * @param \Tofex\Help\Files $fileHelper
-     * @param LoggerInterface   $logging
-     * @param DirectoryList     $directoryList
-     * @param File              $file
+     * @param Variables           $variables
+     * @param \FeWeDev\Base\Files $files
+     * @param LoggerInterface     $logging
+     * @param DirectoryList       $directoryList
+     * @param File                $file
      */
     public function __construct(
-        Variables $variableHelper,
-        \Tofex\Help\Files $fileHelper,
+        Variables $variables,
+        \FeWeDev\Base\Files $files,
         LoggerInterface $logging,
         DirectoryList $directoryList,
-        File $file)
-    {
-        $this->variableHelper = $variableHelper;
-        $this->fileHelper = $fileHelper;
+        File $file
+    ) {
+        $this->variables = $variables;
+        $this->files = $files;
 
         $this->logging = $logging;
         $this->directoryList = $directoryList;
@@ -67,11 +69,11 @@ class Files
     {
         $this->logging->debug(sprintf('Determine path of: %s with a prefix base path: %s', $path, $basePath));
 
-        if ($this->variableHelper->isEmpty($basePath)) {
+        if ($this->variables->isEmpty($basePath)) {
             $basePath = $this->directoryList->getRoot();
         }
 
-        $path = $this->fileHelper->determineFilePath($path, $basePath, $makeDir);
+        $path = $this->files->determineFilePath($path, $basePath, $makeDir);
 
         $this->logging->debug(sprintf('Determined absolute path: %s', $path));
 
@@ -115,10 +117,14 @@ class Files
     public function determineFromFilePath(
         string $path,
         bool $includeFiles = true,
-        bool $includeDirectories = true): array
-    {
-        return $this->fileHelper->determineFromFilePath($path, $this->directoryList->getRoot(), $includeFiles,
-            $includeDirectories);
+        bool $includeDirectories = true
+    ): array {
+        return $this->files->determineFromFilePath(
+            $path,
+            $this->directoryList->getRoot(),
+            $includeFiles,
+            $includeDirectories
+        );
     }
 
     /**

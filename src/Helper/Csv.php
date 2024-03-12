@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
 use Psr\Log\LoggerInterface;
-use Tofex\Help\Arrays;
-use Tofex\Help\Variables;
+use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Variables;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Csv
 {
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var Arrays */
     protected $arrayHelper;
@@ -38,7 +40,7 @@ class Csv
         Arrays $arrayHelper,
         LoggerInterface $logger)
     {
-        $this->variableHelper = $modelsHelper;
+        $this->variables = $modelsHelper;
         $this->arrayHelper = $arrayHelper;
         $this->fileHelper = $fileHelper;
 
@@ -85,7 +87,7 @@ class Csv
 
                 /** @noinspection PhpAssignmentInConditionInspection */
                 while (($row = fgetcsv($handle, 4096, $delimiter)) !== false) {
-                    if ($this->variableHelper->isEmpty($row)) {
+                    if ($this->variables->isEmpty($row)) {
                         continue;
                     }
 

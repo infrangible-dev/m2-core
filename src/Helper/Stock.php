@@ -1,7 +1,10 @@
 <?php /** @noinspection PhpDeprecationInspection */
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
+use FeWeDev\Base\Variables;
 use Magento\CatalogInventory\Api\Data\StockItemInterface;
 use Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory;
 use Magento\CatalogInventory\Model\ResourceModel\Stock\Item\Collection;
@@ -13,17 +16,16 @@ use Magento\Framework\DB\QueryBuilderFactory;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Tofex\Help\Variables;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Stock
 {
     /** @var Variables */
-    protected $variableHelper;
+    protected $variables;
 
     /** @var Stores */
     protected $storeHelper;
@@ -47,7 +49,7 @@ class Stock
     protected $queryBuilderFactory;
 
     /**
-     * @param Variables                                                       $variableHelper
+     * @param Variables                                                       $variables
      * @param Stores                                                          $storeHelper
      * @param ItemFactory                                                     $stockItemFactory
      * @param \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory
@@ -57,16 +59,16 @@ class Stock
      * @param QueryBuilderFactory                                             $queryBuilderFactory
      */
     public function __construct(
-        Variables $variableHelper,
+        Variables $variables,
         Stores $storeHelper,
         ItemFactory $stockItemFactory,
         \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory,
         CollectionFactory $stockItemCollectionFactory,
         StockItemRepository $stockItemRepository,
         StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory,
-        QueryBuilderFactory $queryBuilderFactory)
-    {
-        $this->variableHelper = $variableHelper;
+        QueryBuilderFactory $queryBuilderFactory
+    ) {
+        $this->variables = $variables;
         $this->storeHelper = $storeHelper;
 
         $this->stockItemFactory = $stockItemFactory;
@@ -131,16 +133,16 @@ class Stock
      */
     public function getStockItemCollection(
         array $productIds = [],
-        $storeId = null): Collection
-    {
-        if ( ! $this->variableHelper->isEmpty($productIds) || ! $this->variableHelper->isEmpty($storeId)) {
+        $storeId = null
+    ): Collection {
+        if (!$this->variables->isEmpty($productIds) || !$this->variables->isEmpty($storeId)) {
             $criteria = $this->stockItemCriteriaInterfaceFactory->create();
 
-            if ( ! $this->variableHelper->isEmpty($productIds)) {
+            if (!$this->variables->isEmpty($productIds)) {
                 $criteria->setProductsFilter($productIds);
             }
 
-            if ( ! $this->variableHelper->isEmpty($storeId)) {
+            if (!$this->variables->isEmpty($storeId)) {
                 $criteria->setScopeFilter($this->storeHelper->getStore($storeId)->getWebsiteId());
             }
 

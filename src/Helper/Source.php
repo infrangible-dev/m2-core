@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Source
@@ -79,8 +81,9 @@ class Source
     public function getSourceItemCollectionFactory()
     {
         if ($this->sourceItemCollectionFactory === null && $this->inventoryAvailable) {
-            $this->sourceItemCollectionFactory =
-                $this->instanceHelper->getSingleton('Magento\Inventory\Model\ResourceModel\SourceItem\CollectionFactory');
+            $this->sourceItemCollectionFactory = $this->instanceHelper->getSingleton(
+                'Magento\Inventory\Model\ResourceModel\SourceItem\CollectionFactory'
+            );
         }
 
         return $this->sourceItemCollectionFactory;
@@ -106,6 +109,7 @@ class Source
     {
         $sourceItemFactory = $this->getSourceItemFactory();
 
+        /** @noinspection PhpExpressionAlwaysNullInspection */
         return $sourceItemFactory ? $this->getSourceItemFactory()->create() : null;
     }
 
@@ -118,7 +122,7 @@ class Source
     {
         $skus = $this->productHelper->determineSKUs([$productId]);
 
-        $sku = is_array($skus) ? reset($skus) : null;
+        $sku = reset($skus);
 
         $sourceItem = $this->newSourceItem();
 
@@ -172,12 +176,12 @@ class Source
 
                 $key = sprintf('%s_%s', $sku, $sourceItem->getData('source_code'));
 
-                $this->sourceItemsBySku[ $key ] = $sourceItem;
+                $this->sourceItemsBySku[$key] = $sourceItem;
 
                 if (array_key_exists($sku, $entityIds)) {
-                    $key = sprintf('%s_%s', $entityIds[ $sku ], $sourceItem->getData('source_code'));
+                    $key = sprintf('%s_%s', $entityIds[$sku], $sourceItem->getData('source_code'));
 
-                    $this->sourceItemsById[ $key ] = $sourceItem;
+                    $this->sourceItemsById[$key] = $sourceItem;
                 }
             }
         }
@@ -198,20 +202,20 @@ class Source
         $key = sprintf('%s_%s', $productId, $sourceCode);
 
         if (array_key_exists($key, $this->sourceItemsById)) {
-            return $this->sourceItemsById[ $key ];
+            return $this->sourceItemsById[$key];
         }
 
         $skus = $this->productHelper->determineSKUs([$productId]);
 
-        $sku = is_array($skus) ? reset($skus) : null;
+        $sku = reset($skus);
 
         if (empty($sku)) {
             return null;
         }
 
-        $sourceItem = $this->loadSourceItemByProductSku($productId, $sourceCode);
+        $sourceItem = $this->loadSourceItemByProductSku(strval($productId), $sourceCode);
 
-        $this->sourceItemsById[ $key ] = $sourceItem;
+        $this->sourceItemsById[$key] = $sourceItem;
 
         return $sourceItem;
     }
@@ -231,7 +235,7 @@ class Source
         $key = sprintf('%s_%s', $sku, $sourceCode);
 
         if (array_key_exists($key, $this->sourceItemsBySku)) {
-            return $this->sourceItemsBySku[ $key ];
+            return $this->sourceItemsBySku[$key];
         }
 
         $sourceItemCollection = $this->getSourceItemCollection();
@@ -241,9 +245,10 @@ class Source
 
         $sourceItem = $sourceItemCollection->getFirstItem();
 
-        $this->sourceItemsBySku[ $key ] = $sourceItem && $sourceItem->getId() ? $sourceItem : null;
+        $this->sourceItemsBySku[$key] = $sourceItem && $sourceItem->getId() ? $sourceItem : null;
 
-        return $this->sourceItemsBySku[ $key ];
+        /** @noinspection PhpExpressionAlwaysNullInspection */
+        return $this->sourceItemsBySku[$key];
     }
 
     /**
@@ -265,6 +270,7 @@ class Source
     {
         $sourceItemCollectionFactory = $this->getSourceItemCollectionFactory();
 
+        /** @noinspection PhpExpressionAlwaysNullInspection */
         return $sourceItemCollectionFactory ? $this->getSourceItemCollectionFactory()->create() : null;
     }
 
@@ -275,6 +281,7 @@ class Source
     {
         $defaultSourceProvider = $this->getDefaultSourceProvider();
 
+        /** @noinspection PhpExpressionAlwaysNullInspection */
         return $defaultSourceProvider ? $this->getDefaultSourceProvider()->getCode() : null;
     }
 }

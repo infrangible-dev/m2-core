@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Helper;
 
 use Magento\Framework\Encryption\EncryptorInterface;
@@ -7,13 +9,13 @@ use Magento\Framework\UrlInterface;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Strings
 {
-    /** @var \Tofex\Help\Strings */
-    protected $stringHelper;
+    /** @var \FeWeDev\Base\Strings */
+    protected $strings;
 
     /** @var UrlInterface */
     protected $urlInterface;
@@ -22,16 +24,16 @@ class Strings
     protected $encryptor;
 
     /**
-     * @param \Tofex\Help\Strings $stringHelper
-     * @param UrlInterface        $urlInterface
-     * @param EncryptorInterface  $encryptor
+     * @param \FeWeDev\Base\Strings $strings
+     * @param UrlInterface          $urlInterface
+     * @param EncryptorInterface    $encryptor
      */
     public function __construct(
-        \Tofex\Help\Strings $stringHelper,
+        \FeWeDev\Base\Strings $strings,
         UrlInterface $urlInterface,
-        EncryptorInterface $encryptor)
-    {
-        $this->stringHelper = $stringHelper;
+        EncryptorInterface $encryptor
+    ) {
+        $this->strings = $strings;
 
         $this->urlInterface = $urlInterface;
         $this->encryptor = $encryptor;
@@ -46,7 +48,7 @@ class Strings
      */
     public function generateUUID(): string
     {
-        return $this->stringHelper->generateUUID($this->urlInterface->getBaseUrl());
+        return $this->strings->generateUUID($this->urlInterface->getBaseUrl());
     }
 
     /**

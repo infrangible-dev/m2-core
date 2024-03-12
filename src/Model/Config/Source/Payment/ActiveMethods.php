@@ -1,16 +1,18 @@
 <?php /** @noinspection PhpDeprecationInspection */
 
+declare(strict_types=1);
+
 namespace Infrangible\Core\Model\Config\Source\Payment;
 
+use FeWeDev\Base\Arrays;
 use Infrangible\Core\Helper\Payment;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\Config\Source\Allmethods;
-use Tofex\Help\Arrays;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2022 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class ActiveMethods
@@ -20,7 +22,7 @@ class ActiveMethods
     protected $paymentHelper;
 
     /** @var Arrays */
-    protected $arrayHelper;
+    protected $arrays;
 
     /** @var bool */
     private $allStores = false;
@@ -38,7 +40,7 @@ class ActiveMethods
         parent::__construct($paymentData);
 
         $this->paymentHelper = $paymentHelper;
-        $this->arrayHelper = $arrayHelper;
+        $this->arrays = $arrayHelper;
     }
 
     /**
@@ -93,17 +95,17 @@ class ActiveMethods
 
         foreach ($optionsArray as $option) {
             if (is_array($option)) {
-                $value = $this->arrayHelper->getValue($option, 'value');
-                $label = $this->arrayHelper->getValue($option, 'label');
+                $value = $this->arrays->getValue($option, 'value');
+                $label = $this->arrays->getValue($option, 'label');
 
                 if (is_array($value)) {
                     $prefixes[] = $label;
 
                     foreach ($this->extractOptions($value, $prefixes) as $subValue => $subLabel) {
-                        $options[ $subValue ] = $subLabel;
+                        $options[$subValue] = $subLabel;
                     }
                 } else {
-                    $options[ $value ] =
+                    $options[$value] =
                         empty($prefixes) ? $label : sprintf('%s - %s', implode(' - ', $prefixes), $label);
                 }
             }
@@ -122,19 +124,19 @@ class ActiveMethods
     {
         foreach ($options as $key => $option) {
             if (array_key_exists('value', $option)) {
-                $value = $option[ 'value' ];
+                $value = $option['value'];
 
                 if (is_array($value)) {
                     $subOptions = $this->filterOptions($value, $activeMethodCodes);
 
                     if (empty($subOptions)) {
-                        unset($options[ $key ]);
+                        unset($options[$key]);
                     } else {
-                        $options[ $key ][ 'value' ] = $subOptions;
+                        $options[$key]['value'] = $subOptions;
                     }
                 } else {
-                    if ( ! in_array($value, $activeMethodCodes)) {
-                        unset($options[ $key ]);
+                    if (!in_array($value, $activeMethodCodes)) {
+                        unset($options[$key]);
                     }
                 }
             }
