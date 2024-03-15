@@ -936,18 +936,20 @@ class Attribute
                     );
 
                     return null;
+                } else {
+                    $optionId = (int) $optionId;
                 }
 
                 if ($storeId !== 0) {
                     $dbAdapter->insert($optionValueTableName, [
-                        'option_id' => (int) $optionId,
+                        'option_id' => $optionId,
                         'store_id'  => 0,
                         'value'     => $value,
                     ]);
                 }
 
                 $dbAdapter->insert($optionValueTableName, [
-                    'option_id' => (int) $optionId,
+                    'option_id' => $optionId,
                     'store_id'  => $storeId,
                     'value'     => $value,
                 ]);

@@ -44,8 +44,8 @@ class Database
     public function __construct(
         Context $context,
         ResourceConnection $resourceConnection,
-        TransactionFactory $transactionFactory)
-    {
+        TransactionFactory $transactionFactory
+    ) {
         parent::__construct($context);
 
         $this->logging = $context->getLogger();
@@ -84,7 +84,7 @@ class Database
             $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchAll($select) :
+        $result = !is_null($specialAdapter) ? $specialAdapter->fetchAll($select) :
             $this->getDefaultConnection()->fetchAll($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
@@ -104,13 +104,13 @@ class Database
     public function fetchAssoc(
         Select $select,
         AdapterInterface $specialAdapter = null,
-        bool $allowLogging = true): array
-    {
+        bool $allowLogging = true
+    ): array {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchAssoc($select) :
+        $result = !is_null($specialAdapter) ? $specialAdapter->fetchAssoc($select) :
             $this->getDefaultConnection()->fetchAssoc($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
@@ -130,13 +130,13 @@ class Database
     public function fetchPairs(
         Select $select,
         AdapterInterface $specialAdapter = null,
-        bool $allowLogging = true): array
-    {
+        bool $allowLogging = true
+    ): array {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchPairs($select) :
+        $result = !is_null($specialAdapter) ? $specialAdapter->fetchPairs($select) :
             $this->getDefaultConnection()->fetchPairs($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
@@ -151,19 +151,26 @@ class Database
      * @param AdapterInterface|null $specialAdapter
      * @param bool                  $allowLogging
      *
-     * @return string
+     * @return string|null
      */
-    public function fetchOne(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): string
-    {
+    public function fetchOne(
+        Select $select,
+        AdapterInterface $specialAdapter = null,
+        bool $allowLogging = true
+    ): ?string {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchOne($select) :
+        $result = !is_null($specialAdapter) ? $specialAdapter->fetchOne($select) :
             $this->getDefaultConnection()->fetchOne($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(sprintf('Query result: %s', trim(print_r($result, true))));
+        }
+
+        if (is_bool($result)) {
+            $result = null;
         }
 
         return $result;
@@ -182,7 +189,7 @@ class Database
             $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchRow($select) :
+        $result = !is_null($specialAdapter) ? $specialAdapter->fetchRow($select) :
             $this->getDefaultConnection()->fetchRow($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
@@ -205,7 +212,7 @@ class Database
             $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchCol($select) :
+        $result = !is_null($specialAdapter) ? $specialAdapter->fetchCol($select) :
             $this->getDefaultConnection()->fetchCol($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
@@ -223,8 +230,8 @@ class Database
      */
     public function getTableName(
         string $modelEntity,
-        string $connectionName = ResourceConnection::DEFAULT_CONNECTION): string
-    {
+        string $connectionName = ResourceConnection::DEFAULT_CONNECTION
+    ): string {
         return $this->resourceConnection->getTableName($modelEntity, $connectionName);
     }
 
@@ -241,39 +248,60 @@ class Database
         AdapterInterface $dbAdapter,
         array $createTableData,
         bool $test = false,
-        bool $allowLogging = true): array
-    {
+        bool $allowLogging = true
+    ): array {
         $createdIds = [];
 
         foreach ($createTableData as $tableName => $dbEntries) {
-            $createdIds[ $tableName ] = [];
+            $createdIds[$tableName] = [];
 
             foreach ($dbEntries as $key => $tableData) {
                 if ($allowLogging && $this->isQueryLogging()) {
-                    $this->logging->debug(sprintf('Inserting data into table: %s with values: %s', $tableName,
-                        trim(print_r($dbEntries, true))));
+                    $this->logging->debug(
+                        sprintf(
+                            'Inserting data into table: %s with values: %s',
+                            $tableName,
+                            trim(print_r($dbEntries, true))
+                        )
+                    );
                 }
 
-                if ( ! $test) {
+                if (!$test) {
                     try {
                         $dbAdapter->insert($tableName, $tableData);
 
                         /** @var Mysql $dbAdapter */
-                        $createdIds[ $tableName ][ $key ] = $dbAdapter->lastInsertId($tableName);
+                        $createdIds[$tableName][$key] = $dbAdapter->lastInsertId($tableName);
                     } catch (Exception $exception) {
-                        $this->logging->error(sprintf('Could not insert data into table: %s because: %s using values: %s',
-                            $tableName, $exception->getMessage(), trim(print_r($tableData, true))));
+                        $this->logging->error(
+                            sprintf(
+                                'Could not insert data into table: %s because: %s using values: %s',
+                                $tableName,
+                                $exception->getMessage(),
+                                trim(print_r($tableData, true))
+                            )
+                        );
 
-                        throw new Exception(sprintf('Could not insert data into table: %s because: %s', $tableName,
-                            $exception->getMessage()), 0, $exception);
+                        throw new Exception(
+                            sprintf(
+                                'Could not insert data into table: %s because: %s',
+                                $tableName,
+                                $exception->getMessage()
+                            ), 0, $exception
+                        );
                     }
                 } else {
-                    $createdIds[ $tableName ][ $key ] = rand(10000000, 99999999);
+                    $createdIds[$tableName][$key] = rand(10000000, 99999999);
                 }
 
                 if ($allowLogging && $this->isQueryLogging()) {
-                    $this->logging->debug(sprintf('Created entry in table: %s with id: %s', $tableName,
-                        array_key_exists($key, $createdIds[ $tableName ]) ? $createdIds[ $tableName ][ $key ] : null));
+                    $this->logging->debug(
+                        sprintf(
+                            'Created entry in table: %s with id: %s',
+                            $tableName,
+                            array_key_exists($key, $createdIds[$tableName]) ? $createdIds[$tableName][$key] : null
+                        )
+                    );
                 }
             }
         }
@@ -296,8 +324,8 @@ class Database
         array $singleAttributeTableData,
         array $eavAttributeTableData,
         bool $test = false,
-        bool $allowLogging = true)
-    {
+        bool $allowLogging = true
+    ) {
         $this->saveSingleAttributeTableData($dbAdapter, $singleAttributeTableData, $test, $allowLogging);
         $this->saveEavAttributeTableData($dbAdapter, $eavAttributeTableData, $test, $allowLogging);
     }
@@ -315,24 +343,41 @@ class Database
         AdapterInterface $dbAdapter,
         array $singleAttributeTableData,
         bool $test = false,
-        bool $allowLogging = true)
-    {
+        bool $allowLogging = true
+    ) {
         foreach ($singleAttributeTableData as $tableName => $attributeEntries) {
             foreach ($attributeEntries as $attributeName => $dbEntries) {
                 if ($allowLogging && $this->isQueryLogging()) {
-                    $this->logging->debug(sprintf('Updating single attribute: %s in table: %s with values: %s',
-                        $attributeName, $tableName, trim(print_r($dbEntries, true))));
+                    $this->logging->debug(
+                        sprintf(
+                            'Updating single attribute: %s in table: %s with values: %s',
+                            $attributeName,
+                            $tableName,
+                            trim(print_r($dbEntries, true))
+                        )
+                    );
                 }
 
-                if ( ! $test) {
+                if (!$test) {
                     try {
                         $dbAdapter->insertOnDuplicate($tableName, $dbEntries, [$attributeName]);
                     } catch (Exception $exception) {
-                        $this->logging->error(sprintf('Could not update data in table: %s because: %s using values: %s',
-                            $tableName, $exception->getMessage(), trim(print_r($dbEntries, true))));
+                        $this->logging->error(
+                            sprintf(
+                                'Could not update data in table: %s because: %s using values: %s',
+                                $tableName,
+                                $exception->getMessage(),
+                                trim(print_r($dbEntries, true))
+                            )
+                        );
 
-                        throw new Exception(sprintf('Could not update data in table: %s because: %s', $tableName,
-                            $exception->getMessage()), 0, $exception);
+                        throw new Exception(
+                            sprintf(
+                                'Could not update data in table: %s because: %s',
+                                $tableName,
+                                $exception->getMessage()
+                            ), 0, $exception
+                        );
                     }
                 }
             }
@@ -352,23 +397,39 @@ class Database
         AdapterInterface $dbAdapter,
         array $eavAttributeTableData,
         bool $test = false,
-        bool $allowLogging = true)
-    {
+        bool $allowLogging = true
+    ) {
         foreach ($eavAttributeTableData as $tableName => $dbEntries) {
             if ($allowLogging && $this->isQueryLogging()) {
-                $this->logging->debug(sprintf('Updating eav attribute in table: %s with values: %s', $tableName,
-                    trim(print_r($dbEntries, true))));
+                $this->logging->debug(
+                    sprintf(
+                        'Updating eav attribute in table: %s with values: %s',
+                        $tableName,
+                        trim(print_r($dbEntries, true))
+                    )
+                );
             }
 
-            if ( ! $test) {
+            if (!$test) {
                 try {
                     $dbAdapter->insertOnDuplicate($tableName, $dbEntries, ['value']);
                 } catch (Exception $exception) {
-                    $this->logging->error(sprintf('Could not update data in table: %s because: %s using values: %s',
-                        $tableName, $exception->getMessage(), trim(print_r($dbEntries, true))));
+                    $this->logging->error(
+                        sprintf(
+                            'Could not update data in table: %s because: %s using values: %s',
+                            $tableName,
+                            $exception->getMessage(),
+                            trim(print_r($dbEntries, true))
+                        )
+                    );
 
-                    throw new Exception(sprintf('Could not update data in table: %s because: %s', $tableName,
-                        $exception->getMessage()), 0, $exception);
+                    throw new Exception(
+                        sprintf(
+                            'Could not update data in table: %s because: %s',
+                            $tableName,
+                            $exception->getMessage()
+                        ), 0, $exception
+                    );
                 }
             }
         }
@@ -391,14 +452,19 @@ class Database
         array $tableData,
         bool $checkDuplicate = false,
         bool $test = false,
-        bool $allowLogging = true): int
-    {
+        bool $allowLogging = true
+    ): int {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Inserting data into table: %s with values: %s', $tableName,
-                trim(print_r($tableData, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Inserting data into table: %s with values: %s',
+                    $tableName,
+                    trim(print_r($tableData, true))
+                )
+            );
         }
 
-        if ( ! $test) {
+        if (!$test) {
             try {
                 if ($checkDuplicate) {
                     $dbAdapter->insertOnDuplicate($tableName, $tableData);
@@ -407,13 +473,24 @@ class Database
                 }
 
                 /** @var Mysql $dbAdapter */
-                return (int)$dbAdapter->lastInsertId($tableName);
+                return (int) $dbAdapter->lastInsertId($tableName);
             } catch (Exception $exception) {
-                $this->logging->error(sprintf('Could not insert data into table: %s because: %s using values: %s',
-                    $tableName, $exception->getMessage(), trim(print_r($tableData, true))));
+                $this->logging->error(
+                    sprintf(
+                        'Could not insert data into table: %s because: %s using values: %s',
+                        $tableName,
+                        $exception->getMessage(),
+                        trim(print_r($tableData, true))
+                    )
+                );
 
-                throw new Exception(sprintf('Could not insert data into table: %s because: %s', $tableName,
-                    $exception->getMessage()), 0, $exception);
+                throw new Exception(
+                    sprintf(
+                        'Could not insert data into table: %s because: %s',
+                        $tableName,
+                        $exception->getMessage()
+                    ), 0, $exception
+                );
             }
         } else {
             return rand(10000000, 99999999);
@@ -437,19 +514,30 @@ class Database
         array $tableData,
         $where = null,
         bool $test = false,
-        bool $allowLogging = true)
-    {
+        bool $allowLogging = true
+    ) {
         if ($allowLogging && $this->isQueryLogging()) {
             if (empty($where)) {
-                $this->logging->debug(sprintf('Updating data in table: %s with values: %s', $tableName,
-                    trim(print_r($tableData, true))));
+                $this->logging->debug(
+                    sprintf(
+                        'Updating data in table: %s with values: %s',
+                        $tableName,
+                        trim(print_r($tableData, true))
+                    )
+                );
             } else {
-                $this->logging->debug(sprintf('Updating data in table: %s with values: %s where: %s', $tableName,
-                    trim(print_r($tableData, true)), trim(print_r($where, true))));
+                $this->logging->debug(
+                    sprintf(
+                        'Updating data in table: %s with values: %s where: %s',
+                        $tableName,
+                        trim(print_r($tableData, true)),
+                        trim(print_r($where, true))
+                    )
+                );
             }
         }
 
-        if ( ! $test) {
+        if (!$test) {
             try {
                 if (empty($where)) {
                     $dbAdapter->insertOnDuplicate($tableName, $tableData);
@@ -457,11 +545,22 @@ class Database
                     $dbAdapter->update($tableName, $tableData, $where);
                 }
             } catch (Exception $exception) {
-                $this->logging->error(sprintf('Could not update data in table: %s because: %s using values: %s',
-                    $tableName, $exception->getMessage(), trim(print_r($tableData, true))));
+                $this->logging->error(
+                    sprintf(
+                        'Could not update data in table: %s because: %s using values: %s',
+                        $tableName,
+                        $exception->getMessage(),
+                        trim(print_r($tableData, true))
+                    )
+                );
 
-                throw new Exception(sprintf('Could not update data in table: %s because: %s', $tableName,
-                    $exception->getMessage()), 0, $exception);
+                throw new Exception(
+                    sprintf(
+                        'Could not update data in table: %s because: %s',
+                        $tableName,
+                        $exception->getMessage()
+                    ), 0, $exception
+                );
             }
         }
     }
@@ -481,22 +580,37 @@ class Database
         string $tableName,
         $where = null,
         bool $test = false,
-        bool $allowLogging = true)
-    {
+        bool $allowLogging = true
+    ) {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Deleting data in table: %s where: %s', $tableName,
-                trim(print_r($where, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Deleting data in table: %s where: %s',
+                    $tableName,
+                    trim(print_r($where, true))
+                )
+            );
         }
 
-        if ( ! $test) {
+        if (!$test) {
             try {
                 $dbAdapter->delete($tableName, $where);
             } catch (Exception $exception) {
-                $this->logging->error(sprintf('Could not delete data in table: %s because: %s', $tableName,
-                    $exception->getMessage()));
+                $this->logging->error(
+                    sprintf(
+                        'Could not delete data in table: %s because: %s',
+                        $tableName,
+                        $exception->getMessage()
+                    )
+                );
 
-                throw new Exception(sprintf('Could not delete data in table: %s because: %s', $tableName,
-                    $exception->getMessage()), 0, $exception);
+                throw new Exception(
+                    sprintf(
+                        'Could not delete data in table: %s because: %s',
+                        $tableName,
+                        $exception->getMessage()
+                    ), 0, $exception
+                );
             }
         }
     }
@@ -536,8 +650,8 @@ class Database
     public function query(
         AdapterInterface $dbAdapter,
         Select $select,
-        bool $allowLogging = true): Zend_Db_Statement_Interface
-    {
+        bool $allowLogging = true
+    ): Zend_Db_Statement_Interface {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
         }
