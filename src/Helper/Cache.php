@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Infrangible\Core\Helper;
 
+use FeWeDev\Base\Variables;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\Config\ReinitableConfigInterface;
@@ -32,25 +33,31 @@ class Cache
     /** @var Config */
     protected $pageCacheConfig;
 
+    /** @var Variables */
+    protected $variables;
+
     /**
      * @param LoggerInterface           $logging
      * @param TypeListInterface         $typeList
      * @param ReinitableConfigInterface $reinitableConfig
      * @param CacheInterface            $cache
      * @param Config                    $pageCacheConfig
+     * @param Variables                 $variables
      */
     public function __construct(
         LoggerInterface $logging,
         TypeListInterface $typeList,
         ReinitableConfigInterface $reinitableConfig,
         CacheInterface $cache,
-        Config $pageCacheConfig)
+        Config $pageCacheConfig,
+        Variables $variables)
     {
         $this->logging = $logging;
         $this->typeList = $typeList;
         $this->reinitableConfig = $reinitableConfig;
         $this->cache = $cache;
         $this->pageCacheConfig = $pageCacheConfig;
+        $this->variables = $variables;
     }
 
     /**
@@ -102,11 +109,14 @@ class Cache
     /**
      * @param string $id
      *
-     * @return string
+     * @return string|null
      */
-    public function loadCache(string $id): string
+    public function loadCache(string $id): ?string
     {
-        return $this->cache->load($id);
+        /** @var string|false $value */
+        $value = $this->cache->load($id);
+
+        return $value === false ? null : $this->variables->stringValue($value);
     }
 
     /**
