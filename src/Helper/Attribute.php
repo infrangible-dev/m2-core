@@ -594,7 +594,7 @@ class Attribute
 
                             foreach ($source->getAllOptions() as $option) {
                                 if (array_key_exists('label', $option) && array_key_exists('value', $option)) {
-                                    if (strcasecmp($option['value'], $attributeValue) === 0) {
+                                    if (strcasecmp(strval($option['value']), strval($attributeValue)) === 0) {
                                         $optionValue = $option['label'];
                                         break;
                                     }
