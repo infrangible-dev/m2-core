@@ -14,6 +14,7 @@ use Magento\CatalogInventory\Model\Configuration;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\AbstractEntity;
 use Magento\Eav\Model\Entity\Attribute;
+use Magento\Eav\Model\Entity\Collection\AbstractCollection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\LocalizedException;
@@ -21,7 +22,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Tax\Helper\Data;
 use Psr\Log\LoggerInterface;
 use Zend_Db_Select;
-use Zend_Db_Select_Exception;
 
 /**
  * @author      Andreas Knollmann
@@ -1161,16 +1161,16 @@ class Export
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param int              $storeId
-     * @param array            $attributeCodes
-     * @param array            $entityIds
-     * @param array            $specialAttributes
+     * @param AdapterInterface        $dbAdapter
+     * @param string                  $entityTypeCode
+     * @param int                     $storeId
+     * @param array                   $attributeCodes
+     * @param array                   $entityIds
+     * @param array                   $specialAttributes
+     * @param AbstractCollection|null $collection
      *
      * @return array
      * @throws Exception
-     * @throws Zend_Db_Select_Exception
      */
     public function getCurrentAttributeValues(
         AdapterInterface $dbAdapter,
@@ -1178,7 +1178,8 @@ class Export
         int $storeId,
         array $attributeCodes,
         array $entityIds,
-        array $specialAttributes
+        array $specialAttributes,
+        ?AbstractCollection $collection = null
     ): array {
         if (empty($attributeCodes) || empty($entityIds)) {
             return [];
@@ -1189,18 +1190,20 @@ class Export
         $attributeCodeChunks = array_chunk($attributeCodes, 25, true);
 
         foreach ($attributeCodeChunks as $attributeChunk) {
-            if ($entityTypeCode == \Magento\Catalog\Model\Product::ENTITY) {
-                $collection = $this->productHelper->getProductCollection();
-                $collection->setStoreId($storeId);
-            } elseif ($entityTypeCode == \Magento\Catalog\Model\Category::ENTITY) {
-                $collection = $this->categoryHelper->getCategoryCollection();
-                $collection->setStoreId($storeId);
-            } elseif ($entityTypeCode == 'customer') {
-                $collection = $this->customerHelper->getCustomerCollection();
-            } elseif ($entityTypeCode == 'customer_address') {
-                $collection = $this->addressHelper->getAddressCollection();
-            } else {
-                throw new Exception(sprintf('Entity type: %s not implemented yet', $entityTypeCode));
+            if ($collection === null) {
+                if ($entityTypeCode == \Magento\Catalog\Model\Product::ENTITY) {
+                    $collection = $this->productHelper->getProductCollection();
+                    $collection->setStoreId($storeId);
+                } elseif ($entityTypeCode == \Magento\Catalog\Model\Category::ENTITY) {
+                    $collection = $this->categoryHelper->getCategoryCollection();
+                    $collection->setStoreId($storeId);
+                } elseif ($entityTypeCode == 'customer') {
+                    $collection = $this->customerHelper->getCustomerCollection();
+                } elseif ($entityTypeCode == 'customer_address') {
+                    $collection = $this->addressHelper->getAddressCollection();
+                } else {
+                    throw new Exception(sprintf('Entity type: %s not implemented yet', $entityTypeCode));
+                }
             }
 
             foreach ($attributeChunk as $attributeCode) {

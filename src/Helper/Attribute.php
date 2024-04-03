@@ -751,14 +751,16 @@ class Attribute
 
                 foreach ($value as $innerOption) {
                     // skip ' -- Please Select -- ' option
-                    if (array_key_exists('value', $innerOption) && strlen($innerOption['value']) > 0) {
+                    if (array_key_exists('value', $innerOption)) {
                         $optionKey = $innerOption['value'];
-                        $optionValue =
-                            array_key_exists('label', $innerOption) ? $innerOption['label'] : $innerOption['value'];
-                        if ($optionValue instanceof Phrase) {
-                            $optionValue = $optionValue->getText();
+                        if (!$this->variables->isEmpty($optionKey)) {
+                            $optionValue =
+                                array_key_exists('label', $innerOption) ? $innerOption['label'] : $innerOption['value'];
+                            if ($optionValue instanceof Phrase) {
+                                $optionValue = $optionValue->getText();
+                            }
+                            $values[$optionKey] = $optionValue;
                         }
-                        $values[$optionKey] = $optionValue;
                     }
                 }
             }
@@ -803,9 +805,9 @@ class Attribute
         if (!array_key_exists($key, $this->attributeOptionIds)) {
             $attributeOptions = $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId, $strToLower);
 
-            $key = array_search($strToLower ? strtolower($value) : $value, $attributeOptions);
+            $searchKey = array_search($strToLower ? strtolower($value) : $value, $attributeOptions);
 
-            $result = $key !== false ? $key : null;
+            $result = $searchKey !== false ? $searchKey : null;
 
             if ($result === null && $storeId !== 0) {
                 $result = $this->getAttributeOptionId($entityTypeCode, $attributeCode, 0, $value, $strToLower);
@@ -833,13 +835,38 @@ class Attribute
         int $optionId
     ): bool {
         return $this->arrays->getValue(
-            $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
-            strval($optionId),
-            $this->arrays->getValue(
-                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
-                strval($optionId)
-            )
-        );
+                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
+                strval($optionId),
+                $this->arrays->getValue(
+                    $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
+                    strval($optionId)
+                )
+            ) !== null;
+    }
+
+    /**
+     * @param string $entityTypeCode
+     * @param string $attributeCode
+     * @param int    $storeId
+     * @param string $optionKey
+     *
+     * @return bool
+     * @throws Exception
+     */
+    public function checkAttributeOptionKey(
+        string $entityTypeCode,
+        string $attributeCode,
+        int $storeId,
+        string $optionKey
+    ): bool {
+        return $this->arrays->getValue(
+                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
+                $optionKey,
+                $this->arrays->getValue(
+                    $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
+                    $optionKey
+                )
+            ) !== null;
     }
 
     /**
