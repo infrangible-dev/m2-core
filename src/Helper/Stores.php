@@ -237,9 +237,9 @@ class Stores
 
                 $newQueryResult = $writeAdapter->fetchAssoc($newQuery);
 
-                $newData = reset($newQueryResult);
+                if (!$this->variables->isEmpty($newQueryResult)) {
+                    $newData = reset($newQueryResult);
 
-                if (!$this->variables->isEmpty($newData)) {
                     $writeAdapter->update($tableName, [
                         'value' => $this->arrays->getValue($oldData, 'value')
                     ],                    sprintf('config_id = %d', $this->arrays->getValue($newData, 'config_id')));
