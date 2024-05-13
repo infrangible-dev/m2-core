@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Infrangible\Core\Helper;
 
 use Exception;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Filter\FilterManager;
 use Magento\Framework\Validator\UniversalFactory;
 use Psr\Log\LoggerInterface;
@@ -15,6 +17,7 @@ use Psr\Log\LoggerInterface;
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Url
+    extends AbstractHelper
 {
     /** @var Stores */
     protected $storeHelper;
@@ -37,15 +40,8 @@ class Url
     /** @var \Magento\Framework\Url[] */
     private $urls = [];
 
-    /**
-     * @param Stores                     $storeHelper
-     * @param LoggerInterface            $logging
-     * @param \Magento\Framework\Url     $frontendUrl
-     * @param \Magento\Backend\Model\Url $backendUrl
-     * @param UniversalFactory           $universalFactory
-     * @param FilterManager              $filter
-     */
     public function __construct(
+        Context $context,
         Stores $storeHelper,
         LoggerInterface $logging,
         \Magento\Framework\Url $frontendUrl,
@@ -53,8 +49,9 @@ class Url
         UniversalFactory $universalFactory,
         FilterManager $filter
     ) {
-        $this->storeHelper = $storeHelper;
+        parent::__construct($context);
 
+        $this->storeHelper = $storeHelper;
         $this->logging = $logging;
         $this->url = $frontendUrl;
         $this->backendUrl = $backendUrl;
