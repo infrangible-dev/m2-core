@@ -180,7 +180,7 @@ class Setup
         /** @var array $entityTypeData */
         $entityTypeData = $setup->getEntityType($entityType);
 
-        $entityTypeId = $this->arrays->getValue($entityTypeData, 'entity_type_id');
+        $entityTypeId = (int)$this->arrays->getValue($entityTypeData, 'entity_type_id');
 
         /** @var array $attributeData */
         $attributeData = $setup->getAttribute($entityTypeId, $attributeCode);
