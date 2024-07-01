@@ -186,7 +186,7 @@ class Setup
         $attributeData = $setup->getAttribute($entityTypeId, $attributeCode);
 
         if (is_array($attributeData)) {
-            $attributeId = $this->arrays->getValue($attributeData, 'attribute_id');
+            $attributeId = (int)$this->arrays->getValue($attributeData, 'attribute_id');
 
             if ($attributeId) {
                 $this->addAttributeIdToSetAndGroup($setup, $entityTypeId, $attributeId, $attributeSetName,
