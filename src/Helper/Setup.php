@@ -7,7 +7,6 @@ namespace Infrangible\Core\Helper;
 use FeWeDev\Base\Arrays;
 use Magento\Catalog\Model\Product;
 use Magento\Eav\Setup\EavSetup;
-use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\Exception\LocalizedException;
@@ -32,13 +31,9 @@ class Setup
     /** @var Arrays */
     protected $arrays;
 
-    /** @var EavSetupFactory */
-    protected $eavSetupFactory;
-
-    public function __construct(Arrays $arrayHelper, EavSetupFactory $eavSetupFactory)
+    public function __construct(Arrays $arrayHelper)
     {
         $this->arrays = $arrayHelper;
-        $this->eavSetupFactory = $eavSetupFactory;
     }
 
     public function addEntityType(
@@ -241,7 +236,7 @@ class Setup
      * @throws ValidateException
      */
     public function addEavEntityAttribute(
-        SetupInterface $setup,
+        EavSetup $setup,
         string $entityTypeId,
         string $attributeCode,
         string $label,
@@ -262,9 +257,7 @@ class Setup
         string $backendModel = null,
         string $sourceModel = null)
     {
-        $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
-
-        $eavSetup->addAttribute($entityTypeId, $attributeCode, ['label' => $label,
+        $setup->addAttribute($entityTypeId, $attributeCode, ['label' => $label,
             'global' => $scope,
             'type' => $type,
             'input' => $input,
