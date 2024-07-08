@@ -71,20 +71,6 @@ class Stores
     /** @var ResolverInterface */
     protected $localeResolver;
 
-    /**
-     * @param Context                $context
-     * @param Variables              $variableHelper
-     * @param Arrays                 $arrayHelper
-     * @param Database               $databaseHelper
-     * @param Instances              $instanceHelper
-     * @param LoggerInterface        $logging
-     * @param StoreManagerInterface  $storeManager
-     * @param ConfigFactory          $configFactory
-     * @param Filesystem             $filesystem
-     * @param Repository             $assetRepository
-     * @param RequestInterface       $request
-     * @param PriceCurrencyInterface $priceCurrency
-     */
     public function __construct(
         Context $context,
         Variables $variableHelper,
@@ -97,8 +83,8 @@ class Stores
         Filesystem $filesystem,
         Repository $assetRepository,
         RequestInterface $request,
-        PriceCurrencyInterface $priceCurrency
-    ) {
+        PriceCurrencyInterface $priceCurrency)
+    {
         parent::__construct($context);
 
         $this->variables = $variableHelper;
@@ -116,9 +102,9 @@ class Stores
     }
 
     /**
-     * @param string   $path
-     * @param mixed    $defaultValue
-     * @param bool     $isFlag
+     * @param string $path
+     * @param mixed $defaultValue
+     * @param bool $isFlag
      * @param int|null $storeId
      *
      * @return mixed
@@ -145,9 +131,9 @@ class Stores
     }
 
     /**
-     * @param string   $path
-     * @param mixed    $defaultValue
-     * @param bool     $isFlag
+     * @param string $path
+     * @param mixed $defaultValue
+     * @param bool $isFlag
      * @param int|null $websiteId
      *
      * @return mixed
@@ -174,8 +160,8 @@ class Stores
     }
 
     /**
-     * @param string   $path
-     * @param bool     $defaultValue
+     * @param string $path
+     * @param bool $defaultValue
      * @param int|null $storeId
      *
      * @return mixed
@@ -186,8 +172,8 @@ class Stores
     }
 
     /**
-     * @param string   $configPath
-     * @param string   $delimiter
+     * @param string $configPath
+     * @param string $delimiter
      * @param int|null $storeId
      *
      * @return array
@@ -211,10 +197,6 @@ class Stores
         return [];
     }
 
-    /**
-     * @param string $oldPath
-     * @param string $newPath
-     */
     public function moveConfigValue(string $oldPath, string $newPath)
     {
         $writeAdapter = $this->databaseHelper->getDefaultConnection();
@@ -240,20 +222,14 @@ class Stores
                 if (!$this->variables->isEmpty($newQueryResult)) {
                     $newData = reset($newQueryResult);
 
-                    $writeAdapter->update($tableName, [
-                        'value' => $this->arrays->getValue($oldData, 'value')
-                    ],                    sprintf('config_id = %d', $this->arrays->getValue($newData, 'config_id')));
+                    $writeAdapter->update($tableName, ['value' => $this->arrays->getValue($oldData, 'value')],
+                        sprintf('config_id = %d', $this->arrays->getValue($newData, 'config_id')));
 
-                    $writeAdapter->delete(
-                        $tableName,
-                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id'))
-                    );
+                    $writeAdapter->delete($tableName,
+                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id')));
                 } else {
-                    $writeAdapter->update(
-                        $tableName,
-                        ['path' => $newPath],
-                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id'))
-                    );
+                    $writeAdapter->update($tableName, ['path' => $newPath],
+                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id')));
                 }
             }
         } // else no old data to move
@@ -261,52 +237,36 @@ class Stores
 
     /**
      * @param string $path
-     * @param mixed  $value
+     * @param mixed $value
      * @param string $scope
-     * @param int    $scopeId
+     * @param int $scopeId
      */
     public function insertConfigValue(string $path, $value, string $scope = 'default', int $scopeId = 0)
     {
-        $this->configFactory->create()->saveConfig(
-            $path,
-            is_array($value) ? implode(',', $value) : $value,
-            $scope,
-            $scopeId
-        );
+        $this->configFactory->create()
+            ->saveConfig($path, is_array($value) ? implode(',', $value) : $value, $scope, $scopeId);
     }
 
-    /**
-     * @param string $path
-     */
     public function removeConfigValue(string $path)
     {
-        $this->databaseHelper->getDefaultConnection()->delete(
-            $this->databaseHelper->getTableName('core_config_data'),
-            sprintf('path = "%s"', $path)
-        );
+        $this->databaseHelper->getDefaultConnection()
+            ->delete($this->databaseHelper->getTableName('core_config_data'), sprintf('path = "%s"', $path));
     }
 
     /**
      * @param int|string|null $storeId
      *
-     * @return Store
      * @throws NoSuchEntityException
-     * @noinspection PhpDocRedundantThrowsInspection
-     * @noinspection RedundantSuppression
      */
     public function getStore($storeId = null): Store
     {
         /** @var Store $store */
-        /** @noinspection PhpUnnecessaryLocalVariableInspection */
         $store = $this->storeManager->getStore($storeId);
 
         return $store;
     }
 
     /**
-     * @param int|null $websiteId
-     *
-     * @return Store
      * @throws LocalizedException
      */
     public function getDefaultStore(int $websiteId = null): Store
@@ -321,7 +281,6 @@ class Stores
     /**
      * @param int|string|null $websiteId
      *
-     * @return Website
      * @throws LocalizedException
      */
     public function getWebsite($websiteId = null): Website
@@ -333,9 +292,6 @@ class Stores
     }
 
     /**
-     * @param bool $withDefault
-     * @param bool $codeKey
-     *
      * @return Website[]
      */
     public function getWebsites(bool $withDefault = false, bool $codeKey = false): array
@@ -347,9 +303,6 @@ class Stores
     }
 
     /**
-     * @param bool $withDefault
-     * @param bool $codeKey
-     *
      * @return Store[]
      */
     public function getStores(bool $withDefault = false, bool $codeKey = false): array
@@ -360,9 +313,6 @@ class Stores
         return $stores;
     }
 
-    /**
-     * @return string
-     */
     public function getWebUrl(): string
     {
         $store = null;
@@ -379,9 +329,6 @@ class Stores
         return $store !== null ? $store->getBaseUrl(UrlInterface::URL_TYPE_WEB) : '';
     }
 
-    /**
-     * @return string
-     */
     public function getMediaUrl(): string
     {
         $store = null;
@@ -398,18 +345,15 @@ class Stores
         return $store !== null ? $store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) : '';
     }
 
-    /**
-     * @return string
-     */
     public function getSiteLogo(): string
     {
         $folderName = Logo::UPLOAD_DIR;
 
         $storeLogoPath = $this->getStoreConfig('design/header/logo_src');
 
-        $path = $folderName.'/'.$storeLogoPath;
+        $path = $folderName . '/' . $storeLogoPath;
 
-        $logoUrl = $this->getMediaUrl().$path;
+        $logoUrl = $this->getMediaUrl() . $path;
 
         $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
 
@@ -417,19 +361,12 @@ class Stores
             $this->assetRepository->getUrlWithParams('images/logo.svg', ['_secure' => $this->request->isSecure()]);
     }
 
-    /**
-     * @return bool
-     */
     public function isSingleStoreMode(): bool
     {
         return $this->storeManager->isSingleStoreMode();
     }
 
     /**
-     * @param Store $store
-     * @param array $data
-     * @param array $resetSections
-     *
      * @throws Exception
      */
     public function import(Store $store, array $data, array $resetSections = [])
@@ -441,17 +378,13 @@ class Stores
                 $this->logging->info(sprintf('Resetting section: %s', $section));
 
                 if ($isDefault) {
-                    $this->databaseHelper->deleteTableData(
-                        $this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%"', $section)
-                    );
+                        sprintf('path like "%s/%%"', $section));
                 } else {
-                    $this->databaseHelper->deleteTableData(
-                        $this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%" AND scope = "stores" AND scope_id = %d', $section, $store->getId())
-                    );
+                        sprintf('path like "%s/%%" AND scope = "stores" AND scope_id = %d', $section, $store->getId()));
                 }
             }
 
@@ -461,23 +394,13 @@ class Stores
                 $this->logging->info(sprintf('Importing group: %s/%s', $section, $group));
 
                 foreach ($groupData as $field => $value) {
-                    $this->insertConfigValue(
-                        sprintf('%s/%s/%s', $section, $group, $field),
-                        $value,
-                        $isDefault ? 'default' : 'stores',
-                        $isDefault ? 0 : $store->getId()
-                    );
+                    $this->insertConfigValue(sprintf('%s/%s/%s', $section, $group, $field), $value,
+                        $isDefault ? 'default' : 'stores', $isDefault ? 0 : $store->getId());
                 }
             }
         }
     }
 
-    /**
-     * @param Store $store
-     * @param array $sections
-     *
-     * @return array
-     */
     public function export(Store $store, array $sections): array
     {
         $data = [];
@@ -490,8 +413,6 @@ class Stores
     }
 
     /**
-     * @param string $value
-     *
      * @return int|float
      */
     public function getNumber(string $value)
@@ -503,12 +424,6 @@ class Stores
         return $formatter->parse($value);
     }
 
-    /**
-     * @param float $value
-     * @param int   $precision
-     *
-     * @return string
-     */
     public function formatNumber(float $value, int $precision = 2): string
     {
         $locale = $this->getStoreConfig(Data::XML_PATH_DEFAULT_LOCALE, 'en_US');
@@ -516,26 +431,14 @@ class Stores
         $formatter = \NumberFormatter::create($locale, \NumberFormatter::DECIMAL);
         $formatter->setAttribute(\NumberFormatter::FRACTION_DIGITS, $precision);
 
-        $parsed = $formatter->parse($value);
-
-        return $parsed->format($parsed);
+        return $formatter->format($value);
     }
 
-    /**
-     * @param float $price
-     * @param bool  $includeContainer
-     *
-     * @return string
-     */
     public function formatPrice(float $price, bool $includeContainer = true): string
     {
         try {
-            return $this->priceCurrency->format(
-                $price,
-                $includeContainer,
-                PriceCurrencyInterface::DEFAULT_PRECISION,
-                $this->getStore()
-            );
+            return $this->priceCurrency->format($price, $includeContainer, PriceCurrencyInterface::DEFAULT_PRECISION,
+                $this->getStore());
         } catch (NoSuchEntityException $exception) {
             $this->logging->error($exception);
         }
@@ -544,9 +447,7 @@ class Stores
     }
 
     /**
-     * @param mixed $price
-     *
-     * @return double
+     * @param int|float $price
      */
     public function roundPrice($price): float
     {
@@ -554,9 +455,6 @@ class Stores
     }
 
     /**
-     * @param float $price
-     * @param bool  $format
-     *
      * @return float|string
      */
     public function convertPrice(float $price, bool $format = false)
@@ -580,9 +478,6 @@ class Stores
         return $value;
     }
 
-    /**
-     * @return string
-     */
     public function getLocale(): string
     {
         if ($this->localeResolver === null) {
