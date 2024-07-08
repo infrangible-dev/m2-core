@@ -516,9 +516,7 @@ class Stores
         $formatter = \NumberFormatter::create($locale, \NumberFormatter::DECIMAL);
         $formatter->setAttribute(\NumberFormatter::FRACTION_DIGITS, $precision);
 
-        $parsed = $formatter->parse($value);
-
-        return $parsed->format($parsed);
+        return $formatter->format($value);
     }
 
     /**
