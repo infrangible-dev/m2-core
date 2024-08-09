@@ -18,24 +18,17 @@ class Categories
     implements OptionSourceInterface
 {
     /** @var Category */
-    protected $objectHelper;
+    protected $categoryHelper;
 
     /** @var TreeFactory */
     protected $categoryTreeFactory;
 
-    /**
-     * @param Category    $objectHelper
-     * @param TreeFactory $categoryTreeFactory
-     */
-    public function __construct(Category $objectHelper, TreeFactory $categoryTreeFactory)
+    public function __construct(Category $categoryHelper, TreeFactory $categoryTreeFactory)
     {
-        $this->objectHelper = $objectHelper;
+        $this->categoryHelper = $categoryHelper;
         $this->categoryTreeFactory = $categoryTreeFactory;
     }
 
-    /**
-     * @return array
-     */
     public function toOptionArray(): array
     {
         $tree = $this->categoryTreeFactory->create();
@@ -54,7 +47,7 @@ class Categories
             $categoryId = $node->getData('entity_id');
             $level = $node->getData('level');
 
-            $category = $this->objectHelper->loadCategory($categoryId);
+            $category = $this->categoryHelper->loadCategory($categoryId);
 
             $options[] = [
                 'value' => $categoryId,
@@ -65,9 +58,6 @@ class Categories
         return $options;
     }
 
-    /**
-     * @return array
-     */
     public function toOptions(): array
     {
         $tree = $this->categoryTreeFactory->create();
@@ -86,7 +76,7 @@ class Categories
             $categoryId = $node->getData('entity_id');
             $level = $node->getData('level');
 
-            $category = $this->objectHelper->loadCategory($categoryId);
+            $category = $this->categoryHelper->loadCategory($categoryId);
 
             $options[ $categoryId ] =
                 sprintf('%s%s %s', str_repeat($spaceChar, $level), $arrowChar, $category->getName());
