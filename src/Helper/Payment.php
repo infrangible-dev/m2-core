@@ -35,20 +35,13 @@ class Payment
     /** @var Factory */
     protected $paymentMethodFactory;
 
-    /**
-     * @param Stores                                                  $storeHelper
-     * @param PaymentFactory                                          $paymentFactory
-     * @param \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory
-     * @param CollectionFactory                                       $paymentCollectionFactory
-     * @param Factory                                                 $paymentMethodFactory
-     */
     public function __construct(
         Stores $storeHelper,
         PaymentFactory $paymentFactory,
         \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory,
         CollectionFactory $paymentCollectionFactory,
-        Factory $paymentMethodFactory)
-    {
+        Factory $paymentMethodFactory
+    ) {
         $this->storeHelper = $storeHelper;
 
         $this->paymentFactory = $paymentFactory;
@@ -57,19 +50,11 @@ class Payment
         $this->paymentMethodFactory = $paymentMethodFactory;
     }
 
-    /**
-     * @return \Magento\Sales\Model\Order\Payment
-     */
     public function newPayment(): \Magento\Sales\Model\Order\Payment
     {
         return $this->paymentFactory->create();
     }
 
-    /**
-     * @param int $paymentId
-     *
-     * @return \Magento\Sales\Model\Order\Payment
-     */
     public function loadPayment(int $paymentId): \Magento\Sales\Model\Order\Payment
     {
         $payment = $this->newPayment();
@@ -80,27 +65,19 @@ class Payment
     }
 
     /**
-     * @param \Magento\Sales\Model\Order\Payment $payment
-     *
      * @throws AlreadyExistsException
      */
-    public function savePayment(\Magento\Sales\Model\Order\Payment $payment)
+    public function savePayment(\Magento\Sales\Model\Order\Payment $payment): void
     {
         $this->paymentResourceFactory->create()->save($payment);
     }
 
-    /**
-     * @return Collection
-     */
     public function getPaymentCollection(): Collection
     {
         return $this->paymentCollectionFactory->create();
     }
 
     /**
-     * @param bool $allStores
-     * @param bool $withDefault
-     *
      * @return AbstractMethod[]
      */
     public function getActiveMethods(bool $allStores = false, bool $withDefault = true): array

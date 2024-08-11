@@ -27,10 +27,6 @@ class EntityType
     /** @var array */
     private $entityTypes = [];
 
-    /**
-     * @param Config   $eavConfig
-     * @param Database $databaseHelper
-     */
     public function __construct(Config $eavConfig, Database $databaseHelper)
     {
         $this->eavConfig = $eavConfig;
@@ -38,9 +34,6 @@ class EntityType
     }
 
     /**
-     * @param string $entityTypeCode
-     *
-     * @return Type|null
      * @throws LocalizedException
      */
     public function getEntityType(string $entityTypeCode): ?Type
@@ -61,9 +54,6 @@ class EntityType
     }
 
     /**
-     * @param string $entityTypeCode
-     *
-     * @return string|null
      * @throws LocalizedException
      */
     public function getEntityTypeTableByEntityTypeCode(string $entityTypeCode): ?string
@@ -73,18 +63,12 @@ class EntityType
         return $entityType !== null ? $this->getEntityTypeTableByEntityType($entityType) : null;
     }
 
-    /**
-     * @param Type $entityType
-     *
-     * @return string
-     */
     public function getEntityTypeTableByEntityType(Type $entityType): string
     {
         return $this->databaseHelper->getTableName($entityType->getEntityTable());
     }
 
     /**
-     * @return Type
      * @throws LocalizedException
      */
     public function getCategoryEntityType(): ?Type
@@ -93,7 +77,6 @@ class EntityType
     }
 
     /**
-     * @return int
      * @throws LocalizedException
      */
     public function getCategoryEntityTypeId(): ?int
@@ -104,7 +87,6 @@ class EntityType
     }
 
     /**
-     * @return string|null
      * @throws LocalizedException
      */
     public function getCategoryEntityTypeTable(): ?string
@@ -113,7 +95,6 @@ class EntityType
     }
 
     /**
-     * @return Type
      * @throws LocalizedException
      */
     public function getProductEntityType(): ?Type
@@ -122,7 +103,6 @@ class EntityType
     }
 
     /**
-     * @return int
      * @throws LocalizedException
      */
     public function getProductEntityTypeId(): ?int
@@ -133,7 +113,6 @@ class EntityType
     }
 
     /**
-     * @return string|null
      * @throws LocalizedException
      */
     public function getProductEntityTypeTable(): ?string
@@ -142,7 +121,6 @@ class EntityType
     }
 
     /**
-     * @return int
      * @throws LocalizedException
      */
     public function getProductEntityTypeDefaultAttributeSetId(): ?int
@@ -153,7 +131,6 @@ class EntityType
     }
 
     /**
-     * @return Type
      * @throws LocalizedException
      */
     public function getCustomerEntityType(): ?Type
@@ -162,7 +139,6 @@ class EntityType
     }
 
     /**
-     * @return Type
      * @throws LocalizedException
      */
     public function getCustomerAddressEntityType(): ?Type

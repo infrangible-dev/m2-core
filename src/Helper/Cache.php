@@ -36,22 +36,14 @@ class Cache
     /** @var Variables */
     protected $variables;
 
-    /**
-     * @param LoggerInterface           $logging
-     * @param TypeListInterface         $typeList
-     * @param ReinitableConfigInterface $reinitableConfig
-     * @param CacheInterface            $cache
-     * @param Config                    $pageCacheConfig
-     * @param Variables                 $variables
-     */
     public function __construct(
         LoggerInterface $logging,
         TypeListInterface $typeList,
         ReinitableConfigInterface $reinitableConfig,
         CacheInterface $cache,
         Config $pageCacheConfig,
-        Variables $variables)
-    {
+        Variables $variables
+    ) {
         $this->logging = $logging;
         $this->typeList = $typeList;
         $this->reinitableConfig = $reinitableConfig;
@@ -60,10 +52,7 @@ class Cache
         $this->variables = $variables;
     }
 
-    /**
-     * @return void
-     */
-    public function cleanConfigCache()
+    public function cleanConfigCache(): void
     {
         $this->logging->info('Cleaning config cache');
 
@@ -74,20 +63,14 @@ class Cache
         $this->reinitableConfig->reinit();
     }
 
-    /**
-     * @return void
-     */
-    public function cleanBlockCache()
+    public function cleanBlockCache(): void
     {
         $this->logging->info('Cleaning block cache');
 
         $this->typeList->cleanType('block_html');
     }
 
-    /**
-     * @return void
-     */
-    public function cleanFullPageCache()
+    public function cleanFullPageCache(): void
     {
         if ($this->pageCacheConfig->isEnabled()) {
             $this->logging->info('Cleaning full page cache');
@@ -96,21 +79,13 @@ class Cache
         }
     }
 
-    /**
-     * @return void
-     */
-    public function cleanLayoutCache()
+    public function cleanLayoutCache(): void
     {
         $this->logging->info('Cleaning layout cache');
 
         $this->typeList->cleanType('layout');
     }
 
-    /**
-     * @param string $id
-     *
-     * @return string|null
-     */
     public function loadCache(string $id): ?string
     {
         /** @var string|false $value */
@@ -119,21 +94,12 @@ class Cache
         return $value === false ? null : $this->variables->stringValue($value);
     }
 
-    /**
-     * @param string   $data
-     * @param string   $id
-     * @param array    $tags
-     * @param int|null $lifeTime
-     */
-    public function saveCache(string $data, string $id, array $tags = [], int $lifeTime = null)
+    public function saveCache(string $data, string $id, array $tags = [], int $lifeTime = null): void
     {
         $this->cache->save($data, $id, $tags, $lifeTime);
     }
 
-    /**
-     * @param string $id
-     */
-    public function removeCache(string $id)
+    public function removeCache(string $id): void
     {
         $this->cache->remove($id);
     }

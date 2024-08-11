@@ -11,14 +11,8 @@ use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class CategoryAttributeCode
-    extends Category
+class CategoryAttributeCode extends Category
 {
-    /**
-     * @param Attribute $catalogAttribute
-     *
-     * @return string
-     */
     protected function getAttributeValue(Attribute $catalogAttribute): string
     {
         return $catalogAttribute->getAttributeCode();

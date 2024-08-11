@@ -21,10 +21,6 @@ class Carrier
     /** @var CarrierFactory */
     protected $carrierFactory;
 
-    /**
-     * @param Stores         $storeHelper
-     * @param CarrierFactory $carrierFactory
-     */
     public function __construct(Stores $storeHelper, CarrierFactory $carrierFactory)
     {
         $this->storeHelper = $storeHelper;

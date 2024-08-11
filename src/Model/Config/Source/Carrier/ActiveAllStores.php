@@ -9,12 +9,8 @@ namespace Infrangible\Core\Model\Config\Source\Carrier;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class ActiveAllStores
-    extends Active
+class ActiveAllStores extends Active
 {
-    /**
-     * @return array
-     */
     public function toOptionArray(): array
     {
         $this->setAllStores(true);
@@ -23,9 +19,6 @@ class ActiveAllStores
         return parent::toOptionArray();
     }
 
-    /**
-     * @return array
-     */
     public function toArray(): array
     {
         $this->setAllStores(true);

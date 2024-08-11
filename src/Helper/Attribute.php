@@ -109,24 +109,6 @@ class Attribute
     /** @var Set[] */
     private $attributeSetsByName = [];
 
-    /**
-     * @param Arrays                                                                    $arrays
-     * @param Variables                                                                 $variables
-     * @param Database                                                                  $databaseHelper
-     * @param EntityType                                                                $entityTypeHelper
-     * @param LoggerInterface                                                           $logging
-     * @param AttributeFactory                                                          $attributeFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\AttributeFactory                  $attributeResourceFactory
-     * @param CollectionFactory                                                         $attributeCollectionFactory
-     * @param SetFactory                                                                $attributeSetFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\SetFactory              $attributeSetResourceFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory   $attributeSetCollectionFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\CollectionFactory $attributeGroupCollectionFactory
-     * @param ProductAttributeRepositoryInterface                                       $productAttributeRepository
-     * @param CategoryAttributeRepositoryInterface                                      $categoryAttributeRepository
-     * @param \Magento\Catalog\Model\ResourceModel\Product\Attribute\CollectionFactory  $productAttributeCollectionFactory
-     * @param ConfigFactory                                                             $configFactory
-     */
     public function __construct(
         Arrays $arrays,
         Variables $variables,
@@ -164,27 +146,16 @@ class Attribute
         $this->configFactory = $configFactory;
     }
 
-    /**
-     * @return Collection
-     */
     public function getAttributeCollection(): Collection
     {
         return $this->attributeCollectionFactory->create();
     }
 
-    /**
-     * @return Entity\Attribute
-     */
     public function newAttribute(): Entity\Attribute
     {
         return $this->attributeFactory->create();
     }
 
-    /**
-     * @param int $attributeId
-     *
-     * @return Entity\Attribute
-     */
     public function loadAttribute(int $attributeId): Entity\Attribute
     {
         $attribute = $this->newAttribute();
@@ -195,36 +166,23 @@ class Attribute
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
      * @throws Exception
      */
-    public function deleteAttribute(Entity\Attribute $attribute)
+    public function deleteAttribute(Entity\Attribute $attribute): void
     {
         $this->attributeResourceFactory->create()->delete($attribute);
     }
 
-    /**
-     * @return \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\Collection
-     */
     public function getAttributeSetCollection(): \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\Collection
     {
         return $this->attributeSetCollectionFactory->create();
     }
 
-    /**
-     * @return Set
-     */
     public function newAttributeSet(): Set
     {
         return $this->attributeSetFactory->create();
     }
 
-    /**
-     * @param int $attributeSetId
-     *
-     * @return Set
-     */
     public function loadAttributeSet(int $attributeSetId): Set
     {
         $attributeSet = $this->newAttributeSet();
@@ -235,27 +193,19 @@ class Attribute
     }
 
     /**
-     * @param Set $attributeSet
-     *
      * @throws Exception
      */
-    public function deleteAttributeSet(Set $attributeSet)
+    public function deleteAttributeSet(Set $attributeSet): void
     {
         $this->attributeSetResourceFactory->create()->delete($attributeSet);
     }
 
-    /**
-     * @return \Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\Collection
-     */
     public function getAttributeGroupCollection(): \Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\Collection
     {
         return $this->attributeGroupCollectionFactory->create();
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
-     * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute|null
      * @throws NoSuchEntityException
      */
     public function loadCatalogEavAttribute(
@@ -278,19 +228,12 @@ class Attribute
         return $catalogEavAttribute;
     }
 
-    /**
-     * @return \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection
-     */
     public function getProductAttributeCollection(): \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection
     {
         return $this->productAttributeCollectionFactory->create();
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     *
-     * @return Entity\Attribute
      * @throws Exception
      */
     public function getAttribute(string $entityTypeCode, string $attributeCode): Entity\Attribute
@@ -331,16 +274,9 @@ class Attribute
         return $attribute;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param string           $attributeCode
-     *
-     * @return int|null
-     */
     public function getAttributeId(AdapterInterface $dbAdapter, string $entityTypeCode, string $attributeCode): ?int
     {
-        $key = $entityTypeCode.'_'.$attributeCode;
+        $key = $entityTypeCode . '_' . $attributeCode;
 
         if (array_key_exists($key, $this->attributeIds)) {
             return $this->attributeIds[$key];
@@ -351,20 +287,24 @@ class Attribute
 
         $attributeQuery = $dbAdapter->select()->from(['eav_attribute' => $eavAttributeTableName], ['attribute_id']);
 
-        $attributeQuery->joinLeft(['eav_entity_type' => $entityTypeTableName],
-                                  'eav_entity_type.entity_type_id = eav_attribute.entity_type_id',
-                                  'entity_type_code');
+        $attributeQuery->joinLeft(
+            ['eav_entity_type' => $entityTypeTableName],
+            'eav_entity_type.entity_type_id = eav_attribute.entity_type_id',
+            'entity_type_code'
+        );
 
         $attributeQuery->where(
             $dbAdapter->prepareSqlCondition(
-                'eav_attribute.attribute_code', ['eq' => $attributeCode]
+                'eav_attribute.attribute_code',
+                ['eq' => $attributeCode]
             ),
             null,
             Select::TYPE_CONDITION
         );
         $attributeQuery->where(
             $dbAdapter->prepareSqlCondition(
-                'eav_entity_type.entity_type_code', ['eq' => $entityTypeCode]
+                'eav_entity_type.entity_type_code',
+                ['eq' => $entityTypeCode]
             ),
             null,
             Select::TYPE_CONDITION
@@ -382,15 +322,6 @@ class Attribute
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param int              $entityId
-     * @param string           $attributeCode
-     * @param int              $storeId
-     * @param bool             $useOptionValue
-     * @param bool             $strToLower
-     *
-     * @return mixed
      * @throws Exception
      */
     public function getAttributeValue(
@@ -416,15 +347,6 @@ class Attribute
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param array            $entityIds
-     * @param string           $attributeCode
-     * @param int              $storeId
-     * @param bool             $useOptionValue
-     * @param bool             $strToLower
-     *
-     * @return array
      * @throws Exception
      * @throws LocalizedException
      */
@@ -629,11 +551,6 @@ class Attribute
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param string $optionId
-     *
      * @return int|array|null
      * @throws Exception
      */
@@ -673,12 +590,6 @@ class Attribute
     /**
      * Returns all values of the attribute without any labels.
      *
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param bool   $strToLower
-     *
-     * @return array
      * @throws Exception
      */
     public function getAttributeOptionValues(
@@ -711,13 +622,9 @@ class Attribute
     /**
      * Initialize all values and labels of the attribute.
      *
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     *
      * @throws Exception
      */
-    protected function initAttributeOptions(string $entityTypeCode, string $attributeCode, int $storeId)
+    protected function initAttributeOptions(string $entityTypeCode, string $attributeCode, int $storeId): void
     {
         $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
 
@@ -784,13 +691,6 @@ class Attribute
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param string $value
-     * @param bool   $strToLower
-     *
-     * @return int|null
      * @throws Exception
      */
     public function getAttributeOptionId(
@@ -820,12 +720,6 @@ class Attribute
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param int    $optionId
-     *
-     * @return bool
      * @throws Exception
      */
     public function checkAttributeOptionId(
@@ -835,22 +729,16 @@ class Attribute
         int $optionId
     ): bool {
         return $this->arrays->getValue(
-                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
-                strval($optionId),
-                $this->arrays->getValue(
-                    $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
-                    strval($optionId)
-                )
-            ) !== null;
+            $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
+            strval($optionId),
+            $this->arrays->getValue(
+                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
+                strval($optionId)
+            )
+        ) !== null;
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param string $optionKey
-     *
-     * @return bool
      * @throws Exception
      */
     public function checkAttributeOptionKey(
@@ -860,22 +748,18 @@ class Attribute
         string $optionKey
     ): bool {
         return $this->arrays->getValue(
-                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
-                $optionKey,
-                $this->arrays->getValue(
-                    $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
-                    $optionKey
-                )
-            ) !== null;
+            $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
+            $optionKey,
+            $this->arrays->getValue(
+                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
+                $optionKey
+            )
+        ) !== null;
     }
 
     /**
      * Get attribute type for upcoming validation.
      *
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     *
-     * @return string
      * @throws Exception
      */
     public function getAttributeType(string $entityTypeCode, string $attributeCode): string
@@ -894,15 +778,6 @@ class Attribute
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param string           $attributeCode
-     * @param int              $sortOrder
-     * @param int              $storeId
-     * @param string|null      $value
-     * @param bool             $test
-     *
-     * @return int|null
      * @throws Exception
      */
     public function addAttributeOption(
@@ -1007,7 +882,7 @@ class Attribute
         }
 
         if ($storeId !== 0) {
-            $key = $attribute->getAttributeCode().'_0';
+            $key = $attribute->getAttributeCode() . '_0';
 
             if (!array_key_exists($key, $this->attributeOptionValues)) {
                 $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0);
@@ -1022,9 +897,6 @@ class Attribute
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
-     * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute
      * @throws Exception
      */
     public function getCatalogCategoryAttribute(
@@ -1048,9 +920,6 @@ class Attribute
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
-     * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute
      * @throws Exception
      */
     public function getCatalogProductAttribute(
@@ -1073,11 +942,6 @@ class Attribute
         return $this->productAttributes[$attributeCode];
     }
 
-    /**
-     * @param int $attributeSetId
-     *
-     * @return Set|null
-     */
     public function getAttributeSetById(int $attributeSetId): ?Set
     {
         if (array_key_exists($attributeSetId, $this->attributeSetsById)) {
@@ -1102,12 +966,6 @@ class Attribute
         return null;
     }
 
-    /**
-     * @param int    $entityTypeId
-     * @param string $attributeSetName
-     *
-     * @return Set|null
-     */
     public function getAttributeSetByName(int $entityTypeId, string $attributeSetName): ?Set
     {
         $attributeSetNameKey = sprintf('%d_%s', $entityTypeId, $attributeSetName);

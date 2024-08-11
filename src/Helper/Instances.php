@@ -17,18 +17,12 @@ class Instances
     /** @var ObjectManagerInterface */
     protected $objectManager;
 
-    /**
-     * @param ObjectManagerInterface $objectManager
-     */
     public function __construct(ObjectManagerInterface $objectManager)
     {
         $this->objectManager = $objectManager;
     }
 
     /**
-     * @param string $className
-     * @param array  $arguments
-     *
      * @return object
      */
     public function getInstance(string $className, array $arguments = [])
@@ -43,8 +37,6 @@ class Instances
     }
 
     /**
-     * @param string $className
-     *
      * @return object
      */
     public function getSingleton(string $className)
@@ -58,11 +50,6 @@ class Instances
         return null;
     }
 
-    /**
-     * @param string $className
-     *
-     * @return AbstractModel
-     */
     public function getModelInstance(string $className): ?AbstractModel
     {
         $instance = $this->getInstance($className);
@@ -74,11 +61,6 @@ class Instances
         return null;
     }
 
-    /**
-     * @param string $className
-     *
-     * @return AbstractModel
-     */
     public function getModelSingleton(string $className): ?AbstractModel
     {
         $singleton = $this->getSingleton($className);

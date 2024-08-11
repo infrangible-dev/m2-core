@@ -35,20 +35,13 @@ class Order
     /** @var OrderStatusHistoryRepositoryInterface */
     protected $orderStatusHistoryRepository;
 
-    /**
-     * @param OrderFactory                                    $orderFactory
-     * @param \Magento\Sales\Model\ResourceModel\OrderFactory $orderResourceFactory
-     * @param CollectionFactory                               $orderCollectionFactory
-     * @param HistoryFactory                                  $orderStatusHistoryFactory
-     * @param OrderStatusHistoryRepositoryInterface           $orderStatusHistoryRepository
-     */
     public function __construct(
         OrderFactory $orderFactory,
         \Magento\Sales\Model\ResourceModel\OrderFactory $orderResourceFactory,
         CollectionFactory $orderCollectionFactory,
         HistoryFactory $orderStatusHistoryFactory,
-        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository)
-    {
+        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
+    ) {
         $this->orderFactory = $orderFactory;
         $this->orderResourceFactory = $orderResourceFactory;
         $this->orderCollectionFactory = $orderCollectionFactory;
@@ -56,19 +49,11 @@ class Order
         $this->orderStatusHistoryRepository = $orderStatusHistoryRepository;
     }
 
-    /**
-     * @return \Magento\Sales\Model\Order
-     */
     public function newOrder(): \Magento\Sales\Model\Order
     {
         return $this->orderFactory->create();
     }
 
-    /**
-     * @param int $orderId
-     *
-     * @return \Magento\Sales\Model\Order
-     */
     public function loadOrder(int $orderId): \Magento\Sales\Model\Order
     {
         $order = $this->newOrder();
@@ -78,11 +63,6 @@ class Order
         return $order;
     }
 
-    /**
-     * @param string $incrementId
-     *
-     * @return \Magento\Sales\Model\Order
-     */
     public function loadOrderByIncrementId(string $incrementId): \Magento\Sales\Model\Order
     {
         $order = $this->orderFactory->create();
@@ -93,39 +73,25 @@ class Order
     }
 
     /**
-     * @param \Magento\Sales\Model\Order $order
-     *
      * @throws AlreadyExistsException
      */
-    public function saveOrder(\Magento\Sales\Model\Order $order)
+    public function saveOrder(\Magento\Sales\Model\Order $order): void
     {
         $this->orderResourceFactory->create()->save($order);
     }
 
-    /**
-     * @return Collection
-     */
     public function getOrderCollection(): Collection
     {
         return $this->orderCollectionFactory->create();
     }
 
-    /**
-     * @param string                     $comment
-     * @param string                     $status
-     * @param \Magento\Sales\Model\Order $order
-     * @param bool                       $isCustomerNotified
-     * @param bool                       $isVisibleOnFrontend
-     *
-     * @return History
-     */
     public function createOrderHistoryModel(
         string $comment,
         string $status,
         \Magento\Sales\Model\Order $order,
         bool $isCustomerNotified = false,
-        bool $isVisibleOnFrontend = false): History
-    {
+        bool $isVisibleOnFrontend = false
+    ): History {
         $historyStatus = $this->orderStatusHistoryFactory->create();
 
         $historyStatus->setComment($comment);
@@ -138,11 +104,9 @@ class Order
     }
 
     /**
-     * @param History $history
-     *
      * @throws CouldNotSaveException
      */
-    public function saveOrderHistory(History $history)
+    public function saveOrderHistory(History $history): void
     {
         $this->orderStatusHistoryRepository->save($history);
     }

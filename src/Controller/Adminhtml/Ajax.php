@@ -20,8 +20,7 @@ use Psr\Log\LoggerInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-abstract class Ajax
-    extends Action
+abstract class Ajax extends Action
 {
     /** @var Arrays */
     protected $arrays;
@@ -41,12 +40,6 @@ abstract class Ajax
     /** @var array */
     private $responseValues = [];
 
-    /**
-     * @param Arrays $arrays
-     * @param Json $json
-     * @param Context $context
-     * @param LoggerInterface $logging
-     */
     public function __construct(
         Arrays $arrays,
         Json $json,
@@ -61,93 +54,61 @@ abstract class Ajax
         $this->logging = $logging;
     }
 
-    /**
-     * @param string $key
-     * @param mixed $value
-     */
-    protected function addResponseValue(string $key, $value)
+    protected function addResponseValue(string $key, $value): void
     {
         $keys = explode(':', $key);
 
         $this->responseValues = $this->arrays->addDeepValue($this->responseValues, $keys, $value);
     }
 
-    /**
-     * @param array $values
-     */
-    protected function addResponseValues(array $values)
+    protected function addResponseValues(array $values): void
     {
         foreach ($values as $key => $value) {
             $this->addResponseValue($key, $value);
         }
     }
 
-    /**
-     * @param string $key
-     *
-     * @return mixed
-     */
     protected function getResponseValue(string $key)
     {
-        if (isset ($this->responseValues[$key])) {
-            return $this->responseValues[$key];
+        if (isset($this->responseValues[ $key ])) {
+            return $this->responseValues[ $key ];
         }
 
         return null;
     }
 
-    /**
-     * Reset response values
-     */
-    protected function resetResponseValues()
+    protected function resetResponseValues(): void
     {
         $this->responseValues = [];
     }
 
-    /**
-     * @param int $responseCode
-     */
-    public function setResponseCode(int $responseCode)
+    public function setResponseCode(int $responseCode): void
     {
         $this->responseCode = $responseCode;
     }
 
-    /**
-     * @param string $message
-     */
-    protected function setSuccessResponse(string $message)
+    protected function setSuccessResponse(string $message): void
     {
         $this->responseResult = true;
         $this->responseValues = ['message' => $message];
     }
 
-    /**
-     * @param string $message
-     */
-    protected function setErrorResponse(string $message)
+    protected function setErrorResponse(string $message): void
     {
         $this->responseResult = false;
         $this->responseValues = ['message' => $message];
     }
 
-    /**
-     * @param string $message
-     */
-    protected function setFatalResponse(string $message)
+    protected function setFatalResponse(string $message): void
     {
         $this->setErrorResponse($message);
         $this->setResponseCode(500);
     }
 
     /**
-     * Dispatch request
-     *
-     * @param RequestInterface $request
-     *
-     * @return ResponseInterface
      * @throws NotFoundException
      */
-    public function dispatch(RequestInterface $request)
+    public function dispatch(RequestInterface $request): ResponseInterface
     {
         /** @var Http $request */
         $request = $this->getRequest();
@@ -160,8 +121,7 @@ abstract class Ajax
                 $this->setErrorResponse($exception->getMessage());
             }
 
-            $responseData =
-                $this->arrays->mergeArrays(['success' => $this->responseResult], $this->responseValues);
+            $responseData = $this->arrays->mergeArrays(['success' => $this->responseResult], $this->responseValues);
 
             /** @var \Magento\Framework\App\Response\Http $response */
             $response = $this->getResponse();

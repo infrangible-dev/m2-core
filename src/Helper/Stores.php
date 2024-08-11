@@ -32,8 +32,7 @@ use Psr\Log\LoggerInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Stores
-    extends AbstractHelper
+class Stores extends AbstractHelper
 {
     /** @var Models */
     protected $variables;
@@ -83,8 +82,8 @@ class Stores
         Filesystem $filesystem,
         Repository $assetRepository,
         RequestInterface $request,
-        PriceCurrencyInterface $priceCurrency)
-    {
+        PriceCurrencyInterface $priceCurrency
+    ) {
         parent::__construct($context);
 
         $this->variables = $variableHelper;
@@ -101,14 +100,6 @@ class Stores
         $this->priceCurrency = $priceCurrency;
     }
 
-    /**
-     * @param string $path
-     * @param mixed $defaultValue
-     * @param bool $isFlag
-     * @param int|null $storeId
-     *
-     * @return mixed
-     */
     public function getStoreConfig(string $path, $defaultValue = null, bool $isFlag = false, int $storeId = null)
     {
         try {
@@ -130,14 +121,6 @@ class Stores
         }
     }
 
-    /**
-     * @param string $path
-     * @param mixed $defaultValue
-     * @param bool $isFlag
-     * @param int|null $websiteId
-     *
-     * @return mixed
-     */
     public function getWebsiteConfig(string $path, $defaultValue = null, bool $isFlag = false, int $websiteId = null)
     {
         try {
@@ -159,25 +142,11 @@ class Stores
         }
     }
 
-    /**
-     * @param string $path
-     * @param bool $defaultValue
-     * @param int|null $storeId
-     *
-     * @return mixed
-     */
     public function getStoreConfigFlag(string $path, bool $defaultValue = false, int $storeId = null)
     {
         return $this->getStoreConfig($path, $defaultValue, true, $storeId);
     }
 
-    /**
-     * @param string $configPath
-     * @param string $delimiter
-     * @param int|null $storeId
-     *
-     * @return array
-     */
     public function getExplodedConfigValues(string $configPath, string $delimiter = ',', int $storeId = null): array
     {
         $valueString = $this->getStoreConfig($configPath, null, false, $storeId);
@@ -197,7 +166,7 @@ class Stores
         return [];
     }
 
-    public function moveConfigValue(string $oldPath, string $newPath)
+    public function moveConfigValue(string $oldPath, string $newPath): void
     {
         $writeAdapter = $this->databaseHelper->getDefaultConnection();
 
@@ -222,32 +191,34 @@ class Stores
                 if (!$this->variables->isEmpty($newQueryResult)) {
                     $newData = reset($newQueryResult);
 
-                    $writeAdapter->update($tableName, ['value' => $this->arrays->getValue($oldData, 'value')],
-                        sprintf('config_id = %d', $this->arrays->getValue($newData, 'config_id')));
+                    $writeAdapter->update(
+                        $tableName,
+                        ['value' => $this->arrays->getValue($oldData, 'value')],
+                        sprintf('config_id = %d', $this->arrays->getValue($newData, 'config_id'))
+                    );
 
-                    $writeAdapter->delete($tableName,
-                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id')));
+                    $writeAdapter->delete(
+                        $tableName,
+                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id'))
+                    );
                 } else {
-                    $writeAdapter->update($tableName, ['path' => $newPath],
-                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id')));
+                    $writeAdapter->update(
+                        $tableName,
+                        ['path' => $newPath],
+                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id'))
+                    );
                 }
             }
         } // else no old data to move
     }
 
-    /**
-     * @param string $path
-     * @param mixed $value
-     * @param string $scope
-     * @param int $scopeId
-     */
-    public function insertConfigValue(string $path, $value, string $scope = 'default', int $scopeId = 0)
+    public function insertConfigValue(string $path, $value, string $scope = 'default', int $scopeId = 0): void
     {
         $this->configFactory->create()
             ->saveConfig($path, is_array($value) ? implode(',', $value) : $value, $scope, $scopeId);
     }
 
-    public function removeConfigValue(string $path)
+    public function removeConfigValue(string $path): void
     {
         $this->databaseHelper->getDefaultConnection()
             ->delete($this->databaseHelper->getTableName('core_config_data'), sprintf('path = "%s"', $path));
@@ -369,7 +340,7 @@ class Stores
     /**
      * @throws Exception
      */
-    public function import(Store $store, array $data, array $resetSections = [])
+    public function import(Store $store, array $data, array $resetSections = []): void
     {
         $isDefault = $store->getId() == 0;
 
@@ -378,13 +349,17 @@ class Stores
                 $this->logging->info(sprintf('Resetting section: %s', $section));
 
                 if ($isDefault) {
-                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData(
+                        $this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%"', $section));
+                        sprintf('path like "%s/%%"', $section)
+                    );
                 } else {
-                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData(
+                        $this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%" AND scope = "stores" AND scope_id = %d', $section, $store->getId()));
+                        sprintf('path like "%s/%%" AND scope = "stores" AND scope_id = %d', $section, $store->getId())
+                    );
                 }
             }
 
@@ -394,8 +369,12 @@ class Stores
                 $this->logging->info(sprintf('Importing group: %s/%s', $section, $group));
 
                 foreach ($groupData as $field => $value) {
-                    $this->insertConfigValue(sprintf('%s/%s/%s', $section, $group, $field), $value,
-                        $isDefault ? 'default' : 'stores', $isDefault ? 0 : $store->getId());
+                    $this->insertConfigValue(
+                        sprintf('%s/%s/%s', $section, $group, $field),
+                        $value,
+                        $isDefault ? 'default' : 'stores',
+                        $isDefault ? 0 : $store->getId()
+                    );
                 }
             }
         }
@@ -437,8 +416,12 @@ class Stores
     public function formatPrice(float $price, bool $includeContainer = true): string
     {
         try {
-            return $this->priceCurrency->format($price, $includeContainer, PriceCurrencyInterface::DEFAULT_PRECISION,
-                $this->getStore());
+            return $this->priceCurrency->format(
+                $price,
+                $includeContainer,
+                PriceCurrencyInterface::DEFAULT_PRECISION,
+                $this->getStore()
+            );
         } catch (NoSuchEntityException $exception) {
             $this->logging->error($exception);
         }

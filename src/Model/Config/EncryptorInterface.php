@@ -11,19 +11,10 @@ namespace Infrangible\Core\Model\Config;
  */
 interface EncryptorInterface
 {
-    /**
-     * @param string $key
-     * @param string $text
-     *
-     * @return string
-     */
     public function decrypt(string $key, string $text): string;
 
     /**
-     * @param string $key
      * @param mixed  $text
-     *
-     * @return string
      */
     public function encrypt(string $key, string $text): string;
 }

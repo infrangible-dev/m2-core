@@ -11,12 +11,8 @@ use Magento\Framework\Data\OptionSourceInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class TypeId
-    implements OptionSourceInterface
+class TypeId implements OptionSourceInterface
 {
-    /**
-     * @return array
-     */
     public function toOptionArray(): array
     {
         return [
@@ -30,9 +26,6 @@ class TypeId
         ];
     }
 
-    /**
-     * @return array
-     */
     public function toOptions(): array
     {
         return [

@@ -32,12 +32,6 @@ class Xml
     /** @var DirectoryList */
     protected $directoryList;
 
-    /**
-     * @param Files         $files
-     * @param Arrays        $arrays
-     * @param Variables     $variables
-     * @param DirectoryList $directoryList
-     */
     public function __construct(
         Files $files,
         Arrays $arrays,
@@ -52,13 +46,6 @@ class Xml
     }
 
     /**
-     * @param string $basePath
-     * @param string $fileName
-     * @param bool   $removeEmptyElements
-     * @param int    $retries
-     * @param int    $retryPause
-     *
-     * @return array
      * @throws Exception
      */
     public function read(
@@ -79,15 +66,6 @@ class Xml
     }
 
     /**
-     * @param string $fileName
-     * @param string $rootElement
-     * @param array  $rootElementAttributes
-     * @param array  $data
-     * @param bool   $append
-     * @param array  $characterDataElements
-     * @param string $version
-     * @param string $encoding
-     *
      * @throws Exception
      */
     public function write(
@@ -99,7 +77,7 @@ class Xml
         array $characterDataElements = [],
         string $version = '1.0',
         string $encoding = 'UTF-8'
-    ) {
+    ): void {
         $xmlWriter = new Writer($this->files, $this->arrays, $this->variables);
 
         $xmlWriter->setBasePath($this->directoryList->getRoot());
@@ -113,14 +91,6 @@ class Xml
     }
 
     /**
-     * @param string $rootElement
-     * @param array  $rootElementAttributes
-     * @param array  $data
-     * @param array  $characterDataElements
-     * @param string $version
-     * @param string $encoding
-     *
-     * @return string
      * @throws Exception
      */
     public function output(

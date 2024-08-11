@@ -48,16 +48,6 @@ class Stock
     /** @var QueryBuilderFactory */
     protected $queryBuilderFactory;
 
-    /**
-     * @param Variables                                                       $variables
-     * @param Stores                                                          $storeHelper
-     * @param ItemFactory                                                     $stockItemFactory
-     * @param \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory
-     * @param CollectionFactory                                               $stockItemCollectionFactory
-     * @param StockItemRepository                                             $stockItemRepository
-     * @param StockItemCriteriaInterfaceFactory                               $stockItemCriteriaInterfaceFactory
-     * @param QueryBuilderFactory                                             $queryBuilderFactory
-     */
     public function __construct(
         Variables $variables,
         Stores $storeHelper,
@@ -79,18 +69,12 @@ class Stock
         $this->queryBuilderFactory = $queryBuilderFactory;
     }
 
-    /**
-     * @return Item
-     */
     public function newStockItem(): Item
     {
         return $this->stockItemFactory->create();
     }
 
     /**
-     * @param int $stockItemId
-     *
-     * @return StockItemInterface
      * @throws NoSuchEntityException
      */
     public function loadStockItem(int $stockItemId): StockItemInterface
@@ -98,12 +82,6 @@ class Stock
         return $this->stockItemRepository->get($stockItemId);
     }
 
-    /**
-     * @param int $productId
-     * @param int $stockId
-     *
-     * @return Item
-     */
     public function loadStockItemByProduct(int $productId, int $stockId): Item
     {
         $stockItem = $this->newStockItem();
@@ -114,20 +92,16 @@ class Stock
     }
 
     /**
-     * @param Item $stockItem
-     *
      * @throws CouldNotSaveException
      */
-    public function saveStockItem(Item $stockItem)
+    public function saveStockItem(Item $stockItem): void
     {
         $this->stockItemRepository->save($stockItem);
     }
 
     /**
-     * @param array $productIds
      * @param null  $storeId
      *
-     * @return Collection
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */

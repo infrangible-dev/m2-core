@@ -14,23 +14,16 @@ use Magento\Framework\Data\OptionSourceInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Customer
-    implements OptionSourceInterface
+class Customer implements OptionSourceInterface
 {
     /** @var CollectionFactory */
     protected $customerAttributeCollectionFactory;
 
-    /**
-     * @param CollectionFactory $customerAttributeCollectionFactory
-     */
     public function __construct(CollectionFactory $customerAttributeCollectionFactory)
     {
         $this->customerAttributeCollectionFactory = $customerAttributeCollectionFactory;
     }
 
-    /**
-     * @return array
-     */
     public function toOptionArray(): array
     {
         $options = [['value' => '', 'label' => __('--Please Select--')]];
@@ -43,7 +36,7 @@ class Customer
         foreach ($customerAttributeCollection as $customerAttribute) {
             $frontendLabel = $customerAttribute->getData('frontend_label');
 
-            if ( ! empty($frontendLabel)) {
+            if (! empty($frontendLabel)) {
                 $options[] = [
                     'value' => $this->getAttributeValue($customerAttribute),
                     'label' => sprintf('%s (%s)', $frontendLabel, $customerAttribute->getAttributeCode())
@@ -54,9 +47,6 @@ class Customer
         return $options;
     }
 
-    /**
-     * @return array
-     */
     public function toOptions(): array
     {
         $options = [];
@@ -69,7 +59,7 @@ class Customer
         foreach ($customerAttributeCollection as $customerAttribute) {
             $frontendLabel = $customerAttribute->getData('frontend_label');
 
-            if ( ! empty($frontendLabel)) {
+            if (! empty($frontendLabel)) {
                 $options[ $this->getAttributeValue($customerAttribute) ] =
                     sprintf('%s (%s)', $frontendLabel, $customerAttribute->getAttributeCode());
             }
@@ -78,11 +68,6 @@ class Customer
         return $options;
     }
 
-    /**
-     * @param Attribute $customerAttribute
-     *
-     * @return string
-     */
     protected function getAttributeValue(Attribute $customerAttribute): string
     {
         return $customerAttribute->getAttributeId();

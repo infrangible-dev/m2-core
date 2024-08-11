@@ -12,12 +12,8 @@ use Magento\Sales\Model\Order\Config;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Statuses
-    extends Status
+class Statuses extends Status
 {
-    /**
-     * @param Config $orderConfig
-     */
     public function __construct(Config $orderConfig)
     {
         parent::__construct($orderConfig);

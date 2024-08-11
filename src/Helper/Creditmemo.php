@@ -21,10 +21,6 @@ class Creditmemo
     /** @var CreditmemoFactory */
     protected $creditMemoFactory;
 
-    /**
-     * @param Variables         $variables
-     * @param CreditmemoFactory $creditMemoFactory
-     */
     public function __construct(Variables $variables, CreditmemoFactory $creditMemoFactory)
     {
         $this->variables = $variables;
@@ -33,14 +29,6 @@ class Creditmemo
 
     /**
      * Prepare order creditmemo based on order items and requested params
-     *
-     * @param Order      $order
-     * @param array      $qtys
-     * @param float|null $shippingAmount
-     * @param float|null $adjustmentPositive
-     * @param float|null $adjustmentNegative
-     *
-     * @return Order\Creditmemo
      */
     public function prepareCreditmemo(
         Order $order,

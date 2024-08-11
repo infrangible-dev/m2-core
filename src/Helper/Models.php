@@ -17,19 +17,11 @@ class Models
     /** @var Variables */
     protected $variables;
 
-    /**
-     * @param Variables $variables
-     */
     public function __construct(Variables $variables)
     {
         $this->variables = $variables;
     }
 
-    /**
-     * @param AbstractModel $object
-     *
-     * @return array
-     */
     public function getChangedAttributeCodes(AbstractModel $object): array
     {
         $oldData = $object->getOrigData();

@@ -14,8 +14,7 @@ use Magento\Framework\Data\OptionSourceInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Active
-    implements OptionSourceInterface
+class Active implements OptionSourceInterface
 {
     /** @var Variables */
     protected $variables;
@@ -32,11 +31,6 @@ class Active
     /** @var bool */
     private $withDefault = true;
 
-    /**
-     * @param Variables $variables
-     * @param Stores    $storeHelper
-     * @param Carrier   $carrierHelper
-     */
     public function __construct(
         Variables $variables,
         Stores $storeHelper,
@@ -49,8 +43,6 @@ class Active
 
     /**
      * Options getter
-     *
-     * @return array
      */
     public function toOptionArray(): array
     {
@@ -72,8 +64,6 @@ class Active
 
     /**
      * Get options in "key-value" format
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -90,34 +80,22 @@ class Active
         return $options;
     }
 
-    /**
-     * @return bool
-     */
     public function isAllStores(): bool
     {
         return $this->allStores;
     }
 
-    /**
-     * @param bool $allStores
-     */
-    public function setAllStores(bool $allStores)
+    public function setAllStores(bool $allStores): void
     {
         $this->allStores = $allStores;
     }
 
-    /**
-     * @return bool
-     */
     public function isWithDefault(): bool
     {
         return $this->withDefault;
     }
 
-    /**
-     * @param bool $withDefault
-     */
-    public function setWithDefault(bool $withDefault)
+    public function setWithDefault(bool $withDefault): void
     {
         $this->withDefault = $withDefault;
     }

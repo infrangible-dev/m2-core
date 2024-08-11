@@ -20,16 +20,12 @@ class Source
     /** @var bool */
     protected $inventoryAvailable = false;
 
-    /** @var mixed */
     private $sourceItemFactory;
 
-    /** @var mixed */
     private $sourceItemResourceFactory;
 
-    /** @var mixed */
     private $sourceItemCollectionFactory;
 
-    /** @var mixed */
     private $defaultSourceProvider;
 
     /** @var array */
@@ -38,10 +34,6 @@ class Source
     /** @var array */
     private $sourceItemsById = [];
 
-    /**
-     * @param Product   $productHelper
-     * @param Instances $instanceHelper
-     */
     public function __construct(Product $productHelper, Instances $instanceHelper)
     {
         $this->productHelper = $productHelper;
@@ -50,9 +42,6 @@ class Source
         $this->inventoryAvailable = class_exists('Magento\Inventory\Model\SourceItem');
     }
 
-    /**
-     * @return mixed
-     */
     public function getSourceItemFactory()
     {
         if ($this->sourceItemFactory === null && $this->inventoryAvailable) {
@@ -62,9 +51,6 @@ class Source
         return $this->sourceItemFactory;
     }
 
-    /**
-     * @return mixed
-     */
     public function getSourceItemResourceFactory()
     {
         if ($this->sourceItemResourceFactory === null && $this->inventoryAvailable) {
@@ -75,23 +61,16 @@ class Source
         return $this->sourceItemResourceFactory;
     }
 
-    /**
-     * @return mixed
-     */
     public function getSourceItemCollectionFactory()
     {
         if ($this->sourceItemCollectionFactory === null && $this->inventoryAvailable) {
-            $this->sourceItemCollectionFactory = $this->instanceHelper->getSingleton(
-                'Magento\Inventory\Model\ResourceModel\SourceItem\CollectionFactory'
-            );
+            $this->sourceItemCollectionFactory =
+                $this->instanceHelper->getSingleton('Magento\Inventory\Model\ResourceModel\SourceItem\CollectionFactory');
         }
 
         return $this->sourceItemCollectionFactory;
     }
 
-    /**
-     * @return mixed
-     */
     public function getDefaultSourceProvider()
     {
         if ($this->defaultSourceProvider === null && $this->inventoryAvailable) {
@@ -102,22 +81,13 @@ class Source
         return $this->defaultSourceProvider;
     }
 
-    /**
-     * @return mixed
-     */
     public function newSourceItem()
     {
         $sourceItemFactory = $this->getSourceItemFactory();
 
-        /** @noinspection PhpExpressionAlwaysNullInspection */
         return $sourceItemFactory ? $this->getSourceItemFactory()->create() : null;
     }
 
-    /**
-     * @param int $productId
-     *
-     * @return mixed
-     */
     public function newProductSourceItem(int $productId)
     {
         $skus = $this->productHelper->determineSKUs([$productId]);
@@ -132,11 +102,6 @@ class Source
         return $sourceItem;
     }
 
-    /**
-     * @param int $sourceItemId
-     *
-     * @return mixed
-     */
     public function loadSourceItem(int $sourceItemId)
     {
         $sourceItem = $this->newSourceItem();
@@ -152,9 +117,8 @@ class Source
 
     /**
      * @param int[]       $productIds
-     * @param string|null $sourceCode
      */
-    public function loadSourceItemsByProductId(array $productIds, string $sourceCode = null)
+    public function loadSourceItemsByProductId(array $productIds, ?string $sourceCode = null): void
     {
         if ($sourceCode === null) {
             $sourceCode = $this->getDefaultSourceProviderCode();
@@ -176,24 +140,18 @@ class Source
 
                 $key = sprintf('%s_%s', $sku, $sourceItem->getData('source_code'));
 
-                $this->sourceItemsBySku[$key] = $sourceItem;
+                $this->sourceItemsBySku[ $key ] = $sourceItem;
 
                 if (array_key_exists($sku, $entityIds)) {
-                    $key = sprintf('%s_%s', $entityIds[$sku], $sourceItem->getData('source_code'));
+                    $key = sprintf('%s_%s', $entityIds[ $sku ], $sourceItem->getData('source_code'));
 
-                    $this->sourceItemsById[$key] = $sourceItem;
+                    $this->sourceItemsById[ $key ] = $sourceItem;
                 }
             }
         }
     }
 
-    /**
-     * @param int         $productId
-     * @param string|null $sourceCode
-     *
-     * @return mixed
-     */
-    public function loadSourceItemByProductId(int $productId, string $sourceCode = null)
+    public function loadSourceItemByProductId(int $productId, ?string $sourceCode = null)
     {
         if ($sourceCode === null) {
             $sourceCode = $this->getDefaultSourceProviderCode();
@@ -202,7 +160,7 @@ class Source
         $key = sprintf('%s_%s', $productId, $sourceCode);
 
         if (array_key_exists($key, $this->sourceItemsById)) {
-            return $this->sourceItemsById[$key];
+            return $this->sourceItemsById[ $key ];
         }
 
         $skus = $this->productHelper->determineSKUs([$productId]);
@@ -215,18 +173,12 @@ class Source
 
         $sourceItem = $this->loadSourceItemByProductSku(strval($productId), $sourceCode);
 
-        $this->sourceItemsById[$key] = $sourceItem;
+        $this->sourceItemsById[ $key ] = $sourceItem;
 
         return $sourceItem;
     }
 
-    /**
-     * @param string      $sku
-     * @param string|null $sourceCode
-     *
-     * @return mixed
-     */
-    public function loadSourceItemByProductSku(string $sku, string $sourceCode = null)
+    public function loadSourceItemByProductSku(string $sku, ?string $sourceCode = null)
     {
         if ($sourceCode === null) {
             $sourceCode = $this->getDefaultSourceProviderCode();
@@ -235,7 +187,7 @@ class Source
         $key = sprintf('%s_%s', $sku, $sourceCode);
 
         if (array_key_exists($key, $this->sourceItemsBySku)) {
-            return $this->sourceItemsBySku[$key];
+            return $this->sourceItemsBySku[ $key ];
         }
 
         $sourceItemCollection = $this->getSourceItemCollection();
@@ -245,16 +197,12 @@ class Source
 
         $sourceItem = $sourceItemCollection->getFirstItem();
 
-        $this->sourceItemsBySku[$key] = $sourceItem && $sourceItem->getId() ? $sourceItem : null;
+        $this->sourceItemsBySku[ $key ] = $sourceItem && $sourceItem->getId() ? $sourceItem : null;
 
-        /** @noinspection PhpExpressionAlwaysNullInspection */
-        return $this->sourceItemsBySku[$key];
+        return $this->sourceItemsBySku[ $key ];
     }
 
-    /**
-     * @param mixed $sourceItem
-     */
-    public function saveSourceItem($sourceItem)
+    public function saveSourceItem($sourceItem): void
     {
         $sourceItemResourceFactory = $this->getSourceItemResourceFactory();
 
@@ -263,25 +211,17 @@ class Source
         }
     }
 
-    /**
-     * @return mixed
-     */
     public function getSourceItemCollection()
     {
         $sourceItemCollectionFactory = $this->getSourceItemCollectionFactory();
 
-        /** @noinspection PhpExpressionAlwaysNullInspection */
         return $sourceItemCollectionFactory ? $this->getSourceItemCollectionFactory()->create() : null;
     }
 
-    /**
-     * @return string|null
-     */
     public function getDefaultSourceProviderCode(): ?string
     {
         $defaultSourceProvider = $this->getDefaultSourceProvider();
 
-        /** @noinspection PhpExpressionAlwaysNullInspection */
         return $defaultSourceProvider ? $this->getDefaultSourceProvider()->getCode() : null;
     }
 }

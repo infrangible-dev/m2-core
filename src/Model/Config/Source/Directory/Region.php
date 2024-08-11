@@ -11,8 +11,7 @@ use Magento\Directory\Model\Config\Source\Allregion;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Region
-    extends Allregion
+class Region extends Allregion
 {
     public function toOptions(): array
     {

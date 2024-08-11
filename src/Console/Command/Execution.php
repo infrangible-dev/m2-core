@@ -31,9 +31,6 @@ class Execution
 
     /**
      * Test constructor.
-     *
-     * @param State                  $state
-     * @param ObjectManagerInterface $objectManager
      */
     public function __construct(State $state, ObjectManagerInterface $objectManager)
     {
@@ -43,12 +40,6 @@ class Execution
     }
 
     /**
-     * @param string          $className
-     * @param string          $area
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
-     * @return int
      * @throws LocalizedException
      */
     public function execute(string $className, string $area, InputInterface $input, OutputInterface $output): int

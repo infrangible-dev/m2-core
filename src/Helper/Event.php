@@ -16,19 +16,12 @@ class Event
     /** @var ManagerInterface */
     protected $eventManager;
 
-    /**
-     * @param ManagerInterface $eventManager
-     */
     public function __construct(ManagerInterface $eventManager)
     {
         $this->eventManager = $eventManager;
     }
 
-    /**
-     * @param       $eventName
-     * @param array $data
-     */
-    public function dispatch($eventName, array $data = [])
+    public function dispatch($eventName, array $data = []): void
     {
         $this->eventManager->dispatch($eventName, $data);
     }

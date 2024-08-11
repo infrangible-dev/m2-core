@@ -15,14 +15,9 @@ use SodiumException;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Encryptor
-    implements EncryptorInterface
+class Encryptor implements EncryptorInterface
 {
     /**
-     * @param string $key
-     * @param string $text
-     *
-     * @return string
      * @throws Exception
      */
     public function decrypt(string $key, string $text): string
@@ -40,7 +35,7 @@ class Encryptor
             // specified key, specified crypt, specified iv
             if (4 === $partsCount) {
                 [$keyVersion, $cryptVersion, $iv, $text] = $parts;
-                $initVector = $iv ? : null;
+                $initVector = $iv ?: null;
                 $cryptVersion = \Magento\Framework\Encryption\Encryptor::CIPHER_RIJNDAEL_256;
                 // specified key, specified crypt
             } elseif (3 === $partsCount) {
@@ -71,11 +66,6 @@ class Encryptor
     }
 
     /**
-     * @param string      $key
-     * @param int|null    $cipherVersion
-     * @param string|null $initVector
-     *
-     * @return EncryptionAdapterInterface|null
      * @throws Exception
      */
     private function getCrypt(
@@ -110,10 +100,6 @@ class Encryptor
     }
 
     /**
-     * @param string $key
-     * @param string $text
-     *
-     * @return string
      * @throws SodiumException
      */
     public function encrypt(string $key, string $text): string

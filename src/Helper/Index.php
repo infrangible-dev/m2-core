@@ -30,28 +30,21 @@ class Index
     /** @var IndexerFactory */
     protected $indexerFactory;
 
-    /**
-     * @param LoggerInterface $logging
-     * @param StateFactory    $stateResourceFactory
-     * @param IndexerFactory  $indexerFactory
-     */
     public function __construct(
         LoggerInterface $logging,
         StateFactory $stateResourceFactory,
-        IndexerFactory $indexerFactory)
-    {
+        IndexerFactory $indexerFactory
+    ) {
         $this->logging = $logging;
         $this->stateResourceFactory = $stateResourceFactory;
         $this->indexerFactory = $indexerFactory;
     }
 
     /**
-     * @param Indexer $indexer
-     *
      * @throws AlreadyExistsException
      * @throws Throwable
      */
-    public function runIndexProcess(Indexer $indexer)
+    public function runIndexProcess(Indexer $indexer): void
     {
         if ($indexer->isScheduled()) {
             /** @var State $state */
@@ -71,11 +64,6 @@ class Index
         $this->logging->info(sprintf('Finished indexer with id: %s', $indexer->getId()));
     }
 
-    /**
-     * @param string $indexerName
-     *
-     * @return IndexerInterface
-     */
     public function loadIndexer(string $indexerName): IndexerInterface
     {
         return $this->indexerFactory->create()->load($indexerName);

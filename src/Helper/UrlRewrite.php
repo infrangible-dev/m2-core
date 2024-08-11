@@ -25,11 +25,6 @@ class UrlRewrite
     /** @var \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory */
     protected $urlRewriteResourceFactory;
 
-    /**
-     * @param UrlFinderInterface                                        $urlFinder
-     * @param UrlRewriteFactory                                         $urlRewriteFactory
-     * @param \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory $urlRewriteResourceFactory
-     */
     public function __construct(
         UrlFinderInterface $urlFinder,
         UrlRewriteFactory $urlRewriteFactory,
@@ -40,20 +35,11 @@ class UrlRewrite
         $this->urlRewriteResourceFactory = $urlRewriteResourceFactory;
     }
 
-    /**
-     * @return \Magento\UrlRewrite\Model\UrlRewrite
-     */
     public function newUrlRewrite(): \Magento\UrlRewrite\Model\UrlRewrite
     {
         return $this->urlRewriteFactory->create();
     }
 
-    /**
-     * @param string $requestPath
-     * @param int    $storeId
-     *
-     * @return \Magento\UrlRewrite\Model\UrlRewrite
-     */
     public function loadUrlRewrite(string $requestPath, int $storeId): \Magento\UrlRewrite\Model\UrlRewrite
     {
         $rewriteData = $this->urlFinder->findOneByData([
@@ -70,12 +56,6 @@ class UrlRewrite
         return $rewrite;
     }
 
-    /**
-     * @param int $categoryId
-     * @param int $storeId
-     *
-     * @return \Magento\UrlRewrite\Model\UrlRewrite
-     */
     public function getCategoryUrlRewrite(int $categoryId, int $storeId): \Magento\UrlRewrite\Model\UrlRewrite
     {
         $rewriteData = $this->urlFinder->findOneByData([
@@ -93,12 +73,6 @@ class UrlRewrite
         return $rewrite;
     }
 
-    /**
-     * @param int $productId
-     * @param int $storeId
-     *
-     * @return \Magento\UrlRewrite\Model\UrlRewrite
-     */
     public function getProductUrlRewrite(int $productId, int $storeId): \Magento\UrlRewrite\Model\UrlRewrite
     {
         $rewriteData = $this->urlFinder->findOneByData([

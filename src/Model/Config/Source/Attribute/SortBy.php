@@ -12,15 +12,11 @@ use Magento\Framework\Data\OptionSourceInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class SortBy
-    implements OptionSourceInterface
+class SortBy implements OptionSourceInterface
 {
     /** @var Config */
     protected $catalogConfig;
 
-    /**
-     * @param Config $catalogConfig
-     */
     public function __construct(Config $catalogConfig)
     {
         $this->catalogConfig = $catalogConfig;
@@ -44,8 +40,6 @@ class SortBy
 
     /**
      * Return array of options as value-label pairs
-     *
-     * @return array
      */
     public function toOptions(): array
     {

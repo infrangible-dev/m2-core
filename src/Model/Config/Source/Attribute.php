@@ -12,8 +12,7 @@ use Magento\Framework\Data\Collection;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Attribute
-    extends Eav
+class Attribute extends Eav
 {
     /** @var \Magento\Customer\Model\ResourceModel\Attribute\CollectionFactory */
     protected $customerAttributeCollectionFactory;
@@ -30,43 +29,28 @@ class Attribute
     /** @var bool */
     private $addPleaseSelect = true;
 
-    /**
-     * @param \Magento\Customer\Model\ResourceModel\Attribute\CollectionFactory         $customerAttributeCollectionFactory
-     * @param \Magento\Customer\Model\ResourceModel\Address\Attribute\CollectionFactory $customerAddressAttributeCollectionFactory
-     * @param \Magento\Catalog\Model\ResourceModel\Category\Attribute\CollectionFactory $categoryAttributeCollectionFactory
-     * @param CollectionFactory                                                         $productAttributeCollectionFactory
-     */
     public function __construct(
         \Magento\Customer\Model\ResourceModel\Attribute\CollectionFactory $customerAttributeCollectionFactory,
         \Magento\Customer\Model\ResourceModel\Address\Attribute\CollectionFactory $customerAddressAttributeCollectionFactory,
         \Magento\Catalog\Model\ResourceModel\Category\Attribute\CollectionFactory $categoryAttributeCollectionFactory,
-        CollectionFactory $productAttributeCollectionFactory)
-    {
+        CollectionFactory $productAttributeCollectionFactory
+    ) {
         $this->customerAttributeCollectionFactory = $customerAttributeCollectionFactory;
         $this->customerAddressAttributeCollectionFactory = $customerAddressAttributeCollectionFactory;
         $this->categoryAttributeCollectionFactory = $categoryAttributeCollectionFactory;
         $this->productAttributeCollectionFactory = $productAttributeCollectionFactory;
     }
 
-    /**
-     * @return bool
-     */
     public function isAddPleaseSelect(): bool
     {
         return $this->addPleaseSelect;
     }
 
-    /**
-     * @param bool $addPleaseSelect
-     */
-    public function setAddPleaseSelect(bool $addPleaseSelect)
+    public function setAddPleaseSelect(bool $addPleaseSelect): void
     {
         $this->addPleaseSelect = $addPleaseSelect;
     }
 
-    /**
-     * @return array
-     */
     public function toOptionArray(): array
     {
         if ($this->isAddPleaseSelect()) {
@@ -86,7 +70,7 @@ class Attribute
             foreach ($customerAttributeCollection as $customerAttribute) {
                 $frontendLabel = $customerAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $customerAttributes[] = [
                         'value' => $customerAttribute->getId(),
                         'label' => sprintf('%s (%s)', $frontendLabel, $customerAttribute->getAttributeCode())
@@ -108,7 +92,7 @@ class Attribute
             foreach ($addressAttributeCollection as $addressAttribute) {
                 $frontendLabel = $addressAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $addressAttributes[] = [
                         'value' => $addressAttribute->getId(),
                         'label' => sprintf('%s (%s)', $frontendLabel, $addressAttribute->getAttributeCode())
@@ -130,7 +114,7 @@ class Attribute
             foreach ($categoryAttributeCollection as $categoryAttribute) {
                 $frontendLabel = $categoryAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $categoryAttributes[] = [
                         'value' => $categoryAttribute->getId(),
                         'label' => sprintf('%s (%s)', $frontendLabel, $categoryAttribute->getAttributeCode())
@@ -152,7 +136,7 @@ class Attribute
             foreach ($productAttributeCollection as $productAttribute) {
                 $frontendLabel = $productAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $productAttributes[] = [
                         'value' => $productAttribute->getId(),
                         'label' => sprintf('%s (%s)', $frontendLabel, $productAttribute->getAttributeCode())
@@ -166,9 +150,6 @@ class Attribute
         return $attributes;
     }
 
-    /**
-     * @return array
-     */
     public function toOptions(): array
     {
         $attributes = [];
@@ -182,7 +163,7 @@ class Attribute
             foreach ($customerAttributeCollection as $customerAttribute) {
                 $frontendLabel = $customerAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $attributes[ $customerAttribute->getId() ] =
                         sprintf('%s | %s (%s)', __('Customer'), $frontendLabel, $customerAttribute->getAttributeCode());
                 }
@@ -198,7 +179,7 @@ class Attribute
             foreach ($addressAttributeCollection as $addressAttribute) {
                 $frontendLabel = $addressAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $attributes[ $addressAttribute->getId() ] =
                         sprintf('%s | %s (%s)', __('Address'), $frontendLabel, $addressAttribute->getAttributeCode());
                 }
@@ -214,7 +195,7 @@ class Attribute
             foreach ($categoryAttributeCollection as $categoryAttribute) {
                 $frontendLabel = $categoryAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $attributes[ $categoryAttribute->getId() ] =
                         sprintf('%s | %s (%s)', __('Category'), $frontendLabel, $categoryAttribute->getAttributeCode());
                 }
@@ -230,7 +211,7 @@ class Attribute
             foreach ($productAttributeCollection as $productAttribute) {
                 $frontendLabel = $productAttribute->getData('frontend_label');
 
-                if ( ! empty($frontendLabel)) {
+                if (! empty($frontendLabel)) {
                     $attributes[ $productAttribute->getId() ] =
                         sprintf('%s | %s (%s)', __('Product'), $frontendLabel, $productAttribute->getAttributeCode());
                 }

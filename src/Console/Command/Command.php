@@ -18,8 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-abstract class Command
-    extends \Symfony\Component\Console\Command\Command
+abstract class Command extends \Symfony\Component\Console\Command\Command
 {
     /** @var Variables */
     protected $variables;
@@ -27,10 +26,6 @@ abstract class Command
     /** @var ObjectManagerFactory */
     protected $objectManagerFactory;
 
-    /**
-     * @param Variables            $variables
-     * @param ObjectManagerFactory $objectManagerFactory
-     */
     public function __construct(Variables $variables, ObjectManagerFactory $objectManagerFactory)
     {
         $this->variables = $variables;
@@ -40,35 +35,17 @@ abstract class Command
         parent::__construct();
     }
 
-    /**
-     * @return string
-     */
     abstract protected function getCommandName(): string;
 
-    /**
-     * @return string
-     */
     abstract protected function getCommandDescription(): string;
 
-    /**
-     * @return array
-     */
     abstract protected function getCommandDefinition(): array;
 
-    /**
-     * @return string
-     */
     abstract protected function getClassName(): string;
 
-    /**
-     * @return string
-     */
     abstract protected function getArea(): string;
 
-    /**
-     * @return void
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName($this->getCommandName());
         $this->setDescription($this->getCommandDescription());
@@ -84,9 +61,6 @@ abstract class Command
      * as a concrete class. In this case, instead of defining the
      * execute() method, you set the code to execute by passing
      * a Closure to the setCode() method.
-     *
-     * @param InputInterface  $input
-     * @param OutputInterface $output
      *
      * @return int 0 if everything went fine, or an error code
      *

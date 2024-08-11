@@ -14,19 +14,11 @@ class Type
     /** @var \Magento\Catalog\Model\Product\Type */
     protected $productType;
 
-    /**
-     * @param \Magento\Catalog\Model\Product\Type $productType
-     */
     public function __construct(\Magento\Catalog\Model\Product\Type $productType)
     {
         $this->productType = $productType;
     }
 
-    /**
-     * Options getter
-     *
-     * @return array
-     */
     public function toOptionArray(): array
     {
         $options = [['value' => 'all', 'label' => __('All Product Types')]];
@@ -41,11 +33,6 @@ class Type
         return $options;
     }
 
-    /**
-     * Get options in "key-value" format
-     *
-     * @return array
-     */
     public function toArray(): array
     {
         $options = ['all' => __('All Product Types')];

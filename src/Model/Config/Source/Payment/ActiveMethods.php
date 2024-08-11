@@ -15,8 +15,7 @@ use Magento\Payment\Model\Config\Source\Allmethods;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class ActiveMethods
-    extends Allmethods
+class ActiveMethods extends Allmethods
 {
     /** @var Payment */
     protected $paymentHelper;
@@ -30,11 +29,6 @@ class ActiveMethods
     /** @var bool */
     private $withDefault = true;
 
-    /**
-     * @param Data    $paymentData
-     * @param Payment $paymentHelper
-     * @param Arrays  $arrayHelper
-     */
     public function __construct(Data $paymentData, Payment $paymentHelper, Arrays $arrayHelper)
     {
         parent::__construct($paymentData);
@@ -44,7 +38,6 @@ class ActiveMethods
     }
 
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptionArray(): array
@@ -67,7 +60,6 @@ class ActiveMethods
     }
 
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptions(): array
@@ -83,12 +75,6 @@ class ActiveMethods
         return $this->extractOptions($this->filterOptions(parent::toOptionArray(), $activeMethodCodes));
     }
 
-    /**
-     * @param array $optionsArray
-     * @param array $prefixes
-     *
-     * @return array
-     */
     protected function extractOptions(array $optionsArray, array $prefixes = []): array
     {
         $options = [];
@@ -115,10 +101,7 @@ class ActiveMethods
     }
 
     /**
-     * @param array    $options
      * @param string[] $activeMethodCodes
-     *
-     * @return array
      */
     protected function filterOptions(array $options, array $activeMethodCodes): array
     {
@@ -145,34 +128,22 @@ class ActiveMethods
         return $options;
     }
 
-    /**
-     * @return bool
-     */
     public function isAllStores(): bool
     {
         return $this->allStores;
     }
 
-    /**
-     * @param bool $allStores
-     */
-    public function setAllStores(bool $allStores)
+    public function setAllStores(bool $allStores): void
     {
         $this->allStores = $allStores;
     }
 
-    /**
-     * @return bool
-     */
     public function isWithDefault(): bool
     {
         return $this->withDefault;
     }
 
-    /**
-     * @param bool $withDefault
-     */
-    public function setWithDefault(bool $withDefault)
+    public function setWithDefault(bool $withDefault): void
     {
         $this->withDefault = $withDefault;
     }

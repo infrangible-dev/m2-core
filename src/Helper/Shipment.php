@@ -41,15 +41,6 @@ class Shipment
     /** @var \Magento\Sales\Model\ResourceModel\Order\Shipment\Track\CollectionFactory */
     protected $shipmentTrackCollectionFactory;
 
-    /**
-     * @param ShipmentRepositoryInterface                                               $shipmentRepository
-     * @param ShipmentFactory                                                           $shipmentFactory
-     * @param \Magento\Sales\Model\ResourceModel\Order\ShipmentFactory                  $shipmentResourceFactory
-     * @param CollectionFactory                                                         $shipmentCollectionFactory
-     * @param TrackFactory                                                              $shipmentTrackFactory
-     * @param \Magento\Sales\Model\ResourceModel\Order\Shipment\TrackFactory            $shipmentTrackResourceFactory
-     * @param \Magento\Sales\Model\ResourceModel\Order\Shipment\Track\CollectionFactory $shipmentTrackCollectionFactory
-     */
     public function __construct(
         ShipmentRepositoryInterface $shipmentRepository,
         ShipmentFactory $shipmentFactory,
@@ -68,19 +59,11 @@ class Shipment
         $this->shipmentTrackCollectionFactory = $shipmentTrackCollectionFactory;
     }
 
-    /**
-     * @return Order\Shipment
-     */
     public function newShipment(): Order\Shipment
     {
         return $this->shipmentRepository->create();
     }
 
-    /**
-     * @param int $shipmentId
-     *
-     * @return Order\Shipment
-     */
     public function loadShipment(int $shipmentId): Order\Shipment
     {
         $shipment = $this->newShipment();
@@ -91,26 +74,18 @@ class Shipment
     }
 
     /**
-     * @param Order\Shipment $shipment
-     *
      * @throws AlreadyExistsException
      */
-    public function saveShipment(Order\Shipment $shipment)
+    public function saveShipment(Order\Shipment $shipment): void
     {
         $this->shipmentResourceFactory->create()->save($shipment);
     }
 
-    /**
-     * @return Collection
-     */
     public function getShipmentCollection(): Collection
     {
         return $this->shipmentCollectionFactory->create();
     }
 
-    /**
-     * @return Track
-     */
     public function newShipmentTrack(): Track
     {
         return $this->shipmentTrackFactory->create();
@@ -119,12 +94,9 @@ class Shipment
     /**
      * Prepare order shipment based on order items and requested items qty
      *
-     * @param Order $order
      * @param array $qtys   array with mappings of item-ids to quantity
      * @param array $tracks array with arrays of mappings
      *                      (keys from ShipmentTrackInterface, eg TRACK_NUMBER, CARRIER_CODE, TITLE)
-     *
-     * @return Order\Shipment
      */
     public function prepareShipment(Order $order, array $qtys = [], array $tracks = []): Order\Shipment
     {

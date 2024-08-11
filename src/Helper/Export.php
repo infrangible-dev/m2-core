@@ -84,22 +84,6 @@ class Export
     /** @var int */
     private $maxBestsellerRating;
 
-    /**
-     * @param Variables                          $variables
-     * @param Arrays                             $arrays
-     * @param Database                           $databaseHelper
-     * @param Stores                             $storeHelper
-     * @param \Infrangible\Core\Helper\Attribute $attributeHelper
-     * @param Product                            $productHelper
-     * @param Category                           $categoryHelper
-     * @param Customer                           $customerHelper
-     * @param Address                            $addressHelper
-     * @param Data                               $taxHelper
-     * @param LoggerInterface                    $logging
-     * @param Visibility                         $productVisible
-     * @param Status                             $productStatus
-     * @param Config                             $eavConfig
-     */
     public function __construct(
         Variables $variables,
         Arrays $arrays,
@@ -134,12 +118,6 @@ class Export
     }
 
     /**
-     * @param int   $storeId
-     * @param bool  $onlyWithStock
-     * @param array $productIds
-     * @param int   $lastProductId
-     * @param int   $limit
-     *
      * @return int[]
      *
      * @throws Exception
@@ -171,14 +149,6 @@ class Export
     }
 
     /**
-     * @param int   $storeId
-     * @param bool  $onlyWithStock
-     * @param array $productIds
-     * @param int   $lastProductId
-     * @param int   $limit
-     *
-     * @return Select
-     *
      * @throws Exception
      */
     protected function getExportableProductsSelect(
@@ -204,89 +174,107 @@ class Export
         $select->from(['e' => $this->databaseHelper->getTableName('catalog_product_entity')], ['entity_id', 'type_id']);
 
         if ($onlyWithStock || $storeId > 0) {
-            $select->joinLeft(['super_link' => $this->databaseHelper->getTableName('catalog_product_super_link')],
-                              'super_link.parent_id = e.entity_id',
-                              []);
+            $select->joinLeft(
+                ['super_link' => $this->databaseHelper->getTableName('catalog_product_super_link')],
+                'super_link.parent_id = e.entity_id',
+                []
+            );
         }
 
         if ($storeId > 0) {
             $websiteId = $this->storeHelper->getStore($storeId)->getWebsiteId();
 
-            $select->join(['website' => $this->databaseHelper->getTableName('catalog_product_website')],
-                          $adapter->quoteInto(
-                              'website.product_id = e.entity_id AND website.website_id = ?',
-                              $websiteId
-                          ),
-                          []);
-
-            $select->joinLeft(['simple_website' => $this->databaseHelper->getTableName('catalog_product_website')],
-                              $adapter->quoteInto(
-                                  'simple_website.product_id = super_link.product_id AND simple_website.website_id = ?',
-                                  $websiteId
-                              ),
-                              []);
-        }
-
-        if ($onlyWithStock) {
-            $select->join(['stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
-                          $adapter->quoteInto(
-                              'stock_item.product_id = e.entity_id AND stock_item.stock_id = ?',
-                              $this->getStockId($storeId)
-                          ),
-                          []);
+            $select->join(
+                ['website' => $this->databaseHelper->getTableName('catalog_product_website')],
+                $adapter->quoteInto(
+                    'website.product_id = e.entity_id AND website.website_id = ?',
+                    $websiteId
+                ),
+                []
+            );
 
             $select->joinLeft(
-                ['simple_stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')], sprintf(
-                '%s AND %s',
+                ['simple_website' => $this->databaseHelper->getTableName('catalog_product_website')],
                 $adapter->quoteInto(
-                    'simple_stock_item.product_id = super_link.product_id AND stock_item.stock_id = ?',
-                    $this->getStockId(
-                        $storeId
-                    )
+                    'simple_website.product_id = super_link.product_id AND simple_website.website_id = ?',
+                    $websiteId
                 ),
-                $adapter->quoteInto(
-                    '((simple_stock_item.use_config_manage_stock = 1 and simple_stock_item.is_in_stock = 1) OR simple_stock_item.use_config_manage_stock = 0 OR ? = 0)',
-                    $configManageStock ? 1 : 0
-                )
-            ), []
+                []
             );
         }
 
-        $select->joinLeft(['status_admin' => $status->getBackendTable()],
-                          $adapter->quoteInto(
-                              'status_admin.entity_id = e.entity_id AND status_admin.attribute_id = ? AND status_admin.store_id = 0',
-                              $status->getAttributeId()
-                          ),
-                          []);
+        if ($onlyWithStock) {
+            $select->join(
+                ['stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
+                $adapter->quoteInto(
+                    'stock_item.product_id = e.entity_id AND stock_item.stock_id = ?',
+                    $this->getStockId($storeId)
+                ),
+                []
+            );
 
-        $select->joinLeft(['status_store' => $status->getBackendTable()],
-                          sprintf(
-                              '%s AND %s',
-                              $adapter->quoteInto(
-                                  'status_store.entity_id = e.entity_id AND status_store.attribute_id = ?',
-                                  $status->getAttributeId()
-                              ),
-                              $adapter->quoteInto('status_store.store_id = ?', $storeId)
-                          ),
-                          []);
+            $select->joinLeft(
+                ['simple_stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
+                sprintf(
+                    '%s AND %s',
+                    $adapter->quoteInto(
+                        'simple_stock_item.product_id = super_link.product_id AND stock_item.stock_id = ?',
+                        $this->getStockId(
+                            $storeId
+                        )
+                    ),
+                    $adapter->quoteInto(
+                        '((simple_stock_item.use_config_manage_stock = 1 and simple_stock_item.is_in_stock = 1) OR simple_stock_item.use_config_manage_stock = 0 OR ? = 0)',
+                        $configManageStock ? 1 : 0
+                    )
+                ),
+                []
+            );
+        }
 
-        $select->joinLeft(['visibility_admin' => $visibility->getBackendTable()],
-                          $adapter->quoteInto(
-                              'visibility_admin.entity_id = e.entity_id AND visibility_admin.attribute_id = ? AND visibility_admin.store_id = 0',
-                              $visibility->getAttributeId()
-                          ),
-                          []);
+        $select->joinLeft(
+            ['status_admin' => $status->getBackendTable()],
+            $adapter->quoteInto(
+                'status_admin.entity_id = e.entity_id AND status_admin.attribute_id = ? AND status_admin.store_id = 0',
+                $status->getAttributeId()
+            ),
+            []
+        );
 
-        $select->joinLeft(['visibility_store' => $visibility->getBackendTable()],
-                          sprintf(
-                              '%s AND %s',
-                              $adapter->quoteInto(
-                                  'visibility_store.entity_id = e.entity_id AND visibility_store.attribute_id = ?',
-                                  $visibility->getAttributeId()
-                              ),
-                              $adapter->quoteInto('visibility_store.store_id = ?', $storeId)
-                          ),
-                          []);
+        $select->joinLeft(
+            ['status_store' => $status->getBackendTable()],
+            sprintf(
+                '%s AND %s',
+                $adapter->quoteInto(
+                    'status_store.entity_id = e.entity_id AND status_store.attribute_id = ?',
+                    $status->getAttributeId()
+                ),
+                $adapter->quoteInto('status_store.store_id = ?', $storeId)
+            ),
+            []
+        );
+
+        $select->joinLeft(
+            ['visibility_admin' => $visibility->getBackendTable()],
+            $adapter->quoteInto(
+                'visibility_admin.entity_id = e.entity_id AND visibility_admin.attribute_id = ? AND visibility_admin.store_id = 0',
+                $visibility->getAttributeId()
+            ),
+            []
+        );
+
+        $select->joinLeft(
+            ['visibility_store' => $visibility->getBackendTable()],
+            sprintf(
+                '%s AND %s',
+                $adapter->quoteInto(
+                    'visibility_store.entity_id = e.entity_id AND visibility_store.attribute_id = ?',
+                    $visibility->getAttributeId()
+                ),
+                $adapter->quoteInto('visibility_store.store_id = ?', $storeId)
+            ),
+            []
+        );
 
         if (!empty($productIds)) {
             $select->where('`e`.`entity_id` IN( ? )', $productIds);
@@ -335,9 +323,6 @@ class Export
     }
 
     /**
-     * @param int $storeId
-     *
-     * @return int
      * @throws NoSuchEntityException
      */
     protected function getStockId(int $storeId): int
@@ -349,10 +334,6 @@ class Export
 
     /**
      * Retrieve searchable attributes
-     *
-     * @param string|null $backendType
-     * @param array       $excludeAttributeCodes
-     * @param array       $attributeConditions
      *
      * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
      * @throws LocalizedException
@@ -370,8 +351,6 @@ class Export
     }
 
     /**
-     * @param array $attributeConditions
-     *
      * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
      * @throws LocalizedException
      */
@@ -418,10 +397,6 @@ class Export
     }
 
     /**
-     * @param string|null $backendType
-     * @param array       $excludeAttributeCodes
-     * @param array       $attributeConditions
-     *
      * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
      * @throws LocalizedException
      */
@@ -453,11 +428,6 @@ class Export
     }
 
     /**
-     * @param bool  $onlyAttributeIds
-     * @param array $excludeAttributeCodes
-     * @param array $attributeConditions
-     *
-     * @return array
      * @throws LocalizedException
      */
     public function getSearchableAttributesByTypes(
@@ -480,11 +450,6 @@ class Export
     }
 
     /**
-     * @param string $useBackendType
-     * @param bool   $onlyAttributeIds
-     * @param array  $excludeAttributeCodes
-     * @param array  $attributeConditions
-     *
      * @return array|\Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
      * @throws LocalizedException
      */
@@ -502,14 +467,8 @@ class Export
     /**
      * Determine the index required data from the current block of products.
      *
-     * @param AdapterInterface $dbAdapter
      * @param int[]            $productIds
-     * @param int              $storeId
-     * @param array            $attributeConditions
-     * @param array            $requiredEavAttributeCodes
-     * @param bool             $limitActiveCategoriesToStore
      *
-     * @return array
      * @throws Exception
      */
     public function getProductsData(
@@ -684,9 +643,6 @@ class Export
     }
 
     /**
-     * @param array $attributeConditions
-     * @param array $requiredEavAttributeCodes
-     *
      * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
      * @throws Exception
      */
@@ -719,17 +675,12 @@ class Export
 
     /**
      * get rating position for a product from the bestseller table
-     *
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     * @param int              $storeId
-     *
-     * @return array
      */
     public function getBestsellerRatings(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
     {
         $bestseller = $dbAdapter->select()->from(
-            $this->databaseHelper->getTableName('sales_bestsellers_aggregated_monthly'), ['product_id', 'rating_pos']
+            $this->databaseHelper->getTableName('sales_bestsellers_aggregated_monthly'),
+            ['product_id', 'rating_pos']
         );
 
         $bestseller->where(
@@ -764,12 +715,6 @@ class Export
         return $queryResult;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param int              $storeId
-     *
-     * @return int
-     */
     protected function getMaxBestsellerRating(AdapterInterface $dbAdapter, int $storeId): int
     {
         if (empty($this->maxBestsellerRating)) {
@@ -780,14 +725,15 @@ class Export
 
             $bestseller->where(
                 $dbAdapter->prepareSqlCondition(
-                    $tableLabel.'.period', ['eq' => sprintf('%s-01', date('Y-m'))]
+                    $tableLabel . '.period',
+                    ['eq' => sprintf('%s-01', date('Y-m'))]
                 ),
                 null,
                 Select::TYPE_CONDITION
             );
 
             $bestseller->where(
-                $dbAdapter->prepareSqlCondition($tableLabel.'.store_id', ['eq' => $storeId]),
+                $dbAdapter->prepareSqlCondition($tableLabel . '.store_id', ['eq' => $storeId]),
                 null,
                 Select::TYPE_CONDITION
             );
@@ -804,12 +750,6 @@ class Export
      * returns an array of the url paths of the categories a product is member of
      * language is given through store, defaults to store 0 if no name is found
      *
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     * @param int              $storeId
-     * @param bool             $limitActiveCategoriesToStore
-     *
-     * @return array
      * @throws Exception
      */
     public function getCategoriesPaths(
@@ -851,13 +791,6 @@ class Export
         return $categoryPaths;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     * @param int              $storeId
-     *
-     * @return array|null
-     */
     public function getUrlRewrites(AdapterInterface $dbAdapter, array $productIds, int $storeId): ?array
     {
         $urlRewriteQuery = $dbAdapter->select()->from($this->databaseHelper->getTableName('url_rewrite'), [
@@ -892,12 +825,6 @@ class Export
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     * @param int              $storeId
-     * @param bool             $includeDisabled
-     *
-     * @return array
      * @throws Exception
      */
     public function getGalleryImages(
@@ -934,39 +861,46 @@ class Export
             )
         ]);
 
-        $galleryQuery->joinLeft(['gallery_value_default' => $galleryValueTableName],
-                                sprintf(
-                                    '%s = %s AND %s = %d',
-                                    $dbAdapter->quoteIdentifier('gallery_value.value_id'),
-                                    $dbAdapter->quoteIdentifier('gallery_value_default.value_id'),
-                                    $dbAdapter->quoteIdentifier('gallery_value_default.store_id'),
-                                    0
-                                ),
-                                []);
+        $galleryQuery->joinLeft(
+            ['gallery_value_default' => $galleryValueTableName],
+            sprintf(
+                '%s = %s AND %s = %d',
+                $dbAdapter->quoteIdentifier('gallery_value.value_id'),
+                $dbAdapter->quoteIdentifier('gallery_value_default.value_id'),
+                $dbAdapter->quoteIdentifier('gallery_value_default.store_id'),
+                0
+            ),
+            []
+        );
 
-        $galleryQuery->joinLeft(['gallery_value_store' => $galleryValueTableName],
-                                sprintf(
-                                    '%s = %s AND %s = %d',
-                                    $dbAdapter->quoteIdentifier('gallery_value.value_id'),
-                                    $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
-                                    $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
-                                    $storeId
-                                ),
-                                []);
+        $galleryQuery->joinLeft(
+            ['gallery_value_store' => $galleryValueTableName],
+            sprintf(
+                '%s = %s AND %s = %d',
+                $dbAdapter->quoteIdentifier('gallery_value.value_id'),
+                $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
+                $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
+                $storeId
+            ),
+            []
+        );
 
-        $galleryQuery->join(['gallery_value_to_entity' => $galleryValueToEntityTableName],
-                            sprintf(
-                                '%s = %s',
-                                $dbAdapter->quoteIdentifier('gallery_value.value_id'),
-                                $dbAdapter->quoteIdentifier('gallery_value_to_entity.value_id')
-                            ),
-                            ['gallery_value_to_entity.entity_id']);
+        $galleryQuery->join(
+            ['gallery_value_to_entity' => $galleryValueToEntityTableName],
+            sprintf(
+                '%s = %s',
+                $dbAdapter->quoteIdentifier('gallery_value.value_id'),
+                $dbAdapter->quoteIdentifier('gallery_value_to_entity.value_id')
+            ),
+            ['gallery_value_to_entity.entity_id']
+        );
 
         $attribute = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'media_gallery');
 
         $galleryQuery->where(
             $dbAdapter->prepareSqlCondition(
-                'gallery_value.attribute_id', ['eq' => $attribute->getId()]
+                'gallery_value.attribute_id',
+                ['eq' => $attribute->getId()]
             ),
             null,
             Select::TYPE_CONDITION
@@ -974,7 +908,8 @@ class Export
 
         $galleryQuery->where(
             $dbAdapter->prepareSqlCondition(
-                'gallery_value_to_entity.entity_id', ['in' => $productIds]
+                'gallery_value_to_entity.entity_id',
+                ['in' => $productIds]
             ),
             null,
             Select::TYPE_CONDITION
@@ -1009,11 +944,6 @@ class Export
     /**
      * Gets the product prices from the catalog price indexer table
      *
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     * @param int              $storeId
-     *
-     * @return array
      * @throws NoSuchEntityException
      */
     public function getIndexedPrices(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
@@ -1084,11 +1014,6 @@ class Export
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     * @param int              $storeId
-     *
-     * @return array
      * @throws NoSuchEntityException
      */
     public function getStockItems(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
@@ -1114,9 +1039,11 @@ class Export
             }
         }
 
-        $select->join(['stock_item' => $stockItemTable],
-                      'stock_status.product_id = stock_item.product_id AND stock_status.stock_id = stock_item.stock_id',
-                      $stockItemFields);
+        $select->join(
+            ['stock_item' => $stockItemTable],
+            'stock_status.product_id = stock_item.product_id AND stock_status.stock_id = stock_item.stock_id',
+            $stockItemFields
+        );
 
         $select->where('stock_status.product_id IN (?)', $productIds);
         $select->where('stock_status.stock_id = ?', $this->getStockId($storeId));
@@ -1124,21 +1051,11 @@ class Export
         return $this->databaseHelper->fetchAssoc($select);
     }
 
-    /**
-     * @return array
-     */
     protected function getStockItemFields(): array
     {
         return ['qty', 'is_in_stock', 'manage_stock'];
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     * @param int              $storeId
-     *
-     * @return array
-     */
     public function getReviewSummary(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
     {
         $entityIdSelect =
@@ -1161,15 +1078,6 @@ class Export
     }
 
     /**
-     * @param AdapterInterface        $dbAdapter
-     * @param string                  $entityTypeCode
-     * @param int                     $storeId
-     * @param array                   $attributeCodes
-     * @param array                   $entityIds
-     * @param array                   $specialAttributes
-     * @param AbstractCollection|null $collection
-     *
-     * @return array
      * @throws Exception
      */
     public function getCurrentAttributeValues(

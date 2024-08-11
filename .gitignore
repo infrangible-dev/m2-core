@@ -1,4 +1,5 @@
 /.idea/
 /generated/
+/src/.php-cs-fixer.cache
 /var/
 /vendor/

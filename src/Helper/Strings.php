@@ -23,11 +23,6 @@ class Strings
     /** @var EncryptorInterface */
     protected $encryptor;
 
-    /**
-     * @param \FeWeDev\Base\Strings $strings
-     * @param UrlInterface          $urlInterface
-     * @param EncryptorInterface    $encryptor
-     */
     public function __construct(
         \FeWeDev\Base\Strings $strings,
         UrlInterface $urlInterface,
@@ -53,10 +48,6 @@ class Strings
 
     /**
      * Encrypt a string
-     *
-     * @param string $data
-     *
-     * @return string
      */
     public function encrypt(string $data): string
     {
@@ -65,10 +56,6 @@ class Strings
 
     /**
      * Decrypt a string
-     *
-     * @param string $data
-     *
-     * @return string
      */
     public function decrypt(string $data): string
     {

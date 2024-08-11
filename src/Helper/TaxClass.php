@@ -18,28 +18,16 @@ class TaxClass
     /** @var CollectionFactory */
     protected $taxClassCollectionFactory;
 
-    /**
-     * @param CollectionFactory $taxClassCollectionFactory
-     */
     public function __construct(CollectionFactory $taxClassCollectionFactory)
     {
         $this->taxClassCollectionFactory = $taxClassCollectionFactory;
     }
 
-    /**
-     * @return Collection
-     */
     public function getTaxClassCollection(): Collection
     {
         return $this->taxClassCollectionFactory->create();
     }
 
-    /**
-     * @param string $taxClassName
-     * @param string $taxClassType
-     *
-     * @return ClassModel|null
-     */
     public function getTaxClassByName(string $taxClassName, string $taxClassType = 'PRODUCT'): ?ClassModel
     {
         $taxClassCollection = $this->taxClassCollectionFactory->create();

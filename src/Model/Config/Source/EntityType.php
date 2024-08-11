@@ -11,22 +11,17 @@ use Magento\Framework\Exception\LocalizedException;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class EntityType
-    extends Eav
+class EntityType extends Eav
 {
     /** @var \Infrangible\Core\Helper\EntityType */
     protected $entityTypeHelper;
 
-    /**
-     * @param \Infrangible\Core\Helper\EntityType $entityTypeHelper
-     */
     public function __construct(\Infrangible\Core\Helper\EntityType $entityTypeHelper)
     {
         $this->entityTypeHelper = $entityTypeHelper;
     }
 
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptionArray(): array
@@ -65,7 +60,6 @@ class EntityType
     }
 
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptions(): array

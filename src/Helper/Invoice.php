@@ -23,10 +23,6 @@ class Invoice
     /** @var InvoiceService */
     protected $invoiceService;
 
-    /**
-     * @param LoggerInterface $logging
-     * @param InvoiceService  $invoiceService
-     */
     public function __construct(LoggerInterface $logging, InvoiceService $invoiceService)
     {
         $this->logging = $logging;
@@ -36,11 +32,6 @@ class Invoice
     /**
      * Prepare order invoice based on order data and requested items qtys. If $qtys is not empty - the function will
      * prepare only specified items, otherwise all containing in the order.
-     *
-     * @param Order $order
-     * @param array $qtys
-     *
-     * @return Order\Invoice
      */
     public function prepareInvoice(Order $order, array $qtys = []): ?Order\Invoice
     {

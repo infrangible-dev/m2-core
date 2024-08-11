@@ -14,8 +14,7 @@ use Magento\Framework\Exception\LocalizedException;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class AttributeSet
-    extends Eav
+class AttributeSet extends Eav
 {
     /** @var \Infrangible\Core\Helper\EntityType */
     protected $entityTypeHelper;
@@ -23,20 +22,15 @@ class AttributeSet
     /** @var CollectionFactory */
     protected $attributeSetCollectionFactory;
 
-    /**
-     * @param \Infrangible\Core\Helper\EntityType $entityTypeHelper
-     * @param CollectionFactory                   $attributeSetCollectionFactory
-     */
     public function __construct(
         \Infrangible\Core\Helper\EntityType $entityTypeHelper,
-        CollectionFactory $attributeSetCollectionFactory)
-    {
+        CollectionFactory $attributeSetCollectionFactory
+    ) {
         $this->entityTypeHelper = $entityTypeHelper;
         $this->attributeSetCollectionFactory = $attributeSetCollectionFactory;
     }
 
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptionArray(): array
@@ -143,7 +137,6 @@ class AttributeSet
     }
 
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptions(): array

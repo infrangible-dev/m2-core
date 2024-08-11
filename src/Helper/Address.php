@@ -36,22 +36,14 @@ class Address
     /** @var \Magento\Directory\Model\ResourceModel\Country\CollectionFactory */
     protected $countryCollectionFactory;
 
-    /**
-     * @param AddressFactory                                                   $addressFactory
-     * @param \Magento\Customer\Model\ResourceModel\AddressFactory             $addressResourceFactory
-     * @param CollectionFactory                                                $addressCollectionFactory
-     * @param CountryFactory                                                   $countryFactory
-     * @param \Magento\Directory\Model\ResourceModel\CountryFactory            $countryResourceFactory
-     * @param \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
-     */
     public function __construct(
         AddressFactory $addressFactory,
         \Magento\Customer\Model\ResourceModel\AddressFactory $addressResourceFactory,
         CollectionFactory $addressCollectionFactory,
         CountryFactory $countryFactory,
         \Magento\Directory\Model\ResourceModel\CountryFactory $countryResourceFactory,
-        \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory)
-    {
+        \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
+    ) {
         $this->addressFactory = $addressFactory;
         $this->addressResourceFactory = $addressResourceFactory;
         $this->addressCollectionFactory = $addressCollectionFactory;
@@ -60,19 +52,11 @@ class Address
         $this->countryCollectionFactory = $countryCollectionFactory;
     }
 
-    /**
-     * @return \Magento\Customer\Model\Address
-     */
     public function newAddress(): \Magento\Customer\Model\Address
     {
         return $this->addressFactory->create();
     }
 
-    /**
-     * @param int $addressId
-     *
-     * @return \Magento\Customer\Model\Address
-     */
     public function loadAddress(int $addressId): \Magento\Customer\Model\Address
     {
         $address = $this->newAddress();
@@ -83,36 +67,23 @@ class Address
     }
 
     /**
-     * @param \Magento\Customer\Model\Address $address
-     *
      * @throws Exception
      */
-    public function saveAddress(\Magento\Customer\Model\Address $address)
+    public function saveAddress(\Magento\Customer\Model\Address $address): void
     {
         $this->addressResourceFactory->create()->save($address);
     }
 
-    /**
-     * @return  Collection
-     */
     public function getAddressCollection(): Collection
     {
         return $this->addressCollectionFactory->create();
     }
 
-    /**
-     * @return Country
-     */
     public function newCountry(): Country
     {
         return $this->countryFactory->create();
     }
 
-    /**
-     * @param int $countryId
-     *
-     * @return Country
-     */
     public function loadCountry(int $countryId): Country
     {
         $country = $this->newCountry();
@@ -123,18 +94,13 @@ class Address
     }
 
     /**
-     * @param Country $country
-     *
      * @throws Exception
      */
-    public function saveCountry(Country $country)
+    public function saveCountry(Country $country): void
     {
         $this->countryResourceFactory->create()->save($country);
     }
 
-    /**
-     * @return \Magento\Directory\Model\ResourceModel\Country\Collection
-     */
     public function getCountryCollection(): \Magento\Directory\Model\ResourceModel\Country\Collection
     {
         return $this->countryCollectionFactory->create();

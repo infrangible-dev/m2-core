@@ -60,19 +60,6 @@ class Cms
     /** @var SimpleXml */
     protected $simpleXml;
 
-    /**
-     * @param Variables                                                $variables
-     * @param Arrays                                                   $arrays
-     * @param Files                                                    $files
-     * @param LoggerInterface                                          $logging
-     * @param PageFactory                                              $cmsPageFactory
-     * @param \Magento\Cms\Model\ResourceModel\PageFactory             $cmsPageResourceFactory
-     * @param CollectionFactory                                        $cmsPageCollectionFactory
-     * @param BlockFactory                                             $cmsBlockFactory
-     * @param \Magento\Cms\Model\ResourceModel\BlockFactory            $cmsBlockResourceFactory
-     * @param \Magento\Cms\Model\ResourceModel\Block\CollectionFactory $cmsBlockCollectionFactory
-     * @param SimpleXml                                                $simpleXml
-     */
     public function __construct(
         Variables $variables,
         Arrays $arrays,
@@ -100,19 +87,11 @@ class Cms
         $this->simpleXml = $simpleXml;
     }
 
-    /**
-     * @return Page
-     */
     public function newCmsPage(): Page
     {
         return $this->cmsPageFactory->create();
     }
 
-    /**
-     * @param int $cmsPageId
-     *
-     * @return Page
-     */
     public function loadCmsPage(int $cmsPageId): Page
     {
         $cmsPage = $this->newCmsPage();
@@ -122,12 +101,6 @@ class Cms
         return $cmsPage;
     }
 
-    /**
-     * @param string   $identifier
-     * @param int|null $storeId
-     *
-     * @return Page
-     */
     public function loadCmsPageByIdentifier(string $identifier, int $storeId = null): Page
     {
         $cmsPage = $this->newCmsPage();
@@ -142,36 +115,23 @@ class Cms
     }
 
     /**
-     * @param Page $cmsPage
-     *
      * @throws Exception
      */
-    public function saveCmsPage(Page $cmsPage)
+    public function saveCmsPage(Page $cmsPage): void
     {
         $this->cmsPageResourceFactory->create()->save($cmsPage);
     }
 
-    /**
-     * @return Collection
-     */
     public function getCmsPageCollection(): Collection
     {
         return $this->cmsPageCollectionFactory->create();
     }
 
-    /**
-     * @return Block
-     */
     public function newCmsBlock(): Block
     {
         return $this->cmsBlockFactory->create();
     }
 
-    /**
-     * @param int $cmsBlockId
-     *
-     * @return Block
-     */
     public function loadCmsBlock(int $cmsBlockId): Block
     {
         $cmsBlock = $this->newCmsBlock();
@@ -181,12 +141,6 @@ class Cms
         return $cmsBlock;
     }
 
-    /**
-     * @param string   $identifier
-     * @param int|null $storeId
-     *
-     * @return Block
-     */
     public function loadCmsBlockByIdentifier(string $identifier, int $storeId = null): Block
     {
         $cmsBlock = $this->newCmsBlock();
@@ -201,27 +155,19 @@ class Cms
     }
 
     /**
-     * @param Block $cmsBlock
-     *
      * @throws Exception
      */
-    public function saveCmsBlock(Block $cmsBlock)
+    public function saveCmsBlock(Block $cmsBlock): void
     {
         $this->cmsBlockResourceFactory->create()->save($cmsBlock);
     }
 
-    /**
-     * @return \Magento\Cms\Model\ResourceModel\Block\Collection
-     */
     public function getCmsBlockCollection(): \Magento\Cms\Model\ResourceModel\Block\Collection
     {
         return $this->cmsBlockCollectionFactory->create();
     }
 
     /**
-     * @param string $xmlFileName
-     * @param bool   $overwriteExisting
-     *
      * @return string[]
      * @throws Exception
      */
@@ -235,9 +181,6 @@ class Cms
     }
 
     /**
-     * @param SimpleXMLElement $xml
-     * @param bool             $overwriteExisting
-     *
      * @return string[]
      * @throws Exception
      */
@@ -258,10 +201,6 @@ class Cms
     }
 
     /**
-     * @param SimpleXMLElement $pageXml
-     * @param bool             $overwriteExisting
-     *
-     * @return bool
      * @throws Exception
      */
     public function importPageFromXml(SimpleXMLElement $pageXml, bool $overwriteExisting): bool
@@ -271,12 +210,6 @@ class Cms
         return $this->importPage($pageData, $overwriteExisting);
     }
 
-    /**
-     * @param array $pageData
-     * @param bool  $overwriteExisting
-     *
-     * @return bool
-     */
     public function importPage(array $pageData, bool $overwriteExisting = false): bool
     {
         $pageIdentifier = $this->arrays->getValue($pageData, static::STRING_IDENTIFIER);
@@ -368,9 +301,6 @@ class Cms
     }
 
     /**
-     * @param string $xmlFileName
-     * @param bool   $overwriteExisting
-     *
      * @return string[]
      * @throws Exception
      */
@@ -384,9 +314,6 @@ class Cms
     }
 
     /**
-     * @param SimpleXMLElement $xml
-     * @param bool             $overwriteExisting
-     *
      * @return string[]
      * @throws Exception
      */
@@ -407,10 +334,6 @@ class Cms
     }
 
     /**
-     * @param SimpleXMLElement $blockXml
-     * @param bool             $overwriteExisting
-     *
-     * @return bool
      * @throws Exception
      */
     public function importBlockFromXml(SimpleXMLElement $blockXml, bool $overwriteExisting): bool
@@ -420,12 +343,6 @@ class Cms
         return $this->importBlock($blockData, $overwriteExisting);
     }
 
-    /**
-     * @param array $blockData
-     * @param bool  $overwriteExisting
-     *
-     * @return bool
-     */
     public function importBlock(array $blockData, bool $overwriteExisting = false): bool
     {
         $blockIdentifier = $this->arrays->getValue($blockData, static::STRING_IDENTIFIER);

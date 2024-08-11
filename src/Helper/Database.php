@@ -21,8 +21,7 @@ use Zend_Db_Statement_Interface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Database
-    extends AbstractHelper
+class Database extends AbstractHelper
 {
     /** @var LoggerInterface */
     protected $logging;
@@ -36,11 +35,6 @@ class Database
     /** @var bool */
     private $queryLogging;
 
-    /**
-     * @param Context            $context
-     * @param ResourceConnection $resourceConnection
-     * @param TransactionFactory $transactionFactory
-     */
     public function __construct(
         Context $context,
         ResourceConnection $resourceConnection,
@@ -53,31 +47,16 @@ class Database
         $this->transactionFactory = $transactionFactory;
     }
 
-    /**
-     * @return AdapterInterface
-     */
     public function getDefaultConnection(): AdapterInterface
     {
         return $this->resourceConnection->getConnection();
     }
 
-    /**
-     * @param string $resourceName
-     *
-     * @return AdapterInterface
-     */
     public function getConnection(string $resourceName): AdapterInterface
     {
         return $this->resourceConnection->getConnection($resourceName);
     }
 
-    /**
-     * @param Select                $select
-     * @param AdapterInterface|null $specialAdapter
-     * @param bool                  $allowLogging
-     *
-     * @return array
-     */
     public function fetchAll(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -94,13 +73,6 @@ class Database
         return $result;
     }
 
-    /**
-     * @param Select                $select
-     * @param AdapterInterface|null $specialAdapter
-     * @param bool                  $allowLogging
-     *
-     * @return array
-     */
     public function fetchAssoc(
         Select $select,
         AdapterInterface $specialAdapter = null,
@@ -120,13 +92,6 @@ class Database
         return $result;
     }
 
-    /**
-     * @param Select                $select
-     * @param AdapterInterface|null $specialAdapter
-     * @param bool                  $allowLogging
-     *
-     * @return array
-     */
     public function fetchPairs(
         Select $select,
         AdapterInterface $specialAdapter = null,
@@ -146,13 +111,6 @@ class Database
         return $result;
     }
 
-    /**
-     * @param Select                $select
-     * @param AdapterInterface|null $specialAdapter
-     * @param bool                  $allowLogging
-     *
-     * @return string|null
-     */
     public function fetchOne(
         Select $select,
         AdapterInterface $specialAdapter = null,
@@ -176,13 +134,6 @@ class Database
         return $result;
     }
 
-    /**
-     * @param Select                $select
-     * @param AdapterInterface|null $specialAdapter
-     * @param bool                  $allowLogging
-     *
-     * @return array
-     */
     public function fetchRow(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -199,13 +150,6 @@ class Database
         return $result;
     }
 
-    /**
-     * @param Select                $select
-     * @param AdapterInterface|null $specialAdapter
-     * @param bool                  $allowLogging
-     *
-     * @return array
-     */
     public function fetchCol(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -222,12 +166,6 @@ class Database
         return $result;
     }
 
-    /**
-     * @param string $modelEntity
-     * @param string $connectionName
-     *
-     * @return string
-     */
     public function getTableName(
         string $modelEntity,
         string $connectionName = ResourceConnection::DEFAULT_CONNECTION
@@ -236,12 +174,6 @@ class Database
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $createTableData
-     * @param bool             $test
-     * @param bool             $allowLogging
-     *
-     * @return array
      * @throws Exception
      */
     public function saveCreateTableData(
@@ -287,7 +219,9 @@ class Database
                                 'Could not insert data into table: %s because: %s',
                                 $tableName,
                                 $exception->getMessage()
-                            ), 0, $exception
+                            ),
+                            0,
+                            $exception
                         );
                     }
                 } else {
@@ -310,13 +244,6 @@ class Database
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $singleAttributeTableData
-     * @param array            $eavAttributeTableData
-     * @param bool             $test
-     * @param bool             $allowLogging
-     *
-     * @return void
      * @throws Exception
      */
     public function saveUpdateTableData(
@@ -325,18 +252,12 @@ class Database
         array $eavAttributeTableData,
         bool $test = false,
         bool $allowLogging = true
-    ) {
+    ): void {
         $this->saveSingleAttributeTableData($dbAdapter, $singleAttributeTableData, $test, $allowLogging);
         $this->saveEavAttributeTableData($dbAdapter, $eavAttributeTableData, $test, $allowLogging);
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $singleAttributeTableData
-     * @param bool             $test
-     * @param bool             $allowLogging
-     *
-     * @return void
      * @throws Exception
      */
     private function saveSingleAttributeTableData(
@@ -344,7 +265,7 @@ class Database
         array $singleAttributeTableData,
         bool $test = false,
         bool $allowLogging = true
-    ) {
+    ): void {
         foreach ($singleAttributeTableData as $tableName => $attributeEntries) {
             foreach ($attributeEntries as $attributeName => $dbEntries) {
                 if ($allowLogging && $this->isQueryLogging()) {
@@ -376,7 +297,9 @@ class Database
                                 'Could not update data in table: %s because: %s',
                                 $tableName,
                                 $exception->getMessage()
-                            ), 0, $exception
+                            ),
+                            0,
+                            $exception
                         );
                     }
                 }
@@ -385,12 +308,6 @@ class Database
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $eavAttributeTableData
-     * @param bool             $test
-     * @param bool             $allowLogging
-     *
-     * @return void
      * @throws Exception
      */
     private function saveEavAttributeTableData(
@@ -398,7 +315,7 @@ class Database
         array $eavAttributeTableData,
         bool $test = false,
         bool $allowLogging = true
-    ) {
+    ): void {
         foreach ($eavAttributeTableData as $tableName => $dbEntries) {
             if ($allowLogging && $this->isQueryLogging()) {
                 $this->logging->debug(
@@ -428,7 +345,9 @@ class Database
                             'Could not update data in table: %s because: %s',
                             $tableName,
                             $exception->getMessage()
-                        ), 0, $exception
+                        ),
+                        0,
+                        $exception
                     );
                 }
             }
@@ -436,14 +355,6 @@ class Database
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $tableName
-     * @param array            $tableData
-     * @param bool             $checkDuplicate
-     * @param bool             $test
-     * @param bool             $allowLogging
-     *
-     * @return int
      * @throws Exception
      */
     public function createTableData(
@@ -489,7 +400,9 @@ class Database
                         'Could not insert data into table: %s because: %s',
                         $tableName,
                         $exception->getMessage()
-                    ), 0, $exception
+                    ),
+                    0,
+                    $exception
                 );
             }
         } else {
@@ -498,14 +411,6 @@ class Database
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $tableName
-     * @param array            $tableData
-     * @param mixed            $where
-     * @param bool             $test
-     * @param bool             $allowLogging
-     *
-     * @return void
      * @throws Exception
      */
     public function updateTableData(
@@ -515,7 +420,7 @@ class Database
         $where = null,
         bool $test = false,
         bool $allowLogging = true
-    ) {
+    ): void {
         if ($allowLogging && $this->isQueryLogging()) {
             if (empty($where)) {
                 $this->logging->debug(
@@ -559,20 +464,15 @@ class Database
                         'Could not update data in table: %s because: %s',
                         $tableName,
                         $exception->getMessage()
-                    ), 0, $exception
+                    ),
+                    0,
+                    $exception
                 );
             }
         }
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $tableName
-     * @param mixed            $where
-     * @param bool             $test
-     * @param bool             $allowLogging
-     *
-     * @return void
      * @throws Exception
      */
     public function deleteTableData(
@@ -581,7 +481,7 @@ class Database
         $where = null,
         bool $test = false,
         bool $allowLogging = true
-    ) {
+    ): void {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
                 sprintf(
@@ -609,7 +509,9 @@ class Database
                         'Could not delete data in table: %s because: %s',
                         $tableName,
                         $exception->getMessage()
-                    ), 0, $exception
+                    ),
+                    0,
+                    $exception
                 );
             }
         }
@@ -618,7 +520,7 @@ class Database
     /**
      * Used in processes which take longer than the database timeout
      */
-    public function databaseKeepAlive()
+    public function databaseKeepAlive(): void
     {
         $dbAdapter = $this->getDefaultConnection();
 
@@ -628,9 +530,6 @@ class Database
         $dbAdapter->fetchOne($select);
     }
 
-    /**
-     * @return bool
-     */
     public function isQueryLogging(): bool
     {
         if ($this->queryLogging === null) {
@@ -640,13 +539,6 @@ class Database
         return $this->queryLogging;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param Select           $select
-     * @param bool             $allowLogging
-     *
-     * @return Zend_Db_Statement_Interface
-     */
     public function query(
         AdapterInterface $dbAdapter,
         Select $select,
@@ -659,13 +551,6 @@ class Database
         return $dbAdapter->query($select);
     }
 
-    /**
-     * @param mixed       $name
-     * @param mixed       $cols
-     * @param string|null $schema
-     *
-     * @return Select
-     */
     public function select($name, $cols = '*', string $schema = null): Select
     {
         return $this->getDefaultConnection()->select()->from($name, $cols, $schema);
@@ -676,7 +561,7 @@ class Database
      *
      * @throws Exception
      */
-    public function saveObjectsInTransaction(array $objects)
+    public function saveObjectsInTransaction(array $objects): void
     {
         $transaction = $this->transactionFactory->create();
 

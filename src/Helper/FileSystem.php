@@ -16,19 +16,11 @@ class FileSystem
     /** @var \Magento\Framework\Filesystem */
     protected $filesystem;
 
-    /**
-     * @param \Magento\Framework\Filesystem $filesystem
-     */
     public function __construct(\Magento\Framework\Filesystem $filesystem)
     {
         $this->filesystem = $filesystem;
     }
 
-    /**
-     * @param string|null $path
-     *
-     * @return string
-     */
     public function getMediaPath(?string $path = null): string
     {
         $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
@@ -36,11 +28,6 @@ class FileSystem
         return $mediaDirectory->getAbsolutePath($path);
     }
 
-    /**
-     * @param string|null $path
-     *
-     * @return string
-     */
     public function getVarPath(?string $path = null): string
     {
         $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::VAR_DIR);

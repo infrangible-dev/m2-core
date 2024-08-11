@@ -13,23 +13,16 @@ use Magento\Framework\Data\OptionSourceInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Operator
-    implements OptionSourceInterface
+class Operator implements OptionSourceInterface
 {
     /** @var Product */
     protected $ruleCondition;
 
-    /**
-     * @param ProductFactory $ruleConditionFactory
-     */
     public function __construct(ProductFactory $ruleConditionFactory)
     {
         $this->ruleCondition = $ruleConditionFactory->create();
     }
 
-    /**
-     * @return array
-     */
     public function toOptionArray(): array
     {
         $options = [['value' => '', 'label' => __('--Please Select--')]];
@@ -41,9 +34,6 @@ class Operator
         return $options;
     }
 
-    /**
-     * @return array
-     */
     public function toOptions(): array
     {
         return $this->ruleCondition->getDefaultOperatorOptions();

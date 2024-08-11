@@ -19,17 +19,11 @@ class Seo
     /** @var string */
     private $seoSuffix;
 
-    /**
-     * @param Stores $storeHelper
-     */
     public function __construct(Stores $storeHelper)
     {
         $this->storeHelper = $storeHelper;
     }
 
-    /**
-     * @return string
-     */
     public function getSeoSuffix(): string
     {
         if ($this->seoSuffix === null) {
@@ -42,10 +36,6 @@ class Seo
 
     /**
      * replace seo category suffix
-     *
-     * @param string $catPath
-     *
-     * @return string
      */
     public function addSeoSuffix(string $catPath): string
     {
@@ -68,11 +58,6 @@ class Seo
 
     /**
      * replace seo category suffix
-     *
-     * @param string $catPath
-     * @param string $replacement
-     *
-     * @return string
      */
     public function replaceSeoSuffix(string $catPath, string $replacement = ''): string
     {

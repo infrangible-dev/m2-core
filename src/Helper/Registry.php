@@ -14,23 +14,12 @@ class Registry
     /** @var \Magento\Framework\Registry */
     protected $registry;
 
-    /**
-     * @param \Magento\Framework\Registry $registry
-     */
     public function __construct(\Magento\Framework\Registry $registry)
     {
         $this->registry = $registry;
     }
 
-    /**
-     * @param string $key
-     * @param mixed  $value
-     * @param bool   $graceful
-     * @param bool   $overwrite
-     *
-     * @return void
-     */
-    public function register(string $key, $value, bool $graceful = false, bool $overwrite = false)
+    public function register(string $key, $value, bool $graceful = false, bool $overwrite = false): void
     {
         if ($overwrite) {
             $previousValue = $this->registry($key);
@@ -43,19 +32,11 @@ class Registry
         $this->registry->register($key, $value, $graceful);
     }
 
-    /**
-     * @param string $key
-     */
-    public function unregister(string $key)
+    public function unregister(string $key): void
     {
         $this->registry->unregister($key);
     }
 
-    /**
-     * @param string $key
-     *
-     * @return mixed
-     */
     public function registry(string $key)
     {
         return $this->registry->registry($key);

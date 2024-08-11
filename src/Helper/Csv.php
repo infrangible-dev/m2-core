@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Infrangible\Core\Helper;
 
 use Exception;
-use Psr\Log\LoggerInterface;
 use FeWeDev\Base\Arrays;
 use FeWeDev\Base\Variables;
+use Psr\Log\LoggerInterface;
 
 /**
  * @author      Andreas Knollmann
@@ -28,18 +28,12 @@ class Csv
     /** @var LoggerInterface */
     protected $logging;
 
-    /**
-     * @param Files           $fileHelper
-     * @param Variables       $modelsHelper
-     * @param Arrays          $arrayHelper
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         Files $fileHelper,
         Variables $modelsHelper,
         Arrays $arrayHelper,
-        LoggerInterface $logger)
-    {
+        LoggerInterface $logger
+    ) {
         $this->variables = $modelsHelper;
         $this->arrayHelper = $arrayHelper;
         $this->fileHelper = $fileHelper;
@@ -48,13 +42,6 @@ class Csv
     }
 
     /**
-     * @param string $fileName
-     * @param bool   $removeEmptyElements
-     * @param string $delimiter
-     * @param array  $header
-     * @param bool   $hasHeader
-     *
-     * @return array
      * @throws Exception
      */
     public function readFile(
@@ -62,8 +49,8 @@ class Csv
         bool $removeEmptyElements = true,
         string $delimiter = ',',
         array $header = [],
-        bool $hasHeader = true): array
-    {
+        bool $hasHeader = true
+    ): array {
         $fileName = $this->fileHelper->determineFilePath($fileName);
 
         $this->logging->debug(sprintf('File path for filename: %s', $fileName));

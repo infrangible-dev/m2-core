@@ -11,8 +11,7 @@ use Magento\Framework\Data\OptionSourceInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-abstract class Eav
-    implements OptionSourceInterface
+abstract class Eav implements OptionSourceInterface
 {
     /** @var bool */
     private $customer = false;
@@ -26,78 +25,46 @@ abstract class Eav
     /** @var bool */
     private $product = true;
 
-    /**
-     * @return bool
-     */
     public function isCustomer(): bool
     {
         return $this->customer;
     }
 
-    /**
-     * @param bool $customer
-     */
-    public function setCustomer(bool $customer = true)
+    public function setCustomer(bool $customer = true): void
     {
         $this->customer = $customer;
     }
 
-    /**
-     * @return bool
-     */
     public function isAddress(): bool
     {
         return $this->address;
     }
 
-    /**
-     * @param bool $address
-     */
-    public function setAddress(bool $address = true)
+    public function setAddress(bool $address = true): void
     {
         $this->address = $address;
     }
 
-    /**
-     * @return bool
-     */
     public function isCategory(): bool
     {
         return $this->category;
     }
 
-    /**
-     * @param bool $category
-     */
-    public function setCategory(bool $category = true)
+    public function setCategory(bool $category = true): void
     {
         $this->category = $category;
     }
 
-    /**
-     * @return bool
-     */
     public function isProduct(): bool
     {
         return $this->product;
     }
 
-    /**
-     * @param bool $product
-     */
-    public function setProduct(bool $product = true)
+    public function setProduct(bool $product = true): void
     {
         $this->product = $product;
     }
 
-    /**
-     * @param bool $customer
-     * @param bool $address
-     * @param bool $category
-     * @param bool $product
-     *
-     * @return array
-     */
     public function toOptionArrayWithEntities(bool $customer, bool $address, bool $category, bool $product): array
     {
         $oldCustomer = $this->isCustomer();
@@ -120,19 +87,8 @@ abstract class Eav
         return $result;
     }
 
-    /**
-     * @return array
-     */
     abstract public function toOptionArray(): array;
 
-    /**
-     * @param bool $customer
-     * @param bool $address
-     * @param bool $category
-     * @param bool $product
-     *
-     * @return array
-     */
     public function toOptionsWithEntities(bool $customer, bool $address, bool $category, bool $product): array
     {
         $oldCustomer = $this->isCustomer();
@@ -155,8 +111,5 @@ abstract class Eav
         return $result;
     }
 
-    /**
-     * @return array
-     */
     abstract public function toOptions(): array;
 }

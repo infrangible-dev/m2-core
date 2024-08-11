@@ -19,8 +19,6 @@ class Template
 
     /**
      * TemplateHelper constructor.
-     *
-     * @param CollectionFactory $templateCollectionFactory
      */
     public function __construct(CollectionFactory $templateCollectionFactory)
     {

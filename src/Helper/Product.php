@@ -72,19 +72,6 @@ class Product
     /** @var array */
     private $categoryIds = [];
 
-    /**
-     * @param Arrays                                                                                                 $arrays
-     * @param Attribute                                                                                              $attributeHelper
-     * @param Database                                                                                               $databaseHelper
-     * @param Data                                                                                                   $catalogHelper
-     * @param LoggerInterface                                                                                        $logging
-     * @param ProductFactory                                                                                         $productFactory
-     * @param \Magento\Catalog\Model\ResourceModel\ProductFactory                                                    $productResourceFactory
-     * @param CollectionFactory                                                                                      $productCollectionFactory
-     * @param Config                                                                                                 $productMediaConfig
-     * @param \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\CollectionFactory $configurableAttributeCollectionFactory
-     * @param ConfigInterface                                                                                        $config
-     */
     public function __construct(
         Arrays $arrays,
         Attribute $attributeHelper,
@@ -112,20 +99,11 @@ class Product
         $this->config = $config;
     }
 
-    /**
-     * @return \Magento\Catalog\Model\Product
-     */
     public function newProduct(): \Magento\Catalog\Model\Product
     {
         return $this->productFactory->create();
     }
 
-    /**
-     * @param int      $productId
-     * @param int|null $storeId
-     *
-     * @return \Magento\Catalog\Model\Product
-     */
     public function loadProduct(int $productId, int $storeId = null): \Magento\Catalog\Model\Product
     {
         $product = $this->newProduct();
@@ -139,12 +117,6 @@ class Product
         return $product;
     }
 
-    /**
-     * @param string   $productSku
-     * @param int|null $storeId
-     *
-     * @return \Magento\Catalog\Model\Product
-     */
     public function loadProductBySku(string $productSku, int $storeId = null): \Magento\Catalog\Model\Product
     {
         $product = $this->newProduct();
@@ -161,42 +133,24 @@ class Product
     }
 
     /**
-     * @param \Magento\Catalog\Model\Product $product
-     *
      * @throws Exception
      */
-    public function saveProduct(\Magento\Catalog\Model\Product $product)
+    public function saveProduct(\Magento\Catalog\Model\Product $product): void
     {
         $this->productResourceFactory->create()->save($product);
     }
 
-    /**
-     * @return Collection
-     */
     public function getProductCollection(): Collection
     {
         return $this->productCollectionFactory->create();
     }
 
-    /**
-     * @return Config
-     */
     public function getProductMediaConfig(): Config
     {
         return $this->productMediaConfig;
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $parentIds
-     * @param bool             $excludeInactive
-     * @param bool             $excludeOutOfStock
-     * @param bool             $maintainAssociation
-     * @param bool             $useSuperLink
-     * @param bool             $includeParents
-     * @param int|null         $storeId
-     *
-     * @return array
      * @throws Exception
      */
     public function getChildIds(
@@ -220,13 +174,15 @@ class Product
             );
             $childColumnName = $useSuperLink ? 'product_id' : 'child_id';
 
-            $childIdQuery->join(['stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
-                                sprintf(
-                                    '%s = %s',
-                                    $dbAdapter->quoteIdentifier('stock_item.product_id'),
-                                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName))
-                                ),
-                                []);
+            $childIdQuery->join(
+                ['stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
+                sprintf(
+                    '%s = %s',
+                    $dbAdapter->quoteIdentifier('stock_item.product_id'),
+                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName))
+                ),
+                []
+            );
 
             $childIdQuery->where(
                 $dbAdapter->prepareSqlCondition(
@@ -258,14 +214,6 @@ class Product
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $parentIds
-     * @param bool             $excludeInactive
-     * @param bool             $useSuperLink
-     * @param bool             $includeParents
-     * @param int|null         $storeId
-     *
-     * @return Select
      * @throws Exception
      */
     public function getChildIdQuery(
@@ -316,18 +264,20 @@ class Product
             $statusAttribute = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'status');
 
             if (empty($storeId)) {
-                $childIdQuery->join(['status0' => $statusAttribute->getBackend()->getTable()],
-                                    $dbAdapter->quoteInto(
-                                        sprintf(
-                                            '%s = %s AND %s = ? AND %s = 0',
-                                            $dbAdapter->quoteIdentifier('status0.entity_id'),
-                                            $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName)),
-                                            $dbAdapter->quoteIdentifier('status0.attribute_id'),
-                                            $dbAdapter->quoteIdentifier('status0.store_id')
-                                        ),
-                                        $statusAttribute->getAttributeId()
-                                    ),
-                                    []);
+                $childIdQuery->join(
+                    ['status0' => $statusAttribute->getBackend()->getTable()],
+                    $dbAdapter->quoteInto(
+                        sprintf(
+                            '%s = %s AND %s = ? AND %s = 0',
+                            $dbAdapter->quoteIdentifier('status0.entity_id'),
+                            $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName)),
+                            $dbAdapter->quoteIdentifier('status0.attribute_id'),
+                            $dbAdapter->quoteIdentifier('status0.store_id')
+                        ),
+                        $statusAttribute->getAttributeId()
+                    ),
+                    []
+                );
 
                 $childIdQuery->where(
                     $dbAdapter->prepareSqlCondition(
@@ -338,34 +288,38 @@ class Product
                     Select::TYPE_CONDITION
                 );
             } else {
-                $childIdQuery->joinLeft(['status0' => $statusAttribute->getBackend()->getTable()],
-                                        $dbAdapter->quoteInto(
-                                            sprintf(
-                                                '%s = %s AND %s = ? AND %s = 0',
-                                                $dbAdapter->quoteIdentifier('status0.entity_id'),
-                                                $dbAdapter->quoteIdentifier(
-                                                    sprintf('%s.%s', $tableName, $childColumnName)
-                                                ),
-                                                $dbAdapter->quoteIdentifier('status0.attribute_id'),
-                                                $dbAdapter->quoteIdentifier('status0.store_id')
-                                            ),
-                                            $statusAttribute->getAttributeId()
-                                        ),
-                                        []);
+                $childIdQuery->joinLeft(
+                    ['status0' => $statusAttribute->getBackend()->getTable()],
+                    $dbAdapter->quoteInto(
+                        sprintf(
+                            '%s = %s AND %s = ? AND %s = 0',
+                            $dbAdapter->quoteIdentifier('status0.entity_id'),
+                            $dbAdapter->quoteIdentifier(
+                                sprintf('%s.%s', $tableName, $childColumnName)
+                            ),
+                            $dbAdapter->quoteIdentifier('status0.attribute_id'),
+                            $dbAdapter->quoteIdentifier('status0.store_id')
+                        ),
+                        $statusAttribute->getAttributeId()
+                    ),
+                    []
+                );
 
                 $tableAlias = sprintf('status_%d', $storeId);
 
-                $childIdQuery->joinLeft([$tableAlias => $statusAttribute->getBackend()->getTable()],
-                                        sprintf(
-                                            '%s = %s AND %s = %d AND %s = %d',
-                                            $dbAdapter->quoteIdentifier(sprintf('%s.entity_id', $tableAlias)),
-                                            $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName)),
-                                            $dbAdapter->quoteIdentifier(sprintf('%s.attribute_id', $tableAlias)),
-                                            $statusAttribute->getAttributeId(),
-                                            $dbAdapter->quoteIdentifier(sprintf('%s.store_id', $tableAlias)),
-                                            $storeId
-                                        ),
-                                        []);
+                $childIdQuery->joinLeft(
+                    [$tableAlias => $statusAttribute->getBackend()->getTable()],
+                    sprintf(
+                        '%s = %s AND %s = %d AND %s = %d',
+                        $dbAdapter->quoteIdentifier(sprintf('%s.entity_id', $tableAlias)),
+                        $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName)),
+                        $dbAdapter->quoteIdentifier(sprintf('%s.attribute_id', $tableAlias)),
+                        $statusAttribute->getAttributeId(),
+                        $dbAdapter->quoteIdentifier(sprintf('%s.store_id', $tableAlias)),
+                        $storeId
+                    ),
+                    []
+                );
 
                 $childIdQuery->where(
                     $dbAdapter->getIfNullSql(
@@ -376,7 +330,7 @@ class Product
                             )
                         ),
                         $dbAdapter->quoteIdentifier('status0.value')
-                    ).' = ?',
+                    ) . ' = ?',
                     Status::STATUS_ENABLED
                 );
             }
@@ -386,14 +340,6 @@ class Product
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $parentIds
-     * @param bool             $excludeInactive
-     * @param bool             $excludeOutOfStock
-     * @param bool             $maintainAssociation
-     * @param int|null         $storeId
-     *
-     * @return array
      * @throws Exception
      */
     public function getBundledIds(
@@ -411,13 +357,15 @@ class Product
         if ($excludeOutOfStock) {
             $tableName = $this->databaseHelper->getTableName('catalog_product_bundle_selection');
 
-            $buildIdQuery->join(['stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
-                                sprintf(
-                                    '%s = %s',
-                                    $dbAdapter->quoteIdentifier('stock_item.product_id'),
-                                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id'))
-                                ),
-                                []);
+            $buildIdQuery->join(
+                ['stock_item' => $this->databaseHelper->getTableName('cataloginventory_stock_item')],
+                sprintf(
+                    '%s = %s',
+                    $dbAdapter->quoteIdentifier('stock_item.product_id'),
+                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id'))
+                ),
+                []
+            );
 
             $buildIdQuery->where(
                 $dbAdapter->prepareSqlCondition(
@@ -449,12 +397,6 @@ class Product
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $parentIds
-     * @param bool             $excludeInactive
-     * @param int|null         $storeId
-     *
-     * @return Select
      * @throws Exception
      */
     public function getBundledIdQuery(
@@ -488,18 +430,20 @@ class Product
             $statusAttribute = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'status');
 
             if (empty($storeId)) {
-                $bundleIdQuery->join(['status_0' => $statusAttribute->getBackend()->getTable()],
-                                     $dbAdapter->quoteInto(
-                                         sprintf(
-                                             '%s = %s AND %s = ? AND %s = 0',
-                                             $dbAdapter->quoteIdentifier('status_0.entity_id'),
-                                             $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id')),
-                                             $dbAdapter->quoteIdentifier('status_0.attribute_id'),
-                                             $dbAdapter->quoteIdentifier('status_0.store_id')
-                                         ),
-                                         $statusAttribute->getAttributeId()
-                                     ),
-                                     []);
+                $bundleIdQuery->join(
+                    ['status_0' => $statusAttribute->getBackend()->getTable()],
+                    $dbAdapter->quoteInto(
+                        sprintf(
+                            '%s = %s AND %s = ? AND %s = 0',
+                            $dbAdapter->quoteIdentifier('status_0.entity_id'),
+                            $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id')),
+                            $dbAdapter->quoteIdentifier('status_0.attribute_id'),
+                            $dbAdapter->quoteIdentifier('status_0.store_id')
+                        ),
+                        $statusAttribute->getAttributeId()
+                    ),
+                    []
+                );
 
                 $bundleIdQuery->where(
                     $dbAdapter->prepareSqlCondition(
@@ -510,34 +454,38 @@ class Product
                     Select::TYPE_CONDITION
                 );
             } else {
-                $bundleIdQuery->joinLeft(['status_0' => $statusAttribute->getBackend()->getTable()],
-                                         $dbAdapter->quoteInto(
-                                             sprintf(
-                                                 '%s = %s AND %s = ? AND %s = 0',
-                                                 $dbAdapter->quoteIdentifier('status_0.entity_id'),
-                                                 $dbAdapter->quoteIdentifier(
-                                                     sprintf('%s.%s', $tableName, 'product_id')
-                                                 ),
-                                                 $dbAdapter->quoteIdentifier('status_0.attribute_id'),
-                                                 $dbAdapter->quoteIdentifier('status_0.store_id')
-                                             ),
-                                             $statusAttribute->getAttributeId()
-                                         ),
-                                         []);
+                $bundleIdQuery->joinLeft(
+                    ['status_0' => $statusAttribute->getBackend()->getTable()],
+                    $dbAdapter->quoteInto(
+                        sprintf(
+                            '%s = %s AND %s = ? AND %s = 0',
+                            $dbAdapter->quoteIdentifier('status_0.entity_id'),
+                            $dbAdapter->quoteIdentifier(
+                                sprintf('%s.%s', $tableName, 'product_id')
+                            ),
+                            $dbAdapter->quoteIdentifier('status_0.attribute_id'),
+                            $dbAdapter->quoteIdentifier('status_0.store_id')
+                        ),
+                        $statusAttribute->getAttributeId()
+                    ),
+                    []
+                );
 
                 $tableAlias = sprintf('status_%d', $storeId);
 
-                $bundleIdQuery->joinLeft([$tableAlias => $statusAttribute->getBackend()->getTable()],
-                                         sprintf(
-                                             '%s = %s AND %s = %d AND %s = %d',
-                                             $dbAdapter->quoteIdentifier(sprintf('%s.entity_id', $tableAlias)),
-                                             $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id')),
-                                             $dbAdapter->quoteIdentifier(sprintf('%s.attribute_id', $tableAlias)),
-                                             $statusAttribute->getAttributeId(),
-                                             $dbAdapter->quoteIdentifier(sprintf('%s.store_id', $tableAlias)),
-                                             $storeId
-                                         ),
-                                         []);
+                $bundleIdQuery->joinLeft(
+                    [$tableAlias => $statusAttribute->getBackend()->getTable()],
+                    sprintf(
+                        '%s = %s AND %s = %d AND %s = %d',
+                        $dbAdapter->quoteIdentifier(sprintf('%s.entity_id', $tableAlias)),
+                        $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id')),
+                        $dbAdapter->quoteIdentifier(sprintf('%s.attribute_id', $tableAlias)),
+                        $statusAttribute->getAttributeId(),
+                        $dbAdapter->quoteIdentifier(sprintf('%s.store_id', $tableAlias)),
+                        $storeId
+                    ),
+                    []
+                );
 
                 $bundleIdQuery->where(
                     $dbAdapter->getIfNullSql(
@@ -548,7 +496,7 @@ class Product
                             )
                         ),
                         $dbAdapter->quoteIdentifier('status_0.value')
-                    ).' = ?',
+                    ) . ' = ?',
                     Status::STATUS_ENABLED
                 );
             }
@@ -558,15 +506,6 @@ class Product
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $parentIds
-     * @param bool             $excludeInactive
-     * @param bool             $excludeOutOfStock
-     * @param bool             $maintainAssociation
-     * @param bool             $includeParents
-     * @param int|null         $storeId
-     *
-     * @return array
      * @throws Exception
      */
     public function getGroupedIds(
@@ -590,21 +529,11 @@ class Product
         );
     }
 
-    /**
-     * @return \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection
-     */
     public function getConfigurableAttributeCollection(
-    ): \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection
-    {
+    ): \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection {
         return $this->configurableAttributeCollectionFactory->create();
     }
 
-    /**
-     * @param array $entityIds
-     * @param bool  $keepAssociation
-     *
-     * @return array
-     */
     public function determineSKUs(array $entityIds, bool $keepAssociation = false): array
     {
         $skus = [];
@@ -652,11 +581,6 @@ class Product
         return $skus;
     }
 
-    /**
-     * @param array $skus
-     *
-     * @return array
-     */
     public function determineEntityIds(array $skus): array
     {
         $entityIds = [];
@@ -708,15 +632,6 @@ class Product
         return $entityIds;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $childIds
-     * @param bool             $maintainAssociation
-     * @param bool             $useSuperLink
-     * @param bool             $includeChildren
-     *
-     * @return array
-     */
     public function getParentIds(
         AdapterInterface $dbAdapter,
         array $childIds,
@@ -767,12 +682,6 @@ class Product
         return $parentIds;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param int              $productId
-     *
-     * @return array
-     */
     public function getWebsiteIds(AdapterInterface $dbAdapter, int $productId): array
     {
         if (!array_key_exists($productId, $this->websiteIds)) {
@@ -796,8 +705,6 @@ class Product
 
     /**
      * Get product types
-     *
-     * @return array
      */
     public function getTypes(): array
     {
@@ -814,12 +721,6 @@ class Product
         return $this->types;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param array            $productIds
-     *
-     * @return array
-     */
     public function getCategoryIds(AdapterInterface $dbAdapter, array $productIds): array
     {
         $result = [];
@@ -857,17 +758,7 @@ class Product
     }
 
     /**
-     * @param \Magento\Catalog\Model\Product $product
-     * @param float                          $price
-     * @param null|bool                      $includingTax
-     * @param AbstractAddress|null           $shippingAddress
-     * @param AbstractAddress|null           $billingAddress
-     * @param int|null                       $ctc
      * @param null|string|bool|int|Store     $store
-     * @param bool|null                      $priceIncludesTax
-     * @param bool                           $roundPrice
-     *
-     * @return  float
      */
     public function getTaxPrice(
         \Magento\Catalog\Model\Product $product,

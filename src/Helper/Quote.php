@@ -26,33 +26,22 @@ class Quote
     /** @var CollectionFactory */
     protected $quoteCollectionFactory;
 
-    /**
-     * @param QuoteFactory            $quoteFactory
-     * @param CartRepositoryInterface $quoteRepository
-     * @param CollectionFactory       $quoteCollectionFactory
-     */
     public function __construct(
         QuoteFactory $quoteFactory,
         CartRepositoryInterface $quoteRepository,
-        CollectionFactory $quoteCollectionFactory)
-    {
+        CollectionFactory $quoteCollectionFactory
+    ) {
         $this->quoteFactory = $quoteFactory;
         $this->quoteRepository = $quoteRepository;
         $this->quoteCollectionFactory = $quoteCollectionFactory;
     }
 
-    /**
-     * @return \Magento\Quote\Model\Quote
-     */
     public function newQuote(): \Magento\Quote\Model\Quote
     {
         return $this->quoteFactory->create();
     }
 
     /**
-     * @param int $quoteId
-     *
-     * @return \Magento\Quote\Model\Quote
      * @throws NoSuchEntityException
      */
     public function loadQuote(int $quoteId): \Magento\Quote\Model\Quote
@@ -63,17 +52,11 @@ class Quote
         return $quote;
     }
 
-    /**
-     * @param \Magento\Quote\Model\Quote $quote
-     */
-    public function saveQuote(\Magento\Quote\Model\Quote $quote)
+    public function saveQuote(\Magento\Quote\Model\Quote $quote): void
     {
         $this->quoteRepository->save($quote);
     }
 
-    /**
-     * @return Collection
-     */
     public function getQuoteCollection(): Collection
     {
         return $this->quoteCollectionFactory->create();

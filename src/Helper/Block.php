@@ -19,8 +19,7 @@ use Psr\Log\LoggerInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Block
-    extends AbstractHelper
+class Block extends AbstractHelper
 {
     protected $logger;
 
@@ -54,8 +53,8 @@ class Block
         AbstractBlock $block,
         string $blockClassName,
         array $blockData = [],
-        string $name = ''): ?BlockInterface
-    {
+        string $name = ''
+    ): ?BlockInterface {
         $layoutBlock = $block->getLayout()->createBlock($blockClassName, $name);
 
         if ($layoutBlock instanceof DataObject) {

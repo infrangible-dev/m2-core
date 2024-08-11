@@ -25,34 +25,21 @@ class Agreement
     /** @var CollectionFactory */
     protected $agreementCollectionFactory;
 
-    /**
-     * @param AgreementFactory                                                 $agreementFactory
-     * @param \Magento\CheckoutAgreements\Model\ResourceModel\AgreementFactory $agreementResourceFactory
-     * @param CollectionFactory                                                $agreementCollectionFactory
-     */
     public function __construct(
         AgreementFactory $agreementFactory,
         \Magento\CheckoutAgreements\Model\ResourceModel\AgreementFactory $agreementResourceFactory,
-        CollectionFactory $agreementCollectionFactory)
-    {
+        CollectionFactory $agreementCollectionFactory
+    ) {
         $this->agreementFactory = $agreementFactory;
         $this->agreementResourceFactory = $agreementResourceFactory;
         $this->agreementCollectionFactory = $agreementCollectionFactory;
     }
 
-    /**
-     * @return \Magento\CheckoutAgreements\Model\Agreement
-     */
     public function newAgreement(): \Magento\CheckoutAgreements\Model\Agreement
     {
         return $this->agreementFactory->create();
     }
 
-    /**
-     * @param int $agreementId
-     *
-     * @return \Magento\CheckoutAgreements\Model\Agreement
-     */
     public function loadAgreement(int $agreementId): \Magento\CheckoutAgreements\Model\Agreement
     {
         $agreement = $this->newAgreement();
@@ -63,18 +50,13 @@ class Agreement
     }
 
     /**
-     * @param \Magento\CheckoutAgreements\Model\Agreement $agreement
-     *
      * @throws Exception
      */
-    public function saveAgreement(\Magento\CheckoutAgreements\Model\Agreement $agreement)
+    public function saveAgreement(\Magento\CheckoutAgreements\Model\Agreement $agreement): void
     {
         $this->agreementResourceFactory->create()->save($agreement);
     }
 
-    /**
-     * @return Collection
-     */
     public function getAgreementCollection(): Collection
     {
         return $this->agreementCollectionFactory->create();

@@ -21,25 +21,16 @@ abstract class Script
     /**
      * Executes the current command.
      *
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
      * @return int 0 if everything went fine, or an error code
      */
     abstract public function execute(InputInterface $input, OutputInterface $output): int;
 
-    /**
-     * @return ObjectManagerInterface
-     */
     public function getObjectManager(): ObjectManagerInterface
     {
         return $this->objectManager;
     }
 
-    /**
-     * @param ObjectManagerInterface $objectManager
-     */
-    public function setObjectManager(ObjectManagerInterface $objectManager)
+    public function setObjectManager(ObjectManagerInterface $objectManager): void
     {
         $this->objectManager = $objectManager;
     }

@@ -22,8 +22,7 @@ use Psr\Log\LoggerInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Category
-    extends AbstractHelper
+class Category extends AbstractHelper
 {
     /** @var Arrays */
     protected $arrays;
@@ -91,8 +90,8 @@ class Category
         LoggerInterface $logging,
         CategoryFactory $categoryFactory,
         \Magento\Catalog\Model\ResourceModel\CategoryFactory $categoryResourceFactory,
-        CollectionFactory $categoryCollectionFactory)
-    {
+        CollectionFactory $categoryCollectionFactory
+    ) {
         parent::__construct($context);
 
         $this->arrays = $arrays;
@@ -117,7 +116,7 @@ class Category
     {
         $category = $this->newCategory();
 
-        if ( ! empty($storeId)) {
+        if (! empty($storeId)) {
             $category->setStoreId($storeId);
         }
 
@@ -129,7 +128,7 @@ class Category
     /**
      * @throws Exception
      */
-    public function saveCategory(\Magento\Catalog\Model\Category $category)
+    public function saveCategory(\Magento\Catalog\Model\Category $category): void
     {
         $this->categoryResourceFactory->create()->save($category);
     }
@@ -151,8 +150,10 @@ class Category
                 $this->getChildEntityIds($dbAdapter, [$store->getRootCategoryId()], false, true, false, true, $storeId);
         } else {
             $rootCategoryQuery =
-                $this->databaseHelper->select($this->databaseHelper->getTableName('catalog_category_entity'),
-                    ['entity_id']);
+                $this->databaseHelper->select(
+                    $this->databaseHelper->getTableName('catalog_category_entity'),
+                    ['entity_id']
+                );
             $rootCategoryQuery->where('level = 1');
 
             $rootCategoryIds = $this->databaseHelper->fetchCol($rootCategoryQuery, $dbAdapter);
@@ -169,8 +170,8 @@ class Category
         array $childIds,
         int $minLevel = 0,
         bool $useCache = false,
-        bool $groupByChild = false): array
-    {
+        bool $groupByChild = false
+    ): array {
         $this->logging->debug(sprintf('Getting parent entity ids for child id(s): %s', implode(', ', $childIds)));
 
         $result = [];
@@ -187,19 +188,27 @@ class Category
             }
         }
 
-        if ( ! empty($loadChildIds)) {
-            $this->logging->debug(sprintf('Searching parent entity ids for child id(s): %s',
-                    implode(', ', $loadChildIds)));
+        if (! empty($loadChildIds)) {
+            $this->logging->debug(sprintf(
+                'Searching parent entity ids for child id(s): %s',
+                implode(', ', $loadChildIds)
+            ));
 
             $tableName = $this->databaseHelper->getTableName('catalog_category_entity');
 
             $parentQuery = $dbAdapter->select()->from([$tableName], ['entity_id', 'parent_id']);
 
-            $parentQuery->where($dbAdapter->prepareSqlCondition('entity_id', ['in' => $loadChildIds]), null,
-                Select::TYPE_CONDITION);
+            $parentQuery->where(
+                $dbAdapter->prepareSqlCondition('entity_id', ['in' => $loadChildIds]),
+                null,
+                Select::TYPE_CONDITION
+            );
 
-            $parentQuery->where($dbAdapter->prepareSqlCondition('level', ['gteq' => $minLevel]), null,
-                Select::TYPE_CONDITION);
+            $parentQuery->where(
+                $dbAdapter->prepareSqlCondition('level', ['gteq' => $minLevel]),
+                null,
+                Select::TYPE_CONDITION
+            );
 
             $queryResult = $this->databaseHelper->fetchPairs($parentQuery, $dbAdapter);
 
@@ -214,7 +223,7 @@ class Category
             }
         }
 
-        if ( ! $groupByChild) {
+        if (! $groupByChild) {
             $result = array_values(array_unique($result));
         }
 
@@ -237,16 +246,21 @@ class Category
             }
         }
 
-        if ( ! empty($loadChildIds)) {
-            $this->logging->debug(sprintf('Searching path entity ids for child id(s): %s',
-                    implode(', ', $loadChildIds)));
+        if (! empty($loadChildIds)) {
+            $this->logging->debug(sprintf(
+                'Searching path entity ids for child id(s): %s',
+                implode(', ', $loadChildIds)
+            ));
 
             $tableName = $this->databaseHelper->getTableName('catalog_category_entity');
 
             $pathQuery = $dbAdapter->select()->from([$tableName], ['entity_id', 'path']);
 
-            $pathQuery->where($dbAdapter->prepareSqlCondition('entity_id', ['in' => $loadChildIds]), null,
-                Select::TYPE_CONDITION);
+            $pathQuery->where(
+                $dbAdapter->prepareSqlCondition('entity_id', ['in' => $loadChildIds]),
+                null,
+                Select::TYPE_CONDITION
+            );
 
             $queryResult = $this->databaseHelper->fetchPairs($pathQuery, $dbAdapter);
 
@@ -274,50 +288,74 @@ class Category
         bool $recursive = false,
         bool $includeInactiveCategories = true,
         bool $useCache = false,
-        int $storeId = null): array
-    {
+        int $storeId = null
+    ): array {
         $this->logging->debug(sprintf('Searching child ids for child id(s): %s', implode(', ', $parentIds)));
 
         $key = md5(json_encode([$parentIds, $orderByPosition, $recursive, $includeInactiveCategories]));
 
-        if ( ! array_key_exists($key, $this->childEntityIds) || ! $useCache) {
+        if (! array_key_exists($key, $this->childEntityIds) || ! $useCache) {
             $tableName = $this->databaseHelper->getTableName('catalog_category_entity');
 
             $childQuery = $dbAdapter->select()->from(['category' => $tableName], ['entity_id']);
 
-            $childQuery->where($dbAdapter->prepareSqlCondition('parent_id', ['in' => $parentIds]), null,
-                Select::TYPE_CONDITION);
+            $childQuery->where(
+                $dbAdapter->prepareSqlCondition('parent_id', ['in' => $parentIds]),
+                null,
+                Select::TYPE_CONDITION
+            );
 
-            if ( ! $includeInactiveCategories) {
+            if (! $includeInactiveCategories) {
                 $isActiveAttribute =
                     $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Category::ENTITY, 'is_active');
 
                 if ($storeId === null) {
-                    $childQuery->join(['is_active' => $isActiveAttribute->getBackend()->getTable()],
-                        $dbAdapter->quoteInto(sprintf('%s = %s AND %s = ?',
+                    $childQuery->join(
+                        ['is_active' => $isActiveAttribute->getBackend()->getTable()],
+                        $dbAdapter->quoteInto(
+                            sprintf(
+                                '%s = %s AND %s = ?',
                                 $dbAdapter->quoteIdentifier('is_active.entity_id'),
                                 $dbAdapter->quoteIdentifier('category.entity_id'),
-                                $dbAdapter->quoteIdentifier('is_active.attribute_id')),
-                            $isActiveAttribute->getAttributeId()), []);
+                                $dbAdapter->quoteIdentifier('is_active.attribute_id')
+                            ),
+                            $isActiveAttribute->getAttributeId()
+                        ),
+                        []
+                    );
 
-                    $childQuery->where($dbAdapter->prepareSqlCondition($dbAdapter->quoteIdentifier('is_active.value'),
-                        ['eq' => 1]), null, Select::TYPE_CONDITION);
+                    $childQuery->where($dbAdapter->prepareSqlCondition(
+                        $dbAdapter->quoteIdentifier('is_active.value'),
+                        ['eq' => 1]
+                    ), null, Select::TYPE_CONDITION);
                 } else {
-                    $childQuery->joinLeft(['is_active_store' => $isActiveAttribute->getBackend()->getTable()],
-                        sprintf('%s = %s AND %s = %d AND %s = %d',
+                    $childQuery->joinLeft(
+                        ['is_active_store' => $isActiveAttribute->getBackend()->getTable()],
+                        sprintf(
+                            '%s = %s AND %s = %d AND %s = %d',
                             $dbAdapter->quoteIdentifier('is_active_store.entity_id'),
                             $dbAdapter->quoteIdentifier('category.entity_id'),
                             $dbAdapter->quoteIdentifier('is_active_store.attribute_id'),
                             $isActiveAttribute->getAttributeId(),
-                            $dbAdapter->quoteIdentifier('is_active_store.store_id'), $storeId), []);
+                            $dbAdapter->quoteIdentifier('is_active_store.store_id'),
+                            $storeId
+                        ),
+                        []
+                    );
 
-                    $childQuery->joinLeft(['is_active_admin' => $isActiveAttribute->getBackend()->getTable()],
-                        sprintf('%s = %s AND %s = %d AND %s = %d',
+                    $childQuery->joinLeft(
+                        ['is_active_admin' => $isActiveAttribute->getBackend()->getTable()],
+                        sprintf(
+                            '%s = %s AND %s = %d AND %s = %d',
                             $dbAdapter->quoteIdentifier('is_active_admin.entity_id'),
                             $dbAdapter->quoteIdentifier('category.entity_id'),
                             $dbAdapter->quoteIdentifier('is_active_admin.attribute_id'),
                             $isActiveAttribute->getAttributeId(),
-                            $dbAdapter->quoteIdentifier('is_active_admin.store_id'), 0), []);
+                            $dbAdapter->quoteIdentifier('is_active_admin.store_id'),
+                            0
+                        ),
+                        []
+                    );
 
                     $childQuery->where('is_active_store.value = 1 OR (is_active_store.value IS NULL and is_active_admin.value = 1)');
                 }
@@ -334,9 +372,18 @@ class Category
             $this->logging->debug(sprintf('Found %d child id(s)', count($childIds)));
 
             if ($recursive && ! $this->variables->isEmpty($childIds)) {
-                $childIds = array_merge($childIds,
-                    $this->getChildEntityIds($dbAdapter, $childIds, $orderByPosition, $recursive,
-                        $includeInactiveCategories, $useCache, $storeId));
+                $childIds = array_merge(
+                    $childIds,
+                    $this->getChildEntityIds(
+                        $dbAdapter,
+                        $childIds,
+                        $orderByPosition,
+                        $recursive,
+                        $includeInactiveCategories,
+                        $useCache,
+                        $storeId
+                    )
+                );
             }
 
             $this->childEntityIds[ $key ] = $childIds;
@@ -354,36 +401,51 @@ class Category
         array $productEntityIds,
         bool $includeInactiveCategories = true,
         bool $order = false,
-        bool $maintainAssociation = false): array
-    {
+        bool $maintainAssociation = false
+    ): array {
         $categoryProductTableName = $this->databaseHelper->getTableName('catalog_category_product');
 
         $categoryQuery = $dbAdapter->select()->from([$categoryProductTableName], ['category_id', 'product_id']);
 
-        if ( ! $includeInactiveCategories || $order) {
+        if (! $includeInactiveCategories || $order) {
             $categoryTableName = $this->databaseHelper->getTableName('catalog_category_product');
 
-            $categoryQuery->join(['category' => $categoryTableName],
-                sprintf('%s = %s', $dbAdapter->quoteIdentifier('category.entity_id'),
-                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $categoryProductTableName, 'category_id'))), []);
+            $categoryQuery->join(
+                ['category' => $categoryTableName],
+                sprintf(
+                    '%s = %s',
+                    $dbAdapter->quoteIdentifier('category.entity_id'),
+                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $categoryProductTableName, 'category_id'))
+                ),
+                []
+            );
         }
 
-        if ( ! $includeInactiveCategories) {
+        if (! $includeInactiveCategories) {
             $isActiveAttribute =
                 $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Category::ENTITY, 'is_active');
 
-            $categoryQuery->join(['is_active' => $isActiveAttribute->getBackend()->getTable()],
-                $dbAdapter->quoteInto(sprintf('%s = %s AND %s = ?', $dbAdapter->quoteIdentifier('is_active.entity_id'),
-                        $dbAdapter->quoteIdentifier('category.entity_id'),
-                        $dbAdapter->quoteIdentifier('is_active.attribute_id')), $isActiveAttribute->getAttributeId()),
-                []);
+            $categoryQuery->join(
+                ['is_active' => $isActiveAttribute->getBackend()->getTable()],
+                $dbAdapter->quoteInto(sprintf(
+                    '%s = %s AND %s = ?',
+                    $dbAdapter->quoteIdentifier('is_active.entity_id'),
+                    $dbAdapter->quoteIdentifier('category.entity_id'),
+                    $dbAdapter->quoteIdentifier('is_active.attribute_id')
+                ), $isActiveAttribute->getAttributeId()),
+                []
+            );
 
-            $categoryQuery->where($dbAdapter->prepareSqlCondition($dbAdapter->quoteIdentifier('is_active.value'),
-                ['eq' => 1]), null, Select::TYPE_CONDITION);
+            $categoryQuery->where($dbAdapter->prepareSqlCondition(
+                $dbAdapter->quoteIdentifier('is_active.value'),
+                ['eq' => 1]
+            ), null, Select::TYPE_CONDITION);
         }
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition(sprintf('%s.%s', $categoryProductTableName, 'product_id'),
-            ['in' => $productEntityIds]), null, Select::TYPE_CONDITION);
+        $categoryQuery->where($dbAdapter->prepareSqlCondition(
+            sprintf('%s.%s', $categoryProductTableName, 'product_id'),
+            ['in' => $productEntityIds]
+        ), null, Select::TYPE_CONDITION);
 
         if ($order) {
             $categoryQuery->order('category.level ASC');
@@ -412,7 +474,7 @@ class Category
     {
         $key = sprintf('%d_%d', $categoryId, $storeId);
 
-        if ( ! array_key_exists($key, $this->categoryNames)) {
+        if (! array_key_exists($key, $this->categoryNames)) {
             $attributeId =
                 $this->attributeHelper->getAttributeId($dbAdapter, \Magento\Catalog\Model\Category::ENTITY, 'name');
 
@@ -420,10 +482,16 @@ class Category
 
             $categoryStoreQuery = $dbAdapter->select()->from(['category' => $tableName], []);
 
-            $categoryStoreQuery->joinLeft(['category_varchar' => sprintf('%s_varchar', $tableName)],
-                sprintf('%s AND %s AND %s', 'category_varchar.entity_id = category.entity_id',
+            $categoryStoreQuery->joinLeft(
+                ['category_varchar' => sprintf('%s_varchar', $tableName)],
+                sprintf(
+                    '%s AND %s AND %s',
+                    'category_varchar.entity_id = category.entity_id',
                     $dbAdapter->quoteInto('category_varchar.attribute_id = ?', $attributeId),
-                    sprintf('category_varchar.store_id = %d', $storeId)), ['category_name' => 'value']);
+                    sprintf('category_varchar.store_id = %d', $storeId)
+                ),
+                ['category_name' => 'value']
+            );
 
             $categoryStoreQuery->where(sprintf('category.entity_id = %d', $categoryId), null, Select::TYPE_CONDITION);
 
@@ -432,13 +500,22 @@ class Category
             if ($this->variables->isEmpty($categoryName)) {
                 $categoryDefaultQuery = $dbAdapter->select()->from(['category' => $tableName], []);
 
-                $categoryDefaultQuery->joinLeft(['category_varchar' => sprintf('%s_varchar', $tableName)],
-                    sprintf('%s AND %s AND %s', 'category_varchar.entity_id = category.entity_id',
+                $categoryDefaultQuery->joinLeft(
+                    ['category_varchar' => sprintf('%s_varchar', $tableName)],
+                    sprintf(
+                        '%s AND %s AND %s',
+                        'category_varchar.entity_id = category.entity_id',
                         $dbAdapter->quoteInto('category_varchar.attribute_id = ?', $attributeId),
-                        sprintf('category_varchar.store_id = %d', 0)), ['category_name' => 'value']);
+                        sprintf('category_varchar.store_id = %d', 0)
+                    ),
+                    ['category_name' => 'value']
+                );
 
-                $categoryDefaultQuery->where(sprintf('category.entity_id = %d', $categoryId), null,
-                    Select::TYPE_CONDITION);
+                $categoryDefaultQuery->where(
+                    sprintf('category.entity_id = %d', $categoryId),
+                    null,
+                    Select::TYPE_CONDITION
+                );
 
                 $categoryName = $this->databaseHelper->fetchOne($categoryDefaultQuery, $dbAdapter);
             }
@@ -459,12 +536,15 @@ class Category
 
         $categoryQuery = $dbAdapter->select()->from(['category' => $tableName], ['path']);
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition('category.entity_id', ['eq' => $categoryId]), null,
-            Select::TYPE_CONDITION);
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition('category.entity_id', ['eq' => $categoryId]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
         $categoryPath = $this->databaseHelper->fetchOne($categoryQuery, $dbAdapter);
 
-        if ( ! empty($categoryPath)) {
+        if (! empty($categoryPath)) {
             $this->categoryPaths[ $categoryId ] = $categoryPath;
 
             return $this->categoryPaths[ $categoryId ];
@@ -490,18 +570,33 @@ class Category
 
         $categoryQuery = $dbAdapter->select()->from(['category' => $tableName], []);
 
-        $categoryQuery->joinLeft(['store_value' => $urlPathAttribute->getBackendTable()],
-            sprintf('%s AND %s AND %s', 'store_value.entity_id = category.entity_id',
+        $categoryQuery->joinLeft(
+            ['store_value' => $urlPathAttribute->getBackendTable()],
+            sprintf(
+                '%s AND %s AND %s',
+                'store_value.entity_id = category.entity_id',
                 $dbAdapter->quoteInto('store_value.attribute_id = ?', $urlPathAttribute->getAttributeId()),
-                $dbAdapter->quoteInto('store_value.store_id = ?', $storeId)), ['store_value_value' => 'value']);
+                $dbAdapter->quoteInto('store_value.store_id = ?', $storeId)
+            ),
+            ['store_value_value' => 'value']
+        );
 
-        $categoryQuery->joinLeft(['admin_value' => $urlPathAttribute->getBackendTable()],
-            sprintf('%s AND %s AND %s', 'admin_value.entity_id = category.entity_id',
+        $categoryQuery->joinLeft(
+            ['admin_value' => $urlPathAttribute->getBackendTable()],
+            sprintf(
+                '%s AND %s AND %s',
+                'admin_value.entity_id = category.entity_id',
                 $dbAdapter->quoteInto('admin_value.attribute_id = ?', $urlPathAttribute->getAttributeId()),
-                $dbAdapter->quoteInto('admin_value.store_id = ?', 0)), ['admin_value_value' => 'value']);
+                $dbAdapter->quoteInto('admin_value.store_id = ?', 0)
+            ),
+            ['admin_value_value' => 'value']
+        );
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition('category.entity_id', ['eq' => $categoryId]), null,
-            Select::TYPE_CONDITION);
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition('category.entity_id', ['eq' => $categoryId]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
         $categoryUrlPaths = $this->databaseHelper->fetchRow($categoryQuery, $dbAdapter);
 
@@ -512,7 +607,7 @@ class Category
                 $categoryUrlPath = $this->arrays->getValue($categoryUrlPaths, 'admin_value_value');
             }
 
-            if ( ! empty($categoryUrlPath)) {
+            if (! empty($categoryUrlPath)) {
                 $this->categoryUrlPaths[ $key ] = $categoryUrlPath;
 
                 return $this->categoryUrlPaths[ $key ];
@@ -523,18 +618,33 @@ class Category
 
         $categoryQuery = $dbAdapter->select()->from(['category' => $tableName], []);
 
-        $categoryQuery->joinLeft(['store_value' => $urlKeyAttribute->getBackendTable()],
-            sprintf('%s AND %s AND %s', 'store_value.entity_id = category.entity_id',
+        $categoryQuery->joinLeft(
+            ['store_value' => $urlKeyAttribute->getBackendTable()],
+            sprintf(
+                '%s AND %s AND %s',
+                'store_value.entity_id = category.entity_id',
                 $dbAdapter->quoteInto('store_value.attribute_id = ?', $urlKeyAttribute->getAttributeId()),
-                $dbAdapter->quoteInto('store_value.store_id = ?', $storeId)), ['store_value_value' => 'value']);
+                $dbAdapter->quoteInto('store_value.store_id = ?', $storeId)
+            ),
+            ['store_value_value' => 'value']
+        );
 
-        $categoryQuery->joinLeft(['admin_value' => $urlKeyAttribute->getBackendTable()],
-            sprintf('%s AND %s AND %s', 'admin_value.entity_id = category.entity_id',
+        $categoryQuery->joinLeft(
+            ['admin_value' => $urlKeyAttribute->getBackendTable()],
+            sprintf(
+                '%s AND %s AND %s',
+                'admin_value.entity_id = category.entity_id',
                 $dbAdapter->quoteInto('admin_value.attribute_id = ?', $urlKeyAttribute->getAttributeId()),
-                $dbAdapter->quoteInto('admin_value.store_id = ?', 0)), ['admin_value_value' => 'value']);
+                $dbAdapter->quoteInto('admin_value.store_id = ?', 0)
+            ),
+            ['admin_value_value' => 'value']
+        );
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition('category.entity_id', ['eq' => $categoryId]), null,
-            Select::TYPE_CONDITION);
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition('category.entity_id', ['eq' => $categoryId]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
         $categoryUrlPaths = $this->databaseHelper->fetchRow($categoryQuery, $dbAdapter);
 
@@ -545,7 +655,7 @@ class Category
                 $categoryUrlPath = $this->arrays->getValue($categoryUrlPaths, 'admin_value_value');
             }
 
-            if ( ! empty($categoryUrlPath)) {
+            if (! empty($categoryUrlPath)) {
                 $category = $this->newCategory();
 
                 $this->categoryUrlPaths[ $key ] =
@@ -578,12 +688,15 @@ class Category
 
         $categoryQuery = $dbAdapter->select()->from(['category' => $tableName], ['entity_id']);
 
-        $categoryQuery->where($dbAdapter->prepareSqlCondition('category.path', ['like' => "%/$parentCategoryId/%"]),
-            null, Select::TYPE_CONDITION);
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition('category.path', ['like' => "%/$parentCategoryId/%"]),
+            null,
+            Select::TYPE_CONDITION
+        );
 
         $subCategoryIds = $this->databaseHelper->fetchCol($categoryQuery, $dbAdapter);
 
-        if ( ! empty($subCategoryIds)) {
+        if (! empty($subCategoryIds)) {
             $this->subCategoryIds[ $parentCategoryId ] = $subCategoryIds;
 
             return $this->subCategoryIds[ $parentCategoryId ];

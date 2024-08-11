@@ -12,15 +12,11 @@ use Magento\Sales\Model\Order\Config;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class State
-    implements OptionSourceInterface
+class State implements OptionSourceInterface
 {
     /** @var Config */
     protected $orderConfig;
 
-    /**
-     * @param Config $orderConfig
-     */
     public function __construct(Config $orderConfig)
     {
         $this->orderConfig = $orderConfig;
@@ -42,9 +38,6 @@ class State
         return $options;
     }
 
-    /**
-     * @return array
-     */
     public function toOptions(): array
     {
         return $this->orderConfig->getStates();

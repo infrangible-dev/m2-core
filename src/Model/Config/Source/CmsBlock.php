@@ -14,31 +14,21 @@ use Magento\Framework\Data\OptionSourceInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class CmsBlock
-    implements OptionSourceInterface
+class CmsBlock implements OptionSourceInterface
 {
     /** @var CollectionFactory */
     protected $collectionFactory;
 
-    /**
-     * @param CollectionFactory $collectionFactory
-     */
     public function __construct(CollectionFactory $collectionFactory)
     {
         $this->collectionFactory = $collectionFactory;
     }
 
-    /**
-     * @return array
-     */
     public function getAllOptions(): array
     {
         return $this->toOptionArray();
     }
 
-    /**
-     * @return array
-     */
     public function toOptionArray(): array
     {
         $cmsBlockCollection = $this->collectionFactory->create();
@@ -58,9 +48,6 @@ class CmsBlock
         return $options;
     }
 
-    /**
-     * @return array
-     */
     public function toOptions(): array
     {
         $cmsBlockCollection = $this->collectionFactory->create();

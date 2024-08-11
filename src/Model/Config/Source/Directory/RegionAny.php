@@ -9,8 +9,7 @@ namespace Infrangible\Core\Model\Config\Source\Directory;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class RegionAny
-    extends Region
+class RegionAny extends Region
 {
     public function toOptionArray($isMultiselect = false): array
     {

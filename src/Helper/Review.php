@@ -36,22 +36,14 @@ class Review
     /** @var \Magento\Review\Model\ResourceModel\Review\Summary\CollectionFactory */
     protected $reviewSummaryCollectionFactory;
 
-    /**
-     * @param ReviewFactory                                                        $reviewFactory
-     * @param \Magento\Review\Model\ResourceModel\ReviewFactory                    $reviewResourceFactory
-     * @param CollectionFactory                                                    $reviewCollectionFactory
-     * @param SummaryFactory                                                       $reviewSummaryFactory
-     * @param \Magento\Review\Model\ResourceModel\Review\SummaryFactory            $reviewSummaryResourceFactory
-     * @param \Magento\Review\Model\ResourceModel\Review\Summary\CollectionFactory $reviewSummaryCollectionFactory
-     */
     public function __construct(
         ReviewFactory $reviewFactory,
         \Magento\Review\Model\ResourceModel\ReviewFactory $reviewResourceFactory,
         CollectionFactory $reviewCollectionFactory,
         SummaryFactory $reviewSummaryFactory,
         \Magento\Review\Model\ResourceModel\Review\SummaryFactory $reviewSummaryResourceFactory,
-        \Magento\Review\Model\ResourceModel\Review\Summary\CollectionFactory $reviewSummaryCollectionFactory)
-    {
+        \Magento\Review\Model\ResourceModel\Review\Summary\CollectionFactory $reviewSummaryCollectionFactory
+    ) {
         $this->reviewFactory = $reviewFactory;
         $this->reviewResourceFactory = $reviewResourceFactory;
         $this->reviewCollectionFactory = $reviewCollectionFactory;
@@ -60,19 +52,11 @@ class Review
         $this->reviewSummaryCollectionFactory = $reviewSummaryCollectionFactory;
     }
 
-    /**
-     * @return \Magento\Review\Model\Review
-     */
     public function newReview(): \Magento\Review\Model\Review
     {
         return $this->reviewFactory->create();
     }
 
-    /**
-     * @param int $reviewId
-     *
-     * @return \Magento\Review\Model\Review
-     */
     public function loadReview(int $reviewId): \Magento\Review\Model\Review
     {
         $review = $this->newReview();
@@ -83,36 +67,23 @@ class Review
     }
 
     /**
-     * @param \Magento\Review\Model\Review $review
-     *
      * @throws AlreadyExistsException
      */
-    public function saveReview(\Magento\Review\Model\Review $review)
+    public function saveReview(\Magento\Review\Model\Review $review): void
     {
         $this->reviewResourceFactory->create()->save($review);
     }
 
-    /**
-     * @return Collection
-     */
     public function getReviewCollection(): Collection
     {
         return $this->reviewCollectionFactory->create();
     }
 
-    /**
-     * @return Summary
-     */
     public function newReviewSummary(): Summary
     {
         return $this->reviewSummaryFactory->create();
     }
 
-    /**
-     * @param int $reviewSummaryId
-     *
-     * @return Summary
-     */
     public function loadReviewSummary(int $reviewSummaryId): Summary
     {
         $reviewSummary = $this->newReviewSummary();
@@ -123,18 +94,13 @@ class Review
     }
 
     /**
-     * @param Summary $reviewSummary
-     *
      * @throws AlreadyExistsException
      */
-    public function saveReviewSummary(Summary $reviewSummary)
+    public function saveReviewSummary(Summary $reviewSummary): void
     {
         $this->reviewSummaryResourceFactory->create()->save($reviewSummary);
     }
 
-    /**
-     * @return \Magento\Review\Model\ResourceModel\Review\Summary\Collection
-     */
     public function getReviewSummaryCollection(): \Magento\Review\Model\ResourceModel\Review\Summary\Collection
     {
         return $this->reviewSummaryCollectionFactory->create();

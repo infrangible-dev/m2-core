@@ -27,12 +27,6 @@ class Config
     /** @var Json */
     protected $json;
 
-    /**
-     * @param Arrays              $arrays
-     * @param \FeWeDev\Base\Files $files
-     * @param Stores              $storeHelper
-     * @param Json                $json
-     */
     public function __construct(
         Arrays $arrays,
         \FeWeDev\Base\Files $files,
@@ -46,11 +40,9 @@ class Config
     }
 
     /**
-     * @param string $fileName
-     *
      * @throws Exception
      */
-    public function importConfigJsonFile(string $fileName)
+    public function importConfigJsonFile(string $fileName): void
     {
         if (file_exists($fileName) && is_readable($fileName)) {
             $this->importConfigJsonString(file_get_contents($fileName));
@@ -60,11 +52,9 @@ class Config
     }
 
     /**
-     * @param string $jsonString
-     *
      * @throws Exception
      */
-    public function importConfigJsonString(string $jsonString)
+    public function importConfigJsonString(string $jsonString): void
     {
         $config = $this->json->decode($jsonString);
 
@@ -74,9 +64,6 @@ class Config
     }
 
     /**
-     * @param array $config
-     *
-     * @return bool
      * @throws Exception
      */
     protected function isValidConfig(array $config): bool
@@ -134,10 +121,8 @@ class Config
      *       [group]
      *         [field1]: [value1]
      *         [field2]: [field2]
-     *
-     * @param array $config
      */
-    public function importConfig(array $config)
+    public function importConfig(array $config): void
     {
         foreach ($config as $scope => $scopesConfig) {
             foreach ($scopesConfig as $scopeId => $scopeConfig) {
@@ -146,26 +131,14 @@ class Config
         }
     }
 
-    /**
-     * @param string $scope
-     * @param int    $scopeId
-     * @param array  $scopeConfig
-     */
-    protected function importScopeConfig(string $scope, int $scopeId, array $scopeConfig)
+    protected function importScopeConfig(string $scope, int $scopeId, array $scopeConfig): void
     {
         foreach ($scopeConfig as $key => $value) {
             $this->importValue($scope, $scopeId, [], $key, $value);
         }
     }
 
-    /**
-     * @param string $scope
-     * @param int    $scopeId
-     * @param array  $parentPath
-     * @param string $key
-     * @param mixed  $value
-     */
-    protected function importValue(string $scope, int $scopeId, array $parentPath, string $key, $value)
+    protected function importValue(string $scope, int $scopeId, array $parentPath, string $key, $value): void
     {
         $valuePath = $parentPath;
         $valuePath[] = $key;
@@ -182,12 +155,9 @@ class Config
     }
 
     /**
-     * @param string $fileName
-     * @param string $path
-     *
      * @throws Exception
      */
-    public function exportConfigJsonFile(string $fileName, string $path)
+    public function exportConfigJsonFile(string $fileName, string $path): void
     {
         $directoryName = dirname($fileName);
 
@@ -206,11 +176,6 @@ class Config
         }
     }
 
-    /**
-     * @param string $path
-     *
-     * @return array
-     */
     public function getScopeConfig(string $path): array
     {
         $config = [];

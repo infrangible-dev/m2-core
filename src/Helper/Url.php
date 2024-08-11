@@ -16,8 +16,7 @@ use Psr\Log\LoggerInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Url
-    extends AbstractHelper
+class Url extends AbstractHelper
 {
     /** @var Stores */
     protected $storeHelper;
@@ -59,11 +58,6 @@ class Url
         $this->filter = $filter;
     }
 
-    /**
-     * @param int $storeId
-     *
-     * @return \Magento\Framework\Url
-     */
     protected function getUrlModel(int $storeId): \Magento\Framework\Url
     {
         if (!array_key_exists($storeId, $this->urls)) {
@@ -78,14 +72,6 @@ class Url
         return $this->urls[$storeId];
     }
 
-    /**
-     * @param string   $route
-     * @param bool     $isSecure
-     * @param array    $params
-     * @param int|null $storeId
-     *
-     * @return string
-     */
     public function getUrl(string $route = '', bool $isSecure = null, array $params = [], int $storeId = null): string
     {
         if (!array_key_exists('_secure', $params)) {
@@ -104,23 +90,13 @@ class Url
         return $url->getUrl($route, $params);
     }
 
-    /**
-     * @param string $route
-     * @param array  $params
-     *
-     * @return string
-     */
     public function getBackendUrl(string $route = '', array $params = []): string
     {
         return $this->backendUrl->getUrl($route, $params);
     }
 
     /**
-     * @param string $url
-     * @param array  $params
      * @param null   $storeId
-     *
-     * @return string
      */
     public function getDirectUrl(string $url, array $params = [], $storeId = null): string
     {
@@ -135,10 +111,6 @@ class Url
 
     /**
      * Format Key for URL
-     *
-     * @param string $str
-     *
-     * @return string
      */
     public function formatUrlKey(string $str): string
     {

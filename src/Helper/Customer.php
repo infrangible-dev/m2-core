@@ -42,15 +42,6 @@ class Customer
     /** @var \Magento\Customer\Model\ResourceModel\Group\CollectionFactory */
     protected $customerGroupCollectionFactory;
 
-    /**
-     * @param LoggerInterface                                               $logging
-     * @param CustomerFactory                                               $customerFactory
-     * @param \Magento\Customer\Model\ResourceModel\CustomerFactory         $customerResourceFactory
-     * @param CollectionFactory                                             $customerCollectionFactory
-     * @param GroupFactory                                                  $customerGroupFactory
-     * @param \Magento\Customer\Model\ResourceModel\GroupFactory            $customerGroupResourceFactory
-     * @param \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
-     */
     public function __construct(
         LoggerInterface $logging,
         CustomerFactory $customerFactory,
@@ -58,8 +49,8 @@ class Customer
         CollectionFactory $customerCollectionFactory,
         GroupFactory $customerGroupFactory,
         \Magento\Customer\Model\ResourceModel\GroupFactory $customerGroupResourceFactory,
-        \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory)
-    {
+        \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
+    ) {
         $this->logging = $logging;
         $this->customerFactory = $customerFactory;
         $this->customerResourceFactory = $customerResourceFactory;
@@ -69,19 +60,11 @@ class Customer
         $this->customerGroupCollectionFactory = $customerGroupCollectionFactory;
     }
 
-    /**
-     * @return \Magento\Customer\Model\Customer
-     */
     public function newCustomer(): \Magento\Customer\Model\Customer
     {
         return $this->customerFactory->create();
     }
 
-    /**
-     * @param int $customerId
-     *
-     * @return \Magento\Customer\Model\Customer
-     */
     public function loadCustomer(int $customerId): \Magento\Customer\Model\Customer
     {
         $customer = $this->newCustomer();
@@ -91,11 +74,6 @@ class Customer
         return $customer;
     }
 
-    /**
-     * @param string $customerEmail
-     *
-     * @return \Magento\Customer\Model\Customer
-     */
     public function loadCustomerByEmail(string $customerEmail): \Magento\Customer\Model\Customer
     {
         $customer = $this->customerFactory->create();
@@ -110,36 +88,23 @@ class Customer
     }
 
     /**
-     * @param \Magento\Customer\Model\Customer $customer
-     *
      * @throws AlreadyExistsException
      */
-    public function saveCustomer(\Magento\Customer\Model\Customer $customer)
+    public function saveCustomer(\Magento\Customer\Model\Customer $customer): void
     {
         $this->customerResourceFactory->create()->save($customer);
     }
 
-    /**
-     * @return Collection
-     */
     public function getCustomerCollection(): Collection
     {
         return $this->customerCollectionFactory->create();
     }
 
-    /**
-     * @return Group
-     */
     public function newCustomerGroup(): Group
     {
         return $this->customerGroupFactory->create();
     }
 
-    /**
-     * @param int $customerGroupId
-     *
-     * @return Group
-     */
     public function loadCustomerGroup(int $customerGroupId): Group
     {
         $group = $this->newCustomerGroup();
@@ -150,18 +115,13 @@ class Customer
     }
 
     /**
-     * @param Group $group
-     *
      * @throws Exception
      */
-    public function saveCustomerGroup(Group $group)
+    public function saveCustomerGroup(Group $group): void
     {
         $this->customerResourceFactory->create()->save($group);
     }
 
-    /**
-     * @return \Magento\Customer\Model\ResourceModel\Group\Collection
-     */
     public function getCustomerGroupCollection(): \Magento\Customer\Model\ResourceModel\Group\Collection
     {
         return $this->customerGroupCollectionFactory->create();

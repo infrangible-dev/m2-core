@@ -13,20 +13,13 @@ use Symfony\Component\Console\Input\InputOption;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Encrypt
-    extends Command
+class Encrypt extends Command
 {
-    /**
-     * @return string
-     */
     protected function getCommandName(): string
     {
         return 'config:encrypt';
     }
 
-    /**
-     * @return string
-     */
     protected function getCommandDescription(): string
     {
         return 'Encrypt a value with the secret of the environment';
@@ -43,17 +36,11 @@ class Encrypt
         ];
     }
 
-    /**
-     * @return string
-     */
     protected function getClassName(): string
     {
         return Script\Encrypt::class;
     }
 
-    /**
-     * @return string
-     */
     protected function getArea(): string
     {
         return Area::AREA_ADMINHTML;

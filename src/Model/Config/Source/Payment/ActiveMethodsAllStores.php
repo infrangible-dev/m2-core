@@ -11,11 +11,9 @@ use Magento\Framework\Exception\LocalizedException;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class ActiveMethodsAllStores
-    extends ActiveMethods
+class ActiveMethodsAllStores extends ActiveMethods
 {
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptionArray(): array
@@ -27,7 +25,6 @@ class ActiveMethodsAllStores
     }
 
     /**
-     * @return array
      * @throws LocalizedException
      */
     public function toOptions(): array
