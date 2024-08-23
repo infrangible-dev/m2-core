@@ -34,14 +34,20 @@ class Block extends AbstractHelper
     {
         /** @var BlockByIdentifier $cmsBlock */
         try {
-            $cmsBlock = $this->createLayoutBlock($block, BlockByIdentifier::class);
+            $cmsBlock = $this->createLayoutBlock(
+                $block,
+                BlockByIdentifier::class
+            );
         } catch (LocalizedException $exception) {
             $this->logger->error($exception);
 
             return '';
         }
 
-        $cmsBlock->setData('identifier', $identifier);
+        $cmsBlock->setData(
+            'identifier',
+            $identifier
+        );
 
         return $cmsBlock->toHtml();
     }
@@ -55,11 +61,17 @@ class Block extends AbstractHelper
         array $blockData = [],
         string $name = ''
     ): ?BlockInterface {
-        $layoutBlock = $block->getLayout()->createBlock($blockClassName, $name);
+        $layoutBlock = $block->getLayout()->createBlock(
+            $blockClassName,
+            $name
+        );
 
         if ($layoutBlock instanceof DataObject) {
             foreach ($blockData as $key => $value) {
-                $layoutBlock->setDataUsingMethod($key, $value);
+                $layoutBlock->setDataUsingMethod(
+                    $key,
+                    $value
+                );
             }
         }
 
@@ -69,7 +81,11 @@ class Block extends AbstractHelper
     public function renderLayoutBlock(AbstractBlock $block, string $blockClassName, array $blockData): string
     {
         try {
-            $block = $this->createLayoutBlock($block, $blockClassName, $blockData);
+            $block = $this->createLayoutBlock(
+                $block,
+                $blockClassName,
+                $blockData
+            );
 
             return $block ? $block->toHtml() : '';
         } catch (LocalizedException $exception) {
@@ -83,6 +99,27 @@ class Block extends AbstractHelper
     {
         $templateData[ 'template' ] = $templateFile;
 
-        return $this->renderLayoutBlock($block, Template::class, $templateData);
+        return $this->renderLayoutBlock(
+            $block,
+            Template::class,
+            $templateData
+        );
+    }
+
+    public function getOrCreateChildBlock(
+        AbstractBlock $block,
+        string $childBlockAlias,
+        string $childBlockClassName
+    ): AbstractBlock {
+        $childBlock = $block->getChildBlock($childBlockAlias);
+
+        if ($childBlock) {
+            return $childBlock;
+        } else {
+            return $block->addChild(
+                $childBlockAlias,
+                $childBlockClassName
+            );
+        }
     }
 }

@@ -6,6 +6,8 @@ namespace Infrangible\Core\Helper;
 
 use Exception;
 use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Variables;
+use Magento\Catalog\Api\Data\ProductTierPriceInterface;
 use Magento\Catalog\Helper\Data;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Media\Config;
@@ -13,6 +15,7 @@ use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ProductTypes\ConfigInterface;
 use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Customer\Model\Address\AbstractAddress;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
@@ -60,6 +63,9 @@ class Product
     /** @var ConfigInterface */
     protected $config;
 
+    /** @var Variables */
+    protected $variables;
+
     /** @var array */
     private $entitySkus = [];
 
@@ -72,6 +78,15 @@ class Product
     /** @var array */
     private $categoryIds = [];
 
+    /** @var array */
+    private $usedProducts = [];
+
+    /** @var array */
+    private $usedProductAttributeIds = [];
+
+    /** @var array */
+    private $usedProductAttributes = [];
+
     public function __construct(
         Arrays $arrays,
         Attribute $attributeHelper,
@@ -83,13 +98,13 @@ class Product
         CollectionFactory $productCollectionFactory,
         Config $productMediaConfig,
         \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\CollectionFactory $configurableAttributeCollectionFactory,
-        ConfigInterface $config
+        ConfigInterface $config,
+        Variables $variables
     ) {
         $this->arrays = $arrays;
         $this->attributeHelper = $attributeHelper;
         $this->databaseHelper = $databaseHelper;
         $this->catalogHelper = $catalogHelper;
-
         $this->logging = $logging;
         $this->productFactory = $productFactory;
         $this->productResourceFactory = $productResourceFactory;
@@ -97,6 +112,7 @@ class Product
         $this->productMediaConfig = $productMediaConfig;
         $this->configurableAttributeCollectionFactory = $configurableAttributeCollectionFactory;
         $this->config = $config;
+        $this->variables = $variables;
     }
 
     public function newProduct(): \Magento\Catalog\Model\Product
@@ -108,11 +124,14 @@ class Product
     {
         $product = $this->newProduct();
 
-        if (!empty($storeId)) {
+        if (! empty($storeId)) {
             $product->setStoreId($storeId);
         }
 
-        $this->productResourceFactory->create()->load($product, $productId);
+        $this->productResourceFactory->create()->load(
+            $product,
+            $productId
+        );
 
         return $product;
     }
@@ -123,11 +142,17 @@ class Product
 
         $productId = $product->getIdBySku($productSku);
 
-        if (!empty($storeId)) {
-            $product->setDataUsingMethod('store_id', $storeId);
+        if (! empty($storeId)) {
+            $product->setDataUsingMethod(
+                'store_id',
+                $storeId
+            );
         }
 
-        $this->productResourceFactory->create()->load($product, $productId);
+        $this->productResourceFactory->create()->load(
+            $product,
+            $productId
+        );
 
         return $product;
     }
@@ -163,10 +188,24 @@ class Product
         bool $includeParents = false,
         int $storeId = null
     ): array {
-        $this->logging->debug(sprintf('Searching child ids for parent id(s): %s', implode(', ', $parentIds)));
+        $this->logging->debug(
+            sprintf(
+                'Searching child ids for parent id(s): %s',
+                implode(
+                    ', ',
+                    $parentIds
+                )
+            )
+        );
 
-        $childIdQuery =
-            $this->getChildIdQuery($dbAdapter, $parentIds, $excludeInactive, $useSuperLink, $includeParents, $storeId);
+        $childIdQuery = $this->getChildIdQuery(
+            $dbAdapter,
+            $parentIds,
+            $excludeInactive,
+            $useSuperLink,
+            $includeParents,
+            $storeId
+        );
 
         if ($excludeOutOfStock) {
             $tableName = $this->databaseHelper->getTableName(
@@ -179,7 +218,13 @@ class Product
                 sprintf(
                     '%s = %s',
                     $dbAdapter->quoteIdentifier('stock_item.product_id'),
-                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName))
+                    $dbAdapter->quoteIdentifier(
+                        sprintf(
+                            '%s.%s',
+                            $tableName,
+                            $childColumnName
+                        )
+                    )
                 ),
                 []
             );
@@ -194,21 +239,35 @@ class Product
             );
         }
 
-        $queryResult = $this->databaseHelper->fetchAssoc($childIdQuery, $dbAdapter);
+        $queryResult = $this->databaseHelper->fetchAssoc(
+            $childIdQuery,
+            $dbAdapter
+        );
 
         if ($maintainAssociation) {
             $childIds = [];
 
             foreach ($queryResult as $childId => $queryRow) {
-                $childIds[(int) $childId] = (int) $this->arrays->getValue($queryRow, 'parent_id');
+                $childIds[ (int)$childId ] = (int)$this->arrays->getValue(
+                    $queryRow,
+                    'parent_id'
+                );
             }
         } else {
             $childIds = array_keys($queryResult);
 
-            $childIds = array_map('intval', $childIds);
+            $childIds = array_map(
+                'intval',
+                $childIds
+            );
         }
 
-        $this->logging->debug(sprintf('Found %d child id(s)', count($childIds)));
+        $this->logging->debug(
+            sprintf(
+                'Found %d child id(s)',
+                count($childIds)
+            )
+        );
 
         return $childIds;
     }
@@ -229,10 +288,11 @@ class Product
         );
         $childColumnName = $useSuperLink ? 'product_id' : 'child_id';
 
-        $childIdQuery = $dbAdapter->select()->from([$tableName], [
-            $childColumnName,
-            'parent_id'
-        ]);
+        $childIdQuery = $dbAdapter->select()->from([$tableName],
+            [
+                $childColumnName,
+                'parent_id'
+            ]);
 
         $childIdQuery->where(
             $dbAdapter->prepareSqlCondition(
@@ -252,7 +312,11 @@ class Product
             // in case child ids are included in the parent id list
             $childIdQuery->orWhere(
                 $dbAdapter->prepareSqlCondition(
-                    sprintf('%s.%s', $tableName, $childColumnName),
+                    sprintf(
+                        '%s.%s',
+                        $tableName,
+                        $childColumnName
+                    ),
                     ['in' => $parentIds]
                 ),
                 null,
@@ -261,7 +325,10 @@ class Product
         }
 
         if ($excludeInactive) {
-            $statusAttribute = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'status');
+            $statusAttribute = $this->attributeHelper->getAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'status'
+            );
 
             if (empty($storeId)) {
                 $childIdQuery->join(
@@ -270,7 +337,13 @@ class Product
                         sprintf(
                             '%s = %s AND %s = ? AND %s = 0',
                             $dbAdapter->quoteIdentifier('status0.entity_id'),
-                            $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName)),
+                            $dbAdapter->quoteIdentifier(
+                                sprintf(
+                                    '%s.%s',
+                                    $tableName,
+                                    $childColumnName
+                                )
+                            ),
                             $dbAdapter->quoteIdentifier('status0.attribute_id'),
                             $dbAdapter->quoteIdentifier('status0.store_id')
                         ),
@@ -295,7 +368,11 @@ class Product
                             '%s = %s AND %s = ? AND %s = 0',
                             $dbAdapter->quoteIdentifier('status0.entity_id'),
                             $dbAdapter->quoteIdentifier(
-                                sprintf('%s.%s', $tableName, $childColumnName)
+                                sprintf(
+                                    '%s.%s',
+                                    $tableName,
+                                    $childColumnName
+                                )
                             ),
                             $dbAdapter->quoteIdentifier('status0.attribute_id'),
                             $dbAdapter->quoteIdentifier('status0.store_id')
@@ -305,17 +382,41 @@ class Product
                     []
                 );
 
-                $tableAlias = sprintf('status_%d', $storeId);
+                $tableAlias = sprintf(
+                    'status_%d',
+                    $storeId
+                );
 
                 $childIdQuery->joinLeft(
                     [$tableAlias => $statusAttribute->getBackend()->getTable()],
                     sprintf(
                         '%s = %s AND %s = %d AND %s = %d',
-                        $dbAdapter->quoteIdentifier(sprintf('%s.entity_id', $tableAlias)),
-                        $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, $childColumnName)),
-                        $dbAdapter->quoteIdentifier(sprintf('%s.attribute_id', $tableAlias)),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.entity_id',
+                                $tableAlias
+                            )
+                        ),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.%s',
+                                $tableName,
+                                $childColumnName
+                            )
+                        ),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.attribute_id',
+                                $tableAlias
+                            )
+                        ),
                         $statusAttribute->getAttributeId(),
-                        $dbAdapter->quoteIdentifier(sprintf('%s.store_id', $tableAlias)),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.store_id',
+                                $tableAlias
+                            )
+                        ),
                         $storeId
                     ),
                     []
@@ -350,9 +451,22 @@ class Product
         bool $maintainAssociation = false,
         int $storeId = null
     ): array {
-        $this->logging->debug(sprintf('Searching bundled ids for parent id(s): %s', implode(', ', $parentIds)));
+        $this->logging->debug(
+            sprintf(
+                'Searching bundled ids for parent id(s): %s',
+                implode(
+                    ', ',
+                    $parentIds
+                )
+            )
+        );
 
-        $buildIdQuery = $this->getBundledIdQuery($dbAdapter, $parentIds, $excludeInactive, $storeId);
+        $buildIdQuery = $this->getBundledIdQuery(
+            $dbAdapter,
+            $parentIds,
+            $excludeInactive,
+            $storeId
+        );
 
         if ($excludeOutOfStock) {
             $tableName = $this->databaseHelper->getTableName('catalog_product_bundle_selection');
@@ -362,7 +476,13 @@ class Product
                 sprintf(
                     '%s = %s',
                     $dbAdapter->quoteIdentifier('stock_item.product_id'),
-                    $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id'))
+                    $dbAdapter->quoteIdentifier(
+                        sprintf(
+                            '%s.%s',
+                            $tableName,
+                            'product_id'
+                        )
+                    )
                 ),
                 []
             );
@@ -377,21 +497,35 @@ class Product
             );
         }
 
-        $queryResult = $this->databaseHelper->fetchAssoc($buildIdQuery, $dbAdapter);
+        $queryResult = $this->databaseHelper->fetchAssoc(
+            $buildIdQuery,
+            $dbAdapter
+        );
 
         if ($maintainAssociation) {
             $childIds = [];
 
             foreach ($queryResult as $childId => $queryRow) {
-                $childIds[(int) $childId] = (int) $this->arrays->getValue($queryRow, 'parent_product_id');
+                $childIds[ (int)$childId ] = (int)$this->arrays->getValue(
+                    $queryRow,
+                    'parent_product_id'
+                );
             }
         } else {
             $childIds = array_keys($queryResult);
 
-            $childIds = array_map('intval', $childIds);
+            $childIds = array_map(
+                'intval',
+                $childIds
+            );
         }
 
-        $this->logging->debug(sprintf('Found %d bundled id(s)', count($childIds)));
+        $this->logging->debug(
+            sprintf(
+                'Found %d bundled id(s)',
+                count($childIds)
+            )
+        );
 
         return $childIds;
     }
@@ -407,10 +541,11 @@ class Product
     ): Select {
         $tableName = $this->databaseHelper->getTableName('catalog_product_bundle_selection');
 
-        $bundleIdQuery = $dbAdapter->select()->from([$tableName], [
-            'product_id',
-            'parent_product_id'
-        ]);
+        $bundleIdQuery = $dbAdapter->select()->from([$tableName],
+            [
+                'product_id',
+                'parent_product_id'
+            ]);
 
         $bundleIdQuery->where(
             $dbAdapter->prepareSqlCondition(
@@ -427,7 +562,10 @@ class Product
         );
 
         if ($excludeInactive) {
-            $statusAttribute = $this->attributeHelper->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'status');
+            $statusAttribute = $this->attributeHelper->getAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'status'
+            );
 
             if (empty($storeId)) {
                 $bundleIdQuery->join(
@@ -436,7 +574,13 @@ class Product
                         sprintf(
                             '%s = %s AND %s = ? AND %s = 0',
                             $dbAdapter->quoteIdentifier('status_0.entity_id'),
-                            $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id')),
+                            $dbAdapter->quoteIdentifier(
+                                sprintf(
+                                    '%s.%s',
+                                    $tableName,
+                                    'product_id'
+                                )
+                            ),
                             $dbAdapter->quoteIdentifier('status_0.attribute_id'),
                             $dbAdapter->quoteIdentifier('status_0.store_id')
                         ),
@@ -461,7 +605,11 @@ class Product
                             '%s = %s AND %s = ? AND %s = 0',
                             $dbAdapter->quoteIdentifier('status_0.entity_id'),
                             $dbAdapter->quoteIdentifier(
-                                sprintf('%s.%s', $tableName, 'product_id')
+                                sprintf(
+                                    '%s.%s',
+                                    $tableName,
+                                    'product_id'
+                                )
                             ),
                             $dbAdapter->quoteIdentifier('status_0.attribute_id'),
                             $dbAdapter->quoteIdentifier('status_0.store_id')
@@ -471,17 +619,41 @@ class Product
                     []
                 );
 
-                $tableAlias = sprintf('status_%d', $storeId);
+                $tableAlias = sprintf(
+                    'status_%d',
+                    $storeId
+                );
 
                 $bundleIdQuery->joinLeft(
                     [$tableAlias => $statusAttribute->getBackend()->getTable()],
                     sprintf(
                         '%s = %s AND %s = %d AND %s = %d',
-                        $dbAdapter->quoteIdentifier(sprintf('%s.entity_id', $tableAlias)),
-                        $dbAdapter->quoteIdentifier(sprintf('%s.%s', $tableName, 'product_id')),
-                        $dbAdapter->quoteIdentifier(sprintf('%s.attribute_id', $tableAlias)),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.entity_id',
+                                $tableAlias
+                            )
+                        ),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.%s',
+                                $tableName,
+                                'product_id'
+                            )
+                        ),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.attribute_id',
+                                $tableAlias
+                            )
+                        ),
                         $statusAttribute->getAttributeId(),
-                        $dbAdapter->quoteIdentifier(sprintf('%s.store_id', $tableAlias)),
+                        $dbAdapter->quoteIdentifier(
+                            sprintf(
+                                '%s.store_id',
+                                $tableAlias
+                            )
+                        ),
                         $storeId
                     ),
                     []
@@ -530,7 +702,8 @@ class Product
     }
 
     public function getConfigurableAttributeCollection(
-    ): \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection {
+    ): \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection
+    {
         return $this->configurableAttributeCollectionFactory->create();
     }
 
@@ -538,45 +711,76 @@ class Product
     {
         $skus = [];
 
-        $this->logging->debug(sprintf('Determining skus for %d entity id(s)', count($entityIds)));
+        $this->logging->debug(
+            sprintf(
+                'Determining skus for %d entity id(s)',
+                count($entityIds)
+            )
+        );
 
         foreach ($entityIds as $key => $entityId) {
-            if (array_key_exists($entityId, $this->entitySkus)) {
-                $skus[$key] = $this->entitySkus[$entityId];
+            if (array_key_exists(
+                $entityId,
+                $this->entitySkus
+            )) {
+                $skus[ $key ] = $this->entitySkus[ $entityId ];
 
-                unset($entityIds[$key]);
+                unset($entityIds[ $key ]);
             }
         }
 
-        $this->logging->debug(sprintf('Searching skus for %d entity id(s)', count($entityIds)));
+        $this->logging->debug(
+            sprintf(
+                'Searching skus for %d entity id(s)',
+                count($entityIds)
+            )
+        );
 
-        if (!empty($entityIds)) {
-            $entityIdChunks = array_chunk($entityIds, 1000, true);
+        if (! empty($entityIds)) {
+            $entityIdChunks = array_chunk(
+                $entityIds,
+                1000,
+                true
+            );
 
             foreach ($entityIdChunks as $entityIdChunk) {
                 $productCollection = $this->getProductCollection();
 
                 $productCollection->getSelect()->reset(Zend_Db_Select::COLUMNS);
                 $productCollection->getSelect()->columns([
-                                                             'entity_id',
-                                                             'sku'
-                                                         ]);
+                    'entity_id',
+                    'sku'
+                ]);
 
-                $productCollection->addAttributeToFilter('entity_id', ['in' => $entityIdChunk]);
+                $productCollection->addAttributeToFilter(
+                    'entity_id',
+                    ['in' => $entityIdChunk]
+                );
 
                 $productData = $this->databaseHelper->fetchAssoc($productCollection->getSelect());
 
                 foreach ($entityIdChunk as $elementNumber => $entityId) {
-                    if (array_key_exists($entityId, $productData) && array_key_exists('sku', $productData[$entityId])) {
-                        $skus[$keepAssociation ? $entityId : $elementNumber] = $productData[$entityId]['sku'];
+                    if (array_key_exists(
+                            $entityId,
+                            $productData
+                        ) && array_key_exists(
+                            'sku',
+                            $productData[ $entityId ]
+                        )) {
+                        $skus[ $keepAssociation ? $entityId : $elementNumber ] = $productData[ $entityId ][ 'sku' ];
 
-                        $this->entitySkus[$entityId] = $productData[$entityId]['sku'];
+                        $this->entitySkus[ $entityId ] = $productData[ $entityId ][ 'sku' ];
                     }
                 }
             }
         }
 
-        $this->logging->debug(sprintf('Found %d sku(s)', count($skus)));
+        $this->logging->debug(
+            sprintf(
+                'Found %d sku(s)',
+                count($skus)
+            )
+        );
 
         return $skus;
     }
@@ -585,49 +789,80 @@ class Product
     {
         $entityIds = [];
 
-        $this->logging->debug(sprintf('Determining entity ids for %d sku(s)', count($skus)));
+        $this->logging->debug(
+            sprintf(
+                'Determining entity ids for %d sku(s)',
+                count($skus)
+            )
+        );
 
         $entitySkus = array_flip($this->entitySkus);
 
         foreach ($skus as $key => $sku) {
-            $entityId = array_key_exists($sku, $entitySkus) ? $entitySkus[$sku] : false;
+            $entityId = array_key_exists(
+                $sku,
+                $entitySkus
+            ) ? $entitySkus[ $sku ] : false;
 
             if ($entityId !== false) {
-                $entityIds[$key] = $entityId;
+                $entityIds[ $key ] = $entityId;
 
-                unset($skus[$key]);
+                unset($skus[ $key ]);
             }
         }
 
-        $this->logging->debug(sprintf('Searching entity ids for %d sku(s)', count($skus)));
+        $this->logging->debug(
+            sprintf(
+                'Searching entity ids for %d sku(s)',
+                count($skus)
+            )
+        );
 
-        if (!empty($skus)) {
-            $skuChunks = array_chunk($skus, 1000, true);
+        if (! empty($skus)) {
+            $skuChunks = array_chunk(
+                $skus,
+                1000,
+                true
+            );
 
             foreach ($skuChunks as $skuChunk) {
                 $productCollection = $this->getProductCollection();
 
                 $productCollection->getSelect()->reset(Zend_Db_Select::COLUMNS);
                 $productCollection->getSelect()->columns([
-                                                             'sku',
-                                                             'entity_id'
-                                                         ]);
+                    'sku',
+                    'entity_id'
+                ]);
 
-                $productCollection->addAttributeToFilter('sku', ['in' => $skuChunk]);
+                $productCollection->addAttributeToFilter(
+                    'sku',
+                    ['in' => $skuChunk]
+                );
 
                 $productData = $this->databaseHelper->fetchAssoc($productCollection->getSelect());
 
                 foreach ($skuChunk as $elementNumber => $sku) {
-                    if (array_key_exists($sku, $productData) && array_key_exists('entity_id', $productData[$sku])) {
-                        $entityIds[$elementNumber] = $productData[$sku]['entity_id'];
+                    if (array_key_exists(
+                            $sku,
+                            $productData
+                        ) && array_key_exists(
+                            'entity_id',
+                            $productData[ $sku ]
+                        )) {
+                        $entityIds[ $elementNumber ] = $productData[ $sku ][ 'entity_id' ];
 
-                        $this->entitySkus[$productData[$sku]['entity_id']] = $sku;
+                        $this->entitySkus[ $productData[ $sku ][ 'entity_id' ] ] = $sku;
                     }
                 }
             }
         }
 
-        $this->logging->debug(sprintf('Found %d entity id(s)', count($entityIds)));
+        $this->logging->debug(
+            sprintf(
+                'Found %d entity id(s)',
+                count($entityIds)
+            )
+        );
 
         return $entityIds;
     }
@@ -639,7 +874,15 @@ class Product
         bool $useSuperLink = true,
         bool $includeChildren = false
     ): array {
-        $this->logging->debug(sprintf('Searching parent ids for child id(s): %s', implode(', ', $childIds)));
+        $this->logging->debug(
+            sprintf(
+                'Searching parent ids for child id(s): %s',
+                implode(
+                    ', ',
+                    $childIds
+                )
+            )
+        );
 
         $tableName = $this->databaseHelper->getTableName(
             $useSuperLink ? 'catalog_product_super_link' : 'catalog_product_relation'
@@ -647,13 +890,17 @@ class Product
 
         $childColumnName = $useSuperLink ? 'product_id' : 'child_id';
 
-        $superLinkQuery = $dbAdapter->select()->from([$tableName], [
-            'parent_id',
-            $childColumnName
-        ]);
+        $superLinkQuery = $dbAdapter->select()->from([$tableName],
+            [
+                'parent_id',
+                $childColumnName
+            ]);
 
         $superLinkQuery->where(
-            $dbAdapter->prepareSqlCondition($childColumnName, ['in' => $childIds]),
+            $dbAdapter->prepareSqlCondition(
+                $childColumnName,
+                ['in' => $childIds]
+            ),
             null,
             Select::TYPE_CONDITION
         );
@@ -661,7 +908,10 @@ class Product
         if ($includeChildren) {
             // in case parent ids are included in the child id list
             $superLinkQuery->orWhere(
-                $dbAdapter->prepareSqlCondition('parent_id', ['in' => $childIds]),
+                $dbAdapter->prepareSqlCondition(
+                    'parent_id',
+                    ['in' => $childIds]
+                ),
                 null,
                 Select::TYPE_CONDITION
             );
@@ -675,32 +925,47 @@ class Product
             $parentIds = array_keys($queryResult);
         }
 
-        $parentIds = array_map('intval', $parentIds);
+        $parentIds = array_map(
+            'intval',
+            $parentIds
+        );
 
-        $this->logging->debug(sprintf('Found %d parent id(s)', count($parentIds)));
+        $this->logging->debug(
+            sprintf(
+                'Found %d parent id(s)',
+                count($parentIds)
+            )
+        );
 
         return $parentIds;
     }
 
     public function getWebsiteIds(AdapterInterface $dbAdapter, int $productId): array
     {
-        if (!array_key_exists($productId, $this->websiteIds)) {
+        if (! array_key_exists(
+            $productId,
+            $this->websiteIds
+        )) {
             $tableName = $this->databaseHelper->getTableName('catalog_product_website');
 
-            $websiteQuery = $dbAdapter->select()->from([$tableName], ['website_id']);
+            $websiteQuery = $dbAdapter->select()->from([$tableName],
+                ['website_id']);
 
             $websiteQuery->where(
-                $dbAdapter->prepareSqlCondition('product_id', ['eq' => $productId]),
+                $dbAdapter->prepareSqlCondition(
+                    'product_id',
+                    ['eq' => $productId]
+                ),
                 null,
                 Select::TYPE_CONDITION
             );
 
             $queryResult = $this->databaseHelper->fetchAssoc($websiteQuery);
 
-            $this->websiteIds[$productId] = array_keys($queryResult);
+            $this->websiteIds[ $productId ] = array_keys($queryResult);
         }
 
-        return $this->websiteIds[$productId];
+        return $this->websiteIds[ $productId ];
     }
 
     /**
@@ -712,7 +977,7 @@ class Product
             $productTypes = $this->config->getAll();
 
             foreach ($productTypes as $productTypeKey => $productTypeConfig) {
-                $productTypes[$productTypeKey]['label'] = __($productTypeConfig['label']);
+                $productTypes[ $productTypeKey ][ 'label' ] = __($productTypeConfig[ 'label' ]);
             }
 
             $this->types = $productTypes;
@@ -728,29 +993,44 @@ class Product
         $loadProductIds = [];
 
         foreach ($productIds as $productId) {
-            if (array_key_exists($productId, $this->categoryIds)) {
-                $result[$productId] = $this->categoryIds[$productId];
+            if (array_key_exists(
+                $productId,
+                $this->categoryIds
+            )) {
+                $result[ $productId ] = $this->categoryIds[ $productId ];
             } else {
                 $loadProductIds[] = $productId;
             }
         }
 
-        if (!empty($loadProductIds)) {
+        if (! empty($loadProductIds)) {
             $categoryQuery = $this->databaseHelper->select(
                 $this->databaseHelper->getTableName('catalog_category_product'),
                 ['product_id', 'category_id']
             );
 
-            $categoryQuery->where('product_id IN (?)', $loadProductIds);
+            $categoryQuery->where(
+                'product_id IN (?)',
+                $loadProductIds
+            );
 
-            $queryResult = $this->databaseHelper->fetchAll($categoryQuery, $dbAdapter);
+            $queryResult = $this->databaseHelper->fetchAll(
+                $categoryQuery,
+                $dbAdapter
+            );
 
             foreach ($queryResult as $row) {
-                $productId = $this->arrays->getValue($row, 'product_id');
-                $categoryId = $this->arrays->getValue($row, 'category_id');
+                $productId = $this->arrays->getValue(
+                    $row,
+                    'product_id'
+                );
+                $categoryId = $this->arrays->getValue(
+                    $row,
+                    'category_id'
+                );
 
-                $this->categoryIds[$productId][] = $categoryId;
-                $result[$productId][] = $categoryId;
+                $this->categoryIds[ $productId ][] = $categoryId;
+                $result[ $productId ][] = $categoryId;
             }
         }
 
@@ -758,7 +1038,7 @@ class Product
     }
 
     /**
-     * @param null|string|bool|int|Store     $store
+     * @param null|string|bool|int|Store $store
      */
     public function getTaxPrice(
         \Magento\Catalog\Model\Product $product,
@@ -782,5 +1062,160 @@ class Product
             $priceIncludesTax,
             $roundPrice
         );
+    }
+
+    /**
+     * @return \Magento\Catalog\Model\Product[]
+     */
+    public function getUsedProducts(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
+    {
+        if ($product->getTypeId() !== 'configurable') {
+            return [];
+        }
+
+        $cacheKey = sprintf(
+            '%d_%d_%s',
+            $product->getId(),
+            $product->getStoreId(),
+            var_export(
+                $onlyEnabled,
+                true
+            )
+        );
+
+        if (! array_key_exists(
+            $cacheKey,
+            $this->usedProducts
+        )) {
+            $this->usedProducts[ $cacheKey ] = [];
+
+            $typeInstance = $product->getTypeInstance();
+
+            if ($typeInstance instanceof Configurable) {
+                $allProducts = $typeInstance->getUsedProducts($product);
+
+                /** @var \Magento\Catalog\Model\Product $product */
+                foreach ($allProducts as $simpleProduct) {
+                    $add = true;
+
+                    if ($onlyEnabled) {
+                        $add = (int)$simpleProduct->getStatus() === Status::STATUS_ENABLED;
+                    }
+
+                    if ($add) {
+                        $this->usedProducts[ $cacheKey ][] = $simpleProduct;
+                    }
+                }
+            }
+        }
+
+        return $this->usedProducts[ $cacheKey ];
+    }
+
+    public function getUsedProductAttributeIds(\Magento\Catalog\Model\Product $product): array
+    {
+        if ($product->getTypeId() !== 'configurable') {
+            return [];
+        }
+
+        if (! array_key_exists(
+            $product->getId(),
+            $this->usedProductAttributeIds
+        )) {
+            $typeInstance = $product->getTypeInstance();
+
+            if ($typeInstance instanceof Configurable) {
+                $this->usedProductAttributeIds[ $product->getId() ] = [];
+
+                $attributes = $typeInstance->getConfigurableAttributes($product);
+
+                foreach ($attributes as $attribute) {
+                    $productAttribute = $attribute->getProductAttribute();
+
+                    try {
+                        $attributeId = $this->variables->intValue($productAttribute->getAttributeId());
+
+                        $this->usedProductAttributeIds[ $product->getId() ][] = $attributeId;
+                    } catch (Exception $exception) {
+                    }
+                }
+            }
+        }
+
+        return $this->usedProductAttributeIds[ $product->getId() ];
+    }
+
+    public function getUsedProductAttributes(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
+    {
+        if ($product->getTypeId() !== 'configurable') {
+            return [];
+        }
+
+        $cacheKey = sprintf(
+            '%d_%d_%s',
+            $product->getId(),
+            $product->getStoreId(),
+            var_export(
+                $onlyEnabled,
+                true
+            )
+        );
+
+        if (! array_key_exists(
+            $cacheKey,
+            $this->usedProductAttributes
+        )) {
+            $usedProducts = $this->getUsedProducts(
+                $product,
+                $onlyEnabled
+            );
+
+            $typeInstance = $product->getTypeInstance();
+
+            if ($typeInstance instanceof Configurable) {
+                $attributes = $typeInstance->getConfigurableAttributes($product);
+
+                foreach ($usedProducts as $usedProduct) {
+                    try {
+                        $usedProductId = $this->variables->intValue($usedProduct->getEntityId());
+
+                        foreach ($attributes as $attribute) {
+                            $productAttribute = $attribute->getProductAttribute();
+
+                            $attributeId = $this->variables->intValue($productAttribute->getAttributeId());
+                            $attributCode = $productAttribute->getAttributeCode();
+
+                            $this->usedProductAttributes[ $cacheKey ][ $usedProductId ][ $attributeId ] =
+                                $this->variables->intValue($usedProduct->getData($attributCode));
+                        }
+                    } catch (Exception $exception) {
+                    }
+                }
+            }
+        }
+
+        return $this->usedProductAttributes[ $cacheKey ];
+    }
+
+    /**
+     * @return ProductTierPriceInterface[]
+     */
+    public function getCustomerGroupTierPrices(\Magento\Catalog\Model\Product $product, int $customerGroupId): array
+    {
+        $tierPrices = $product->getTierPrices();
+
+        if ($tierPrices === null) {
+            return [];
+        }
+
+        $customerGroupTierPrices = [];
+
+        foreach ($tierPrices as $tierPrice) {
+            if ($tierPrice->getCustomerGroupId() == $customerGroupId) {
+                $customerGroupTierPrices[] = $tierPrice;
+            }
+        }
+
+        return $customerGroupTierPrices;
     }
 }
