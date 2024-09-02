@@ -59,11 +59,13 @@ class Block extends AbstractHelper
         AbstractBlock $block,
         string $blockClassName,
         array $blockData = [],
-        string $name = ''
+        string $name = '',
+        array $blockArguments = []
     ): ?BlockInterface {
         $layoutBlock = $block->getLayout()->createBlock(
             $blockClassName,
-            $name
+            $name,
+            $blockArguments
         );
 
         if ($layoutBlock instanceof DataObject) {
@@ -78,13 +80,19 @@ class Block extends AbstractHelper
         return $layoutBlock;
     }
 
-    public function renderLayoutBlock(AbstractBlock $block, string $blockClassName, array $blockData): string
-    {
+    public function renderLayoutBlock(
+        AbstractBlock $block,
+        string $blockClassName,
+        array $blockData = [],
+        array $blockArguments = []
+    ): string {
         try {
             $block = $this->createLayoutBlock(
                 $block,
                 $blockClassName,
-                $blockData
+                $blockData,
+                '',
+                $blockArguments
             );
 
             return $block ? $block->toHtml() : '';
@@ -95,14 +103,19 @@ class Block extends AbstractHelper
         }
     }
 
-    public function renderTemplateBlock(AbstractBlock $block, string $templateFile, array $templateData): string
-    {
+    public function renderTemplateBlock(
+        AbstractBlock $block,
+        string $templateFile,
+        array $templateData = [],
+        array $blockArguments = []
+    ): string {
         $templateData[ 'template' ] = $templateFile;
 
         return $this->renderLayoutBlock(
             $block,
             Template::class,
-            $templateData
+            $templateData,
+            $blockArguments
         );
     }
 
