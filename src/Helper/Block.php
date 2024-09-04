@@ -135,4 +135,18 @@ class Block extends AbstractHelper
             );
         }
     }
+
+    public function renderElement(AbstractBlock $block, string $elementName, $useCache = true): ?string
+    {
+        try {
+            return $block->getLayout()->renderElement(
+                $elementName,
+                $useCache
+            );
+        } catch (LocalizedException $exception) {
+            $this->logger->error($exception);
+
+            return '';
+        }
+    }
 }
