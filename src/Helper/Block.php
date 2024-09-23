@@ -19,8 +19,7 @@ use Psr\Log\LoggerInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Block
-    extends AbstractHelper
+class Block extends AbstractHelper
 {
     protected $logger;
 
@@ -35,14 +34,20 @@ class Block
     {
         /** @var BlockByIdentifier $cmsBlock */
         try {
-            $cmsBlock = $this->createLayoutBlock($block, BlockByIdentifier::class);
+            $cmsBlock = $this->createLayoutBlock(
+                $block,
+                BlockByIdentifier::class
+            );
         } catch (LocalizedException $exception) {
             $this->logger->error($exception);
 
             return '';
         }
 
-        $cmsBlock->setData('identifier', $identifier);
+        $cmsBlock->setData(
+            'identifier',
+            $identifier
+        );
 
         return $cmsBlock->toHtml();
     }
@@ -54,23 +59,41 @@ class Block
         AbstractBlock $block,
         string $blockClassName,
         array $blockData = [],
-        string $name = ''): ?BlockInterface
-    {
-        $layoutBlock = $block->getLayout()->createBlock($blockClassName, $name);
+        string $name = '',
+        array $blockArguments = []
+    ): ?BlockInterface {
+        $layoutBlock = $block->getLayout()->createBlock(
+            $blockClassName,
+            $name,
+            $blockArguments
+        );
 
         if ($layoutBlock instanceof DataObject) {
             foreach ($blockData as $key => $value) {
-                $layoutBlock->setDataUsingMethod($key, $value);
+                $layoutBlock->setDataUsingMethod(
+                    $key,
+                    $value
+                );
             }
         }
 
         return $layoutBlock;
     }
 
-    public function renderLayoutBlock(AbstractBlock $block, string $blockClassName, array $blockData): string
-    {
+    public function renderLayoutBlock(
+        AbstractBlock $block,
+        string $blockClassName,
+        array $blockData = [],
+        array $blockArguments = []
+    ): string {
         try {
-            $block = $this->createLayoutBlock($block, $blockClassName, $blockData);
+            $block = $this->createLayoutBlock(
+                $block,
+                $blockClassName,
+                $blockData,
+                '',
+                $blockArguments
+            );
 
             return $block ? $block->toHtml() : '';
         } catch (LocalizedException $exception) {
@@ -80,10 +103,50 @@ class Block
         }
     }
 
-    public function renderTemplateBlock(AbstractBlock $block, string $templateFile, array $templateData): string
-    {
+    public function renderTemplateBlock(
+        AbstractBlock $block,
+        string $templateFile,
+        array $templateData = [],
+        array $blockArguments = []
+    ): string {
         $templateData[ 'template' ] = $templateFile;
 
-        return $this->renderLayoutBlock($block, Template::class, $templateData);
+        return $this->renderLayoutBlock(
+            $block,
+            Template::class,
+            $templateData,
+            $blockArguments
+        );
+    }
+
+    public function getOrCreateChildBlock(
+        AbstractBlock $block,
+        string $childBlockAlias,
+        string $childBlockClassName
+    ): AbstractBlock {
+        $childBlock = $block->getChildBlock($childBlockAlias);
+
+        if ($childBlock) {
+            return $childBlock;
+        } else {
+            return $block->addChild(
+                $childBlockAlias,
+                $childBlockClassName
+            );
+        }
+    }
+
+    public function renderElement(AbstractBlock $block, string $elementName, $useCache = true): ?string
+    {
+        try {
+            return $block->getLayout()->renderElement(
+                $elementName,
+                $useCache
+            );
+        } catch (LocalizedException $exception) {
+            $this->logger->error($exception);
+
+            return '';
+        }
     }
 }
