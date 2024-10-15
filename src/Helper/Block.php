@@ -109,11 +109,27 @@ class Block extends AbstractHelper
         array $templateData = [],
         array $blockArguments = []
     ): string {
+        return $this->renderTemplateExtendedBlock(
+            $block,
+            Template::class,
+            $templateFile,
+            $templateData,
+            $blockArguments
+        );
+    }
+
+    public function renderTemplateExtendedBlock(
+        AbstractBlock $block,
+        string $blockClassName,
+        string $templateFile,
+        array $templateData = [],
+        array $blockArguments = []
+    ): string {
         $templateData[ 'template' ] = $templateFile;
 
         return $this->renderLayoutBlock(
             $block,
-            Template::class,
+            $blockClassName,
             $templateData,
             $blockArguments
         );
