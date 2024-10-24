@@ -32,8 +32,7 @@ use Psr\Log\LoggerInterface;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Stores
-    extends AbstractHelper
+class Stores extends AbstractHelper
 {
     /** @var Models */
     protected $variables;
@@ -83,8 +82,8 @@ class Stores
         Filesystem $filesystem,
         Repository $assetRepository,
         RequestInterface $request,
-        PriceCurrencyInterface $priceCurrency)
-    {
+        PriceCurrencyInterface $priceCurrency
+    ) {
         parent::__construct($context);
 
         $this->variables = $variableHelper;
@@ -101,23 +100,23 @@ class Stores
         $this->priceCurrency = $priceCurrency;
     }
 
-    /**
-     * @param string $path
-     * @param mixed $defaultValue
-     * @param bool $isFlag
-     * @param int|null $storeId
-     *
-     * @return mixed
-     */
-    public function getStoreConfig(string $path, $defaultValue = null, bool $isFlag = false, int $storeId = null)
+    public function getStoreConfig(string $path, $defaultValue = null, bool $isFlag = false, ?int $storeId = null)
     {
         try {
             $store = $this->getStore($storeId);
 
-            $value = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE, $store->getCode());
+            $value = $this->scopeConfig->getValue(
+                $path,
+                ScopeInterface::SCOPE_STORE,
+                $store->getCode()
+            );
 
-            if ($isFlag === true && !is_null($value)) {
-                $value = $this->scopeConfig->isSetFlag($path, ScopeInterface::SCOPE_STORE, $store->getCode());
+            if ($isFlag === true && ! is_null($value)) {
+                $value = $this->scopeConfig->isSetFlag(
+                    $path,
+                    ScopeInterface::SCOPE_STORE,
+                    $store->getCode()
+                );
             }
 
             if (is_null($value)) {
@@ -130,23 +129,23 @@ class Stores
         }
     }
 
-    /**
-     * @param string $path
-     * @param mixed $defaultValue
-     * @param bool $isFlag
-     * @param int|null $websiteId
-     *
-     * @return mixed
-     */
-    public function getWebsiteConfig(string $path, $defaultValue = null, bool $isFlag = false, int $websiteId = null)
+    public function getWebsiteConfig(string $path, $defaultValue = null, bool $isFlag = false, ?int $websiteId = null)
     {
         try {
             $website = $this->getWebsite($websiteId);
 
-            $value = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_WEBSITE, $website->getCode());
+            $value = $this->scopeConfig->getValue(
+                $path,
+                ScopeInterface::SCOPE_WEBSITE,
+                $website->getCode()
+            );
 
-            if ($isFlag === true && !is_null($value)) {
-                $value = $this->scopeConfig->isSetFlag($path, ScopeInterface::SCOPE_WEBSITE, $website->getCode());
+            if ($isFlag === true && ! is_null($value)) {
+                $value = $this->scopeConfig->isSetFlag(
+                    $path,
+                    ScopeInterface::SCOPE_WEBSITE,
+                    $website->getCode()
+                );
             }
 
             if (is_null($value)) {
@@ -159,36 +158,50 @@ class Stores
         }
     }
 
-    /**
-     * @param string $path
-     * @param bool $defaultValue
-     * @param int|null $storeId
-     *
-     * @return mixed
-     */
-    public function getStoreConfigFlag(string $path, bool $defaultValue = false, int $storeId = null)
+    public function getStoreConfigFlag(string $path, bool $defaultValue = false, ?int $storeId = null)
     {
-        return $this->getStoreConfig($path, $defaultValue, true, $storeId);
+        return $this->getStoreConfig(
+            $path,
+            $defaultValue,
+            true,
+            $storeId
+        );
     }
 
-    /**
-     * @param string $configPath
-     * @param string $delimiter
-     * @param int|null $storeId
-     *
-     * @return array
-     */
-    public function getExplodedConfigValues(string $configPath, string $delimiter = ',', int $storeId = null): array
+    public function getExplodedConfigValues(string $configPath, string $delimiter = ',', ?int $storeId = null): array
     {
-        $valueString = $this->getStoreConfig($configPath, null, false, $storeId);
+        $valueString = $this->getStoreConfig(
+            $configPath,
+            null,
+            false,
+            $storeId
+        );
 
-        if (!$this->variables->isEmpty($valueString)) {
-            if (strpos($valueString, $delimiter) !== false) {
-                $values = explode($delimiter, $valueString);
-                return array_map('trim', $values);
-            } elseif (preg_match('/\n/', $valueString)) {
-                $values = explode("\n", $valueString);
-                return array_map('trim', $values);
+        if (! $this->variables->isEmpty($valueString)) {
+            if (strpos(
+                    $valueString,
+                    $delimiter
+                ) !== false) {
+                $values = explode(
+                    $delimiter,
+                    $valueString
+                );
+                return array_map(
+                    'trim',
+                    $values
+                );
+            } elseif (preg_match(
+                '/\n/',
+                $valueString
+            )) {
+                $values = explode(
+                    "\n",
+                    $valueString
+                );
+                return array_map(
+                    'trim',
+                    $values
+                );
             } else {
                 return [trim($valueString)];
             }
@@ -205,52 +218,212 @@ class Stores
 
         $oldQuery = $writeAdapter->select()->from($tableName);
 
-        $oldQuery->where('path = ?', $oldPath);
+        $oldQuery->where(
+            'path = ?',
+            $oldPath
+        );
 
         $oldQueryResult = $writeAdapter->fetchAssoc($oldQuery);
 
-        if (!$this->variables->isEmpty($oldQueryResult)) {
+        if (! $this->variables->isEmpty($oldQueryResult)) {
             foreach ($oldQueryResult as $oldData) {
                 $newQuery = $writeAdapter->select()->from($tableName);
 
-                $newQuery->where('path = ?', $newPath);
-                $newQuery->where('scope = ?', $this->arrays->getValue($oldData, 'scope'));
-                $newQuery->where('scope_id = ?', $this->arrays->getValue($oldData, 'scope_id'));
+                $newQuery->where(
+                    'path = ?',
+                    $newPath
+                );
+                $newQuery->where(
+                    'scope = ?',
+                    $this->arrays->getValue(
+                        $oldData,
+                        'scope'
+                    )
+                );
+                $newQuery->where(
+                    'scope_id = ?',
+                    $this->arrays->getValue(
+                        $oldData,
+                        'scope_id'
+                    )
+                );
 
                 $newQueryResult = $writeAdapter->fetchAssoc($newQuery);
 
-                if (!$this->variables->isEmpty($newQueryResult)) {
+                if (! $this->variables->isEmpty($newQueryResult)) {
                     $newData = reset($newQueryResult);
 
-                    $writeAdapter->update($tableName, ['value' => $this->arrays->getValue($oldData, 'value')],
-                        sprintf('config_id = %d', $this->arrays->getValue($newData, 'config_id')));
+                    $writeAdapter->update(
+                        $tableName,
+                        [
+                            'value' => $this->arrays->getValue(
+                                $oldData,
+                                'value'
+                            )
+                        ],
+                        sprintf(
+                            'config_id = %d',
+                            $this->arrays->getValue(
+                                $newData,
+                                'config_id'
+                            )
+                        )
+                    );
 
-                    $writeAdapter->delete($tableName,
-                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id')));
+                    $writeAdapter->delete(
+                        $tableName,
+                        sprintf(
+                            'config_id = %d',
+                            $this->arrays->getValue(
+                                $oldData,
+                                'config_id'
+                            )
+                        )
+                    );
                 } else {
-                    $writeAdapter->update($tableName, ['path' => $newPath],
-                        sprintf('config_id = %d', $this->arrays->getValue($oldData, 'config_id')));
+                    $writeAdapter->update(
+                        $tableName,
+                        ['path' => $newPath],
+                        sprintf(
+                            'config_id = %d',
+                            $this->arrays->getValue(
+                                $oldData,
+                                'config_id'
+                            )
+                        )
+                    );
                 }
             }
         } // else no old data to move
     }
 
-    /**
-     * @param string $path
-     * @param mixed $value
-     * @param string $scope
-     * @param int $scopeId
-     */
+    public function moveModuleConfigValues(string $oldModuleId, string $newModuleId)
+    {
+        $writeAdapter = $this->databaseHelper->getDefaultConnection();
+
+        $tableName = $this->databaseHelper->getTableName('core_config_data');
+
+        $oldQuery = $writeAdapter->select()->from($tableName);
+
+        $oldQuery->where(
+            'path like ?',
+            sprintf(
+                '%s/%%',
+                $oldModuleId
+            )
+        );
+
+        $oldQueryResult = $writeAdapter->fetchAssoc($oldQuery);
+
+        if (! $this->variables->isEmpty($oldQueryResult)) {
+            foreach ($oldQueryResult as $oldData) {
+                $path = substr(
+                    $oldData[ 'path' ],
+                    strlen($oldModuleId) + 1
+                );
+
+                $newQuery = $writeAdapter->select()->from($tableName);
+
+                $newQuery->where(
+                    'path = ?',
+                    sprintf(
+                        '%s/%s',
+                        $newModuleId,
+                        $path
+                    )
+                );
+                $newQuery->where(
+                    'scope = ?',
+                    $this->arrays->getValue(
+                        $oldData,
+                        'scope'
+                    )
+                );
+                $newQuery->where(
+                    'scope_id = ?',
+                    $this->arrays->getValue(
+                        $oldData,
+                        'scope_id'
+                    )
+                );
+
+                $newQueryResult = $writeAdapter->fetchAssoc($newQuery);
+
+                if (! $this->variables->isEmpty($newQueryResult)) {
+                    $newData = reset($newQueryResult);
+
+                    $writeAdapter->update(
+                        $tableName,
+                        [
+                            'value' => $this->arrays->getValue(
+                                $oldData,
+                                'value'
+                            )
+                        ],
+                        sprintf(
+                            'config_id = %d',
+                            $this->arrays->getValue(
+                                $newData,
+                                'config_id'
+                            )
+                        )
+                    );
+
+                    $writeAdapter->delete(
+                        $tableName,
+                        sprintf(
+                            'config_id = %d',
+                            $this->arrays->getValue(
+                                $oldData,
+                                'config_id'
+                            )
+                        )
+                    );
+                } else {
+                    $writeAdapter->update(
+                        $tableName,
+                        [
+                            'path' => sprintf(
+                                '%s/%s',
+                                $newModuleId,
+                                $path
+                            )
+                        ],
+                        sprintf(
+                            'config_id = %d',
+                            $this->arrays->getValue(
+                                $oldData,
+                                'config_id'
+                            )
+                        )
+                    );
+                }
+            }
+        } // else no old data to move
+    }
+
     public function insertConfigValue(string $path, $value, string $scope = 'default', int $scopeId = 0)
     {
-        $this->configFactory->create()
-            ->saveConfig($path, is_array($value) ? implode(',', $value) : $value, $scope, $scopeId);
+        $this->configFactory->create()->saveConfig(
+            $path,
+            is_array($value) ? implode(
+                ',',
+                $value
+            ) : $value,
+            $scope,
+            $scopeId
+        );
     }
 
     public function removeConfigValue(string $path)
     {
-        $this->databaseHelper->getDefaultConnection()
-            ->delete($this->databaseHelper->getTableName('core_config_data'), sprintf('path = "%s"', $path));
+        $this->databaseHelper->getDefaultConnection()->delete(
+            $this->databaseHelper->getTableName('core_config_data'),
+            sprintf(
+                'path = "%s"',
+                $path
+            )
+        );
     }
 
     /**
@@ -297,7 +470,10 @@ class Stores
     public function getWebsites(bool $withDefault = false, bool $codeKey = false): array
     {
         /** @var Website[] $websites */
-        $websites = $this->storeManager->getWebsites($withDefault, $codeKey);
+        $websites = $this->storeManager->getWebsites(
+            $withDefault,
+            $codeKey
+        );
 
         return $websites;
     }
@@ -308,7 +484,10 @@ class Stores
     public function getStores(bool $withDefault = false, bool $codeKey = false): array
     {
         /** @var Store[] $stores */
-        $stores = $this->storeManager->getStores($withDefault, $codeKey);
+        $stores = $this->storeManager->getStores(
+            $withDefault,
+            $codeKey
+        );
 
         return $stores;
     }
@@ -358,7 +537,10 @@ class Stores
         $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
 
         return $storeLogoPath !== null && $mediaDirectory->isFile($path) ? $logoUrl :
-            $this->assetRepository->getUrlWithParams('images/logo.svg', ['_secure' => $this->request->isSecure()]);
+            $this->assetRepository->getUrlWithParams(
+                'images/logo.svg',
+                ['_secure' => $this->request->isSecure()]
+            );
     }
 
     public function isSingleStoreMode(): bool
@@ -374,28 +556,67 @@ class Stores
         $isDefault = $store->getId() == 0;
 
         foreach ($data as $section => $sectionData) {
-            if (in_array($section, $resetSections)) {
-                $this->logging->info(sprintf('Resetting section: %s', $section));
+            if (in_array(
+                $section,
+                $resetSections
+            )) {
+                $this->logging->info(
+                    sprintf(
+                        'Resetting section: %s',
+                        $section
+                    )
+                );
 
                 if ($isDefault) {
-                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData(
+                        $this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%"', $section));
+                        sprintf(
+                            'path like "%s/%%"',
+                            $section
+                        )
+                    );
                 } else {
-                    $this->databaseHelper->deleteTableData($this->databaseHelper->getDefaultConnection(),
+                    $this->databaseHelper->deleteTableData(
+                        $this->databaseHelper->getDefaultConnection(),
                         $this->databaseHelper->getTableName('core_config_data'),
-                        sprintf('path like "%s/%%" AND scope = "stores" AND scope_id = %d', $section, $store->getId()));
+                        sprintf(
+                            'path like "%s/%%" AND scope = "stores" AND scope_id = %d',
+                            $section,
+                            $store->getId()
+                        )
+                    );
                 }
             }
 
-            $this->logging->info(sprintf('Importing section: %s', $section));
+            $this->logging->info(
+                sprintf(
+                    'Importing section: %s',
+                    $section
+                )
+            );
 
             foreach ($sectionData as $group => $groupData) {
-                $this->logging->info(sprintf('Importing group: %s/%s', $section, $group));
+                $this->logging->info(
+                    sprintf(
+                        'Importing group: %s/%s',
+                        $section,
+                        $group
+                    )
+                );
 
                 foreach ($groupData as $field => $value) {
-                    $this->insertConfigValue(sprintf('%s/%s/%s', $section, $group, $field), $value,
-                        $isDefault ? 'default' : 'stores', $isDefault ? 0 : $store->getId());
+                    $this->insertConfigValue(
+                        sprintf(
+                            '%s/%s/%s',
+                            $section,
+                            $group,
+                            $field
+                        ),
+                        $value,
+                        $isDefault ? 'default' : 'stores',
+                        $isDefault ? 0 : $store->getId()
+                    );
                 }
             }
         }
@@ -406,7 +627,12 @@ class Stores
         $data = [];
 
         foreach ($sections as $section) {
-            $data[$section] = $this->getStoreConfig($section, [], false, $store->getId());
+            $data[ $section ] = $this->getStoreConfig(
+                $section,
+                [],
+                false,
+                $store->getId()
+            );
         }
 
         return $data;
@@ -417,19 +643,34 @@ class Stores
      */
     public function getNumber(string $value)
     {
-        $locale = $this->getStoreConfig(Data::XML_PATH_DEFAULT_LOCALE, 'en_US');
+        $locale = $this->getStoreConfig(
+            Data::XML_PATH_DEFAULT_LOCALE,
+            'en_US'
+        );
 
-        $formatter = \NumberFormatter::create($locale, \NumberFormatter::DECIMAL);
+        $formatter = \NumberFormatter::create(
+            $locale,
+            \NumberFormatter::DECIMAL
+        );
 
         return $formatter->parse($value);
     }
 
     public function formatNumber(float $value, int $precision = 2): string
     {
-        $locale = $this->getStoreConfig(Data::XML_PATH_DEFAULT_LOCALE, 'en_US');
+        $locale = $this->getStoreConfig(
+            Data::XML_PATH_DEFAULT_LOCALE,
+            'en_US'
+        );
 
-        $formatter = \NumberFormatter::create($locale, \NumberFormatter::DECIMAL);
-        $formatter->setAttribute(\NumberFormatter::FRACTION_DIGITS, $precision);
+        $formatter = \NumberFormatter::create(
+            $locale,
+            \NumberFormatter::DECIMAL
+        );
+        $formatter->setAttribute(
+            \NumberFormatter::FRACTION_DIGITS,
+            $precision
+        );
 
         return $formatter->format($value);
     }
@@ -437,8 +678,12 @@ class Stores
     public function formatPrice(float $price, bool $includeContainer = true): string
     {
         try {
-            return $this->priceCurrency->format($price, $includeContainer, PriceCurrencyInterface::DEFAULT_PRECISION,
-                $this->getStore());
+            return $this->priceCurrency->format(
+                $price,
+                $includeContainer,
+                PriceCurrencyInterface::DEFAULT_PRECISION,
+                $this->getStore()
+            );
         } catch (NoSuchEntityException $exception) {
             $this->logging->error($exception);
         }
@@ -451,7 +696,10 @@ class Stores
      */
     public function roundPrice($price): float
     {
-        return round($price, 2);
+        return round(
+            $price,
+            2
+        );
     }
 
     /**
@@ -465,11 +713,17 @@ class Stores
             $store = $this->getStore();
 
             if ($store->getCurrentCurrency() && $store->getBaseCurrency()) {
-                $value = $store->getBaseCurrency()->convert($price, $store->getCurrentCurrency());
+                $value = $store->getBaseCurrency()->convert(
+                    $price,
+                    $store->getCurrentCurrency()
+                );
             }
 
             if ($store->getCurrentCurrency() && $format) {
-                $value = $this->formatPrice($value, false);
+                $value = $this->formatPrice(
+                    $value,
+                    false
+                );
             }
         } catch (NoSuchEntityException|Exception $exception) {
             $this->logging->error($exception);
