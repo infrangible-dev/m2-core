@@ -20,6 +20,11 @@ class FilterableAttributeList extends \Magento\Catalog\Model\Layer\Category\Filt
             \Magento\Framework\Data\Collection::SORT_ORDER_ASC
         );
 
-        return parent::_prepareAttributeCollection($collection);
+        $collection->addFieldToFilter(
+            'additional_table.is_filterable',
+            ['gt' => 0]
+        );
+
+        return $collection;
     }
 }
