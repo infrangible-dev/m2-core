@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Infrangible\Core\Helper;
 
+use FeWeDev\Base\Variables;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -35,53 +36,43 @@ class Payment
     /** @var Factory */
     protected $paymentMethodFactory;
 
-    /**
-     * @param Stores                                                  $storeHelper
-     * @param PaymentFactory                                          $paymentFactory
-     * @param \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory
-     * @param CollectionFactory                                       $paymentCollectionFactory
-     * @param Factory                                                 $paymentMethodFactory
-     */
+    /** @var Variables */
+    protected $variables;
+
     public function __construct(
         Stores $storeHelper,
         PaymentFactory $paymentFactory,
         \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory,
         CollectionFactory $paymentCollectionFactory,
-        Factory $paymentMethodFactory)
-    {
+        Factory $paymentMethodFactory,
+        Variables $variables
+    ) {
         $this->storeHelper = $storeHelper;
-
         $this->paymentFactory = $paymentFactory;
         $this->paymentResourceFactory = $paymentResourceFactory;
         $this->paymentCollectionFactory = $paymentCollectionFactory;
         $this->paymentMethodFactory = $paymentMethodFactory;
+        $this->variables = $variables;
     }
 
-    /**
-     * @return \Magento\Sales\Model\Order\Payment
-     */
     public function newPayment(): \Magento\Sales\Model\Order\Payment
     {
         return $this->paymentFactory->create();
     }
 
-    /**
-     * @param int $paymentId
-     *
-     * @return \Magento\Sales\Model\Order\Payment
-     */
     public function loadPayment(int $paymentId): \Magento\Sales\Model\Order\Payment
     {
         $payment = $this->newPayment();
 
-        $this->paymentResourceFactory->create()->load($payment, $paymentId);
+        $this->paymentResourceFactory->create()->load(
+            $payment,
+            $paymentId
+        );
 
         return $payment;
     }
 
     /**
-     * @param \Magento\Sales\Model\Order\Payment $payment
-     *
      * @throws AlreadyExistsException
      */
     public function savePayment(\Magento\Sales\Model\Order\Payment $payment)
@@ -89,19 +80,14 @@ class Payment
         $this->paymentResourceFactory->create()->save($payment);
     }
 
-    /**
-     * @return Collection
-     */
     public function getPaymentCollection(): Collection
     {
         return $this->paymentCollectionFactory->create();
     }
 
     /**
-     * @param bool $allStores
-     * @param bool $withDefault
-     *
      * @return AbstractMethod[]
+     * @throws \Exception
      */
     public function getActiveMethods(bool $allStores = false, bool $withDefault = true): array
     {
@@ -119,10 +105,18 @@ class Payment
         }
 
         foreach ($stores as $store) {
-            $storePaymentData = $this->storeHelper->getStoreConfig('payment', [], false, $store->getId());
+            $storePaymentData = $this->storeHelper->getStoreConfig(
+                'payment',
+                [],
+                false,
+                $this->variables->intValue($store->getId())
+            );
 
             foreach ($storePaymentData as $code => $data) {
-                if (is_array($data) && array_key_exists('model', $data)) {
+                if (is_array($data) && array_key_exists(
+                        'model',
+                        $data
+                    )) {
                     try {
                         $methodModel = $this->paymentMethodFactory->create($data[ 'model' ]);
 
