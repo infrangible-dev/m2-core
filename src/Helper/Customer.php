@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Infrangible\Core\Helper;
 
-use Exception;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\Group;
 use Magento\Customer\Model\GroupFactory;
@@ -42,15 +41,6 @@ class Customer
     /** @var \Magento\Customer\Model\ResourceModel\Group\CollectionFactory */
     protected $customerGroupCollectionFactory;
 
-    /**
-     * @param LoggerInterface                                               $logging
-     * @param CustomerFactory                                               $customerFactory
-     * @param \Magento\Customer\Model\ResourceModel\CustomerFactory         $customerResourceFactory
-     * @param CollectionFactory                                             $customerCollectionFactory
-     * @param GroupFactory                                                  $customerGroupFactory
-     * @param \Magento\Customer\Model\ResourceModel\GroupFactory            $customerGroupResourceFactory
-     * @param \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
-     */
     public function __construct(
         LoggerInterface $logging,
         CustomerFactory $customerFactory,
@@ -58,8 +48,8 @@ class Customer
         CollectionFactory $customerCollectionFactory,
         GroupFactory $customerGroupFactory,
         \Magento\Customer\Model\ResourceModel\GroupFactory $customerGroupResourceFactory,
-        \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory)
-    {
+        \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
+    ) {
         $this->logging = $logging;
         $this->customerFactory = $customerFactory;
         $this->customerResourceFactory = $customerResourceFactory;
@@ -69,33 +59,23 @@ class Customer
         $this->customerGroupCollectionFactory = $customerGroupCollectionFactory;
     }
 
-    /**
-     * @return \Magento\Customer\Model\Customer
-     */
     public function newCustomer(): \Magento\Customer\Model\Customer
     {
         return $this->customerFactory->create();
     }
 
-    /**
-     * @param int $customerId
-     *
-     * @return \Magento\Customer\Model\Customer
-     */
     public function loadCustomer(int $customerId): \Magento\Customer\Model\Customer
     {
         $customer = $this->newCustomer();
 
-        $this->customerResourceFactory->create()->load($customer, $customerId);
+        $this->customerResourceFactory->create()->load(
+            $customer,
+            $customerId
+        );
 
         return $customer;
     }
 
-    /**
-     * @param string $customerEmail
-     *
-     * @return \Magento\Customer\Model\Customer
-     */
     public function loadCustomerByEmail(string $customerEmail): \Magento\Customer\Model\Customer
     {
         $customer = $this->customerFactory->create();
@@ -110,8 +90,6 @@ class Customer
     }
 
     /**
-     * @param \Magento\Customer\Model\Customer $customer
-     *
      * @throws AlreadyExistsException
      */
     public function saveCustomer(\Magento\Customer\Model\Customer $customer)
@@ -119,49 +97,36 @@ class Customer
         $this->customerResourceFactory->create()->save($customer);
     }
 
-    /**
-     * @return Collection
-     */
     public function getCustomerCollection(): Collection
     {
         return $this->customerCollectionFactory->create();
     }
 
-    /**
-     * @return Group
-     */
     public function newCustomerGroup(): Group
     {
         return $this->customerGroupFactory->create();
     }
 
-    /**
-     * @param int $customerGroupId
-     *
-     * @return Group
-     */
     public function loadCustomerGroup(int $customerGroupId): Group
     {
         $group = $this->newCustomerGroup();
 
-        $this->customerResourceFactory->create()->load($group, $customerGroupId);
+        $this->customerGroupResourceFactory->create()->load(
+            $group,
+            $customerGroupId
+        );
 
         return $group;
     }
 
     /**
-     * @param Group $group
-     *
-     * @throws Exception
+     * @throws AlreadyExistsException
      */
     public function saveCustomerGroup(Group $group)
     {
-        $this->customerResourceFactory->create()->save($group);
+        $this->customerGroupResourceFactory->create()->save($group);
     }
 
-    /**
-     * @return \Magento\Customer\Model\ResourceModel\Group\Collection
-     */
     public function getCustomerGroupCollection(): \Magento\Customer\Model\ResourceModel\Group\Collection
     {
         return $this->customerGroupCollectionFactory->create();
