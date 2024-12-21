@@ -140,7 +140,7 @@ class Stores extends AbstractHelper
         );
     }
 
-    public function getStoreConfigValue(string $path, bool $defaultValue = false, ?int $storeId = null)
+    public function getStoreConfigValue(string $path, $defaultValue = null, ?int $storeId = null)
     {
         return $this->getStoreConfig(
             $path,
@@ -189,7 +189,7 @@ class Stores extends AbstractHelper
         );
     }
 
-    public function getWebsiteConfigValue(string $path, bool $defaultValue = false, ?int $websiteId = null)
+    public function getWebsiteConfigValue(string $path, $defaultValue = null, ?int $websiteId = null)
     {
         return $this->getWebsiteConfig(
             $path,
@@ -229,7 +229,7 @@ class Stores extends AbstractHelper
         );
     }
 
-    public function getDefaultConfigValue(string $path, bool $defaultValue = false)
+    public function getDefaultConfigValue(string $path, $defaultValue = null)
     {
         return $this->getDefaultConfig(
             $path,
