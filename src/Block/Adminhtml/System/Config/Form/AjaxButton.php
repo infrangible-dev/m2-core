@@ -32,11 +32,6 @@ class AjaxButton
     /** @var string */
     private $dataHtmlIds;
 
-    /**
-     * @param Arrays $arrays
-     * @param Context $context
-     * @param array $data
-     */
     public function __construct(Arrays $arrays, Context $context, array $data = [])
     {
         parent::__construct($context, $data);
@@ -44,21 +39,13 @@ class AjaxButton
         $this->arrays = $arrays;
     }
 
-    /**
-     * @return void
-     */
-    protected function _construct()
+    protected function _construct(): void
     {
         parent::_construct();
 
         $this->setTemplate('Infrangible_Core::system/config/form/button.phtml');
     }
 
-    /**
-     * @param AbstractElement $element
-     *
-     * @return string
-     */
     protected function _getElementHtml(AbstractElement $element): string
     {
         /** @var array $originalData */
@@ -71,70 +58,46 @@ class AjaxButton
                 $this->arrays->getValue($originalData, 'button_url'), ['_current' => true]
             )
         );
-        $this->setDataHtmlIds($this->arrays->getValue($originalData, 'data_html_ids'));
+        $this->setDataHtmlIds($this->arrays->getValue($originalData, 'data_html_ids', ''));
 
         return $this->_toHtml();
     }
 
-    /**
-     * @return string
-     */
     public function getButtonId(): string
     {
         return $this->buttonId;
     }
 
-    /**
-     * @param string $buttonId
-     */
     public function setButtonId(string $buttonId): void
     {
         $this->buttonId = $buttonId;
     }
 
-    /**
-     * @return string
-     */
     public function getButtonLabel(): string
     {
         return $this->buttonLabel;
     }
 
-    /**
-     * @param string $buttonLabel
-     */
     public function setButtonLabel(string $buttonLabel): void
     {
         $this->buttonLabel = $buttonLabel;
     }
 
-    /**
-     * @return string
-     */
     public function getAjaxUrl(): string
     {
         return $this->ajaxUrl;
     }
 
-    /**
-     * @param string $ajaxUrl
-     */
     public function setAjaxUrl(string $ajaxUrl): void
     {
         $this->ajaxUrl = $ajaxUrl;
     }
 
-    /**
-     * @return string
-     */
     public function getDataHtmlIds(): string
     {
         return $this->dataHtmlIds;
     }
 
-    /**
-     * @param string $dataHtmlIds
-     */
     public function setDataHtmlIds(string $dataHtmlIds): void
     {
         $this->dataHtmlIds = $dataHtmlIds;
