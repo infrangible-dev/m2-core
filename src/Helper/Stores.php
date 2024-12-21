@@ -10,6 +10,7 @@ use FeWeDev\Base\Variables;
 use Magento\Config\Model\Config\Backend\Image\Logo;
 use Magento\Config\Model\ResourceModel\ConfigFactory;
 use Magento\Directory\Helper\Data;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
@@ -129,6 +130,26 @@ class Stores extends AbstractHelper
         }
     }
 
+    public function getStoreConfigFlag(string $path, bool $defaultValue = false, ?int $storeId = null)
+    {
+        return $this->getStoreConfig(
+            $path,
+            $defaultValue,
+            true,
+            $storeId
+        );
+    }
+
+    public function getStoreConfigValue(string $path, bool $defaultValue = false, ?int $storeId = null)
+    {
+        return $this->getStoreConfig(
+            $path,
+            $defaultValue,
+            false,
+            $storeId
+        );
+    }
+
     public function getWebsiteConfig(string $path, $defaultValue = null, bool $isFlag = false, ?int $websiteId = null)
     {
         try {
@@ -158,13 +179,61 @@ class Stores extends AbstractHelper
         }
     }
 
-    public function getStoreConfigFlag(string $path, bool $defaultValue = false, ?int $storeId = null)
+    public function getWebsiteConfigFlag(string $path, bool $defaultValue = false, ?int $websiteId = null)
     {
-        return $this->getStoreConfig(
+        return $this->getWebsiteConfig(
             $path,
             $defaultValue,
             true,
-            $storeId
+            $websiteId
+        );
+    }
+
+    public function getWebsiteConfigValue(string $path, bool $defaultValue = false, ?int $websiteId = null)
+    {
+        return $this->getWebsiteConfig(
+            $path,
+            $defaultValue,
+            false,
+            $websiteId
+        );
+    }
+
+    public function getDefaultConfig(string $path, $defaultValue = null, bool $isFlag = false)
+    {
+        $value = $this->scopeConfig->getValue(
+            $path,
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+        );
+
+        if ($isFlag === true && ! is_null($value)) {
+            $value = $this->scopeConfig->isSetFlag(
+                $path,
+                ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+            );
+        }
+
+        if (is_null($value)) {
+            $value = $defaultValue;
+        }
+
+        return $value;
+    }
+
+    public function getDefaultConfigFlag(string $path, bool $defaultValue = false)
+    {
+        return $this->getDefaultConfig(
+            $path,
+            $defaultValue,
+            true
+        );
+    }
+
+    public function getDefaultConfigValue(string $path, bool $defaultValue = false)
+    {
+        return $this->getDefaultConfig(
+            $path,
+            $defaultValue
         );
     }
 
