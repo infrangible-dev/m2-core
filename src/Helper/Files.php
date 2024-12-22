@@ -33,13 +33,6 @@ class Files
     /** @var File */
     protected $file;
 
-    /**
-     * @param Variables           $variables
-     * @param \FeWeDev\Base\Files $files
-     * @param LoggerInterface     $logging
-     * @param DirectoryList       $directoryList
-     * @param File                $file
-     */
     public function __construct(
         Variables $variables,
         \FeWeDev\Base\Files $files,
@@ -58,24 +51,34 @@ class Files
     /**
      * Method to set path as relative (in Magento directories) or absolute for server
      *
-     * @param string $path
-     * @param null   $basePath
-     * @param bool   $makeDir
-     *
-     * @return string
      * @throws Exception
      */
-    public function determineFilePath(string $path, $basePath = null, bool $makeDir = false): string
+    public function determineFilePath(string $path, ?string $basePath = null, bool $makeDir = false): string
     {
-        $this->logging->debug(sprintf('Determine path of: %s with a prefix base path: %s', $path, $basePath));
+        $this->logging->debug(
+            sprintf(
+                'Determine path of: %s with a prefix base path: %s',
+                $path,
+                $basePath
+            )
+        );
 
         if ($this->variables->isEmpty($basePath)) {
             $basePath = $this->directoryList->getRoot();
         }
 
-        $path = $this->files->determineFilePath($path, $basePath, $makeDir);
+        $path = $this->files->determineFilePath(
+            $path,
+            $basePath,
+            $makeDir
+        );
 
-        $this->logging->debug(sprintf('Determined absolute path: %s', $path));
+        $this->logging->debug(
+            sprintf(
+                'Determined absolute path: %s',
+                $path
+            )
+        );
 
         return $path;
     }
@@ -83,35 +86,31 @@ class Files
     /**
      * Method to read Files from directory
      *
-     * @param string $path
-     *
-     * @return array
      * @throws Exception
      */
     public function determineFilesFromFilePath(string $path): array
     {
-        return $this->determineFromFilePath($path, true, false);
+        return $this->determineFromFilePath(
+            $path,
+            true,
+            false
+        );
     }
 
     /**
      * Method to read Files from directory
      *
-     * @param string $path
-     *
-     * @return array
      * @throws Exception
      */
     public function determineDirectoriesFromFilePath(string $path): array
     {
-        return $this->determineFromFilePath($path, false);
+        return $this->determineFromFilePath(
+            $path,
+            false
+        );
     }
 
     /**
-     * @param string $path
-     * @param bool   $includeFiles
-     * @param bool   $includeDirectories
-     *
-     * @return array
      * @throws Exception
      */
     public function determineFromFilePath(
@@ -128,7 +127,6 @@ class Files
     }
 
     /**
-     * @return string
      * @noinspection PhpRedundantCatchClauseInspection
      * @noinspection RedundantSuppression
      */
@@ -139,5 +137,23 @@ class Files
         } catch (FileSystemException $exception) {
             return sys_get_temp_dir();
         }
+    }
+
+    public function read(string $fileName): string
+    {
+        if (file_exists($fileName) && is_readable($fileName)) {
+            $fileContent = @file_get_contents($fileName);
+
+            if ($fileContent) {
+                return $fileContent;
+            }
+        }
+
+        return '';
+    }
+
+    public function removeFile(string $fileName): bool
+    {
+        return $this->file->rm($fileName);
     }
 }
