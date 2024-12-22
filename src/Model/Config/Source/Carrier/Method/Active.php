@@ -2,25 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Infrangible\Core\Model\Config\Source\Carrier;
+namespace Infrangible\Core\Model\Config\Source\Carrier\Method;
 
 use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Carrier;
-use Infrangible\Core\Helper\Stores;
 use Magento\Framework\Data\OptionSourceInterface;
+use Magento\Shipping\Model\Carrier\CarrierInterface;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Active implements OptionSourceInterface
 {
     /** @var Variables */
     protected $variables;
-
-    /** @var Stores */
-    protected $storeHelper;
 
     /** @var Carrier */
     protected $carrierHelper;
@@ -31,13 +28,9 @@ class Active implements OptionSourceInterface
     /** @var bool */
     private $withDefault = true;
 
-    public function __construct(
-        Variables $variables,
-        Stores $storeHelper,
-        Carrier $carrierHelper
-    ) {
+    public function __construct(Variables $variables, Carrier $carrierHelper)
+    {
         $this->variables = $variables;
-        $this->storeHelper = $storeHelper;
         $this->carrierHelper = $carrierHelper;
     }
 
@@ -59,10 +52,28 @@ class Active implements OptionSourceInterface
                 $code
             );
 
-            $options[] = [
-                'value' => $code,
-                'label' => $label
-            ];
+            $options[ $code ] = ['label' => $label, 'value' => []];
+
+            if ($carrier instanceof CarrierInterface) {
+                foreach ($carrier->getAllowedMethods() as $methodCode => $methodTitle) {
+                    $value = sprintf(
+                        '%s_%s',
+                        $code,
+                        $methodCode
+                    );
+
+                    $label = $this->variables->isEmpty($name) ? $code : sprintf(
+                        '%s [%s]',
+                        $methodTitle,
+                        $methodCode
+                    );
+
+                    $options[ $code ][ 'value' ][] = [
+                        'value' => $value,
+                        'label' => $label
+                    ];
+                }
+            }
         }
 
         return $options;
@@ -80,13 +91,25 @@ class Active implements OptionSourceInterface
         foreach ($activeCarriers as $code => $carrier) {
             $name = $carrier->getConfigData('name');
 
-            $label = $this->variables->isEmpty($name) ? $code : sprintf(
-                '%s [%s]',
-                $name,
-                $code
-            );
+            if ($carrier instanceof CarrierInterface) {
+                foreach ($carrier->getAllowedMethods() as $methodCode => $methodTitle) {
+                    $value = sprintf(
+                        '%s_%s',
+                        $code,
+                        $methodCode
+                    );
 
-            $options[ $code ] = $label;
+                    $label = $this->variables->isEmpty($name) ? $code : sprintf(
+                        '%s [%s] %s [%s]',
+                        $name,
+                        $code,
+                        $methodTitle,
+                        $methodCode
+                    );
+
+                    $options[ $value ] = $label;
+                }
+            }
         }
 
         return $options;
