@@ -109,24 +109,6 @@ class Attribute
     /** @var Set[] */
     private $attributeSetsByName = [];
 
-    /**
-     * @param Arrays                                                                    $arrays
-     * @param Variables                                                                 $variables
-     * @param Database                                                                  $databaseHelper
-     * @param EntityType                                                                $entityTypeHelper
-     * @param LoggerInterface                                                           $logging
-     * @param AttributeFactory                                                          $attributeFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\AttributeFactory                  $attributeResourceFactory
-     * @param CollectionFactory                                                         $attributeCollectionFactory
-     * @param SetFactory                                                                $attributeSetFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\SetFactory              $attributeSetResourceFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory   $attributeSetCollectionFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\CollectionFactory $attributeGroupCollectionFactory
-     * @param ProductAttributeRepositoryInterface                                       $productAttributeRepository
-     * @param CategoryAttributeRepositoryInterface                                      $categoryAttributeRepository
-     * @param \Magento\Catalog\Model\ResourceModel\Product\Attribute\CollectionFactory  $productAttributeCollectionFactory
-     * @param ConfigFactory                                                             $configFactory
-     */
     public function __construct(
         Arrays $arrays,
         Variables $variables,
@@ -164,39 +146,30 @@ class Attribute
         $this->configFactory = $configFactory;
     }
 
-    /**
-     * @return Collection
-     */
     public function getAttributeCollection(): Collection
     {
         return $this->attributeCollectionFactory->create();
     }
 
-    /**
-     * @return Entity\Attribute
-     */
     public function newAttribute(): Entity\Attribute
     {
         return $this->attributeFactory->create();
     }
 
-    /**
-     * @param int $attributeId
-     *
-     * @return Entity\Attribute
-     */
     public function loadAttribute(int $attributeId): Entity\Attribute
     {
         $attribute = $this->newAttribute();
 
-        $this->attributeResourceFactory->create()->load($attribute, $attributeId, 'attribute_id');
+        $this->attributeResourceFactory->create()->load(
+            $attribute,
+            $attributeId,
+            'attribute_id'
+        );
 
         return $attribute;
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
      * @throws Exception
      */
     public function deleteAttribute(Entity\Attribute $attribute)
@@ -204,39 +177,30 @@ class Attribute
         $this->attributeResourceFactory->create()->delete($attribute);
     }
 
-    /**
-     * @return \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\Collection
-     */
     public function getAttributeSetCollection(): \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\Collection
     {
         return $this->attributeSetCollectionFactory->create();
     }
 
-    /**
-     * @return Set
-     */
     public function newAttributeSet(): Set
     {
         return $this->attributeSetFactory->create();
     }
 
-    /**
-     * @param int $attributeSetId
-     *
-     * @return Set
-     */
     public function loadAttributeSet(int $attributeSetId): Set
     {
         $attributeSet = $this->newAttributeSet();
 
-        $this->attributeSetResourceFactory->create()->load($attributeSet, $attributeSetId, 'attribute_set_id');
+        $this->attributeSetResourceFactory->create()->load(
+            $attributeSet,
+            $attributeSetId,
+            'attribute_set_id'
+        );
 
         return $attributeSet;
     }
 
     /**
-     * @param Set $attributeSet
-     *
      * @throws Exception
      */
     public function deleteAttributeSet(Set $attributeSet)
@@ -244,18 +208,12 @@ class Attribute
         $this->attributeSetResourceFactory->create()->delete($attributeSet);
     }
 
-    /**
-     * @return \Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\Collection
-     */
     public function getAttributeGroupCollection(): \Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\Collection
     {
         return $this->attributeGroupCollectionFactory->create();
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
-     * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute|null
      * @throws NoSuchEntityException
      */
     public function loadCatalogEavAttribute(
@@ -278,27 +236,27 @@ class Attribute
         return $catalogEavAttribute;
     }
 
-    /**
-     * @return \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection
-     */
     public function getProductAttributeCollection(): \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection
     {
         return $this->productAttributeCollectionFactory->create();
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     *
-     * @return Entity\Attribute
      * @throws Exception
      */
     public function getAttribute(string $entityTypeCode, string $attributeCode): Entity\Attribute
     {
-        $key = sprintf('%s_%s', $entityTypeCode, $attributeCode);
+        $key = sprintf(
+            '%s_%s',
+            $entityTypeCode,
+            $attributeCode
+        );
 
-        if (array_key_exists($key, $this->attributes)) {
-            if ($this->attributes[$key] === null) {
+        if (array_key_exists(
+            $key,
+            $this->attributes
+        )) {
+            if ($this->attributes[ $key ] === null) {
                 throw new Exception(
                     sprintf(
                         'Could not load attribute with entity: %s and code: %s',
@@ -308,14 +266,17 @@ class Attribute
                 );
             }
 
-            return $this->attributes[$key];
+            return $this->attributes[ $key ];
         }
 
         /** @var Entity\Attribute $attribute */
-        $attribute = $this->configFactory->create()->getAttribute($entityTypeCode, $attributeCode);
+        $attribute = $this->configFactory->create()->getAttribute(
+            $entityTypeCode,
+            $attributeCode
+        );
 
-        if (!$attribute || !$attribute->getId()) {
-            $this->attributes[$key] = null;
+        if (! $attribute || ! $attribute->getId()) {
+            $this->attributes[ $key ] = null;
 
             throw new Exception(
                 sprintf(
@@ -326,71 +287,64 @@ class Attribute
             );
         }
 
-        $this->attributes[$key] = $attribute;
+        $this->attributes[ $key ] = $attribute;
 
         return $attribute;
     }
 
-    /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param string           $attributeCode
-     *
-     * @return int|null
-     */
     public function getAttributeId(AdapterInterface $dbAdapter, string $entityTypeCode, string $attributeCode): ?int
     {
-        $key = $entityTypeCode.'_'.$attributeCode;
+        $key = $entityTypeCode . '_' . $attributeCode;
 
-        if (array_key_exists($key, $this->attributeIds)) {
-            return $this->attributeIds[$key];
+        if (array_key_exists(
+            $key,
+            $this->attributeIds
+        )) {
+            return $this->attributeIds[ $key ];
         }
 
         $eavAttributeTableName = $this->databaseHelper->getTableName('eav_attribute');
         $entityTypeTableName = $this->databaseHelper->getTableName('eav_entity_type');
 
-        $attributeQuery = $dbAdapter->select()->from(['eav_attribute' => $eavAttributeTableName], ['attribute_id']);
+        $attributeQuery = $dbAdapter->select()->from(['eav_attribute' => $eavAttributeTableName],
+            ['attribute_id']);
 
         $attributeQuery->joinLeft(['eav_entity_type' => $entityTypeTableName],
-                                  'eav_entity_type.entity_type_id = eav_attribute.entity_type_id',
-                                  'entity_type_code');
+            'eav_entity_type.entity_type_id = eav_attribute.entity_type_id',
+            'entity_type_code');
 
         $attributeQuery->where(
             $dbAdapter->prepareSqlCondition(
-                'eav_attribute.attribute_code', ['eq' => $attributeCode]
+                'eav_attribute.attribute_code',
+                ['eq' => $attributeCode]
             ),
             null,
             Select::TYPE_CONDITION
         );
         $attributeQuery->where(
             $dbAdapter->prepareSqlCondition(
-                'eav_entity_type.entity_type_code', ['eq' => $entityTypeCode]
+                'eav_entity_type.entity_type_code',
+                ['eq' => $entityTypeCode]
             ),
             null,
             Select::TYPE_CONDITION
         );
 
-        $attributeId = $this->databaseHelper->fetchOne($attributeQuery, $dbAdapter);
+        $attributeId = $this->databaseHelper->fetchOne(
+            $attributeQuery,
+            $dbAdapter
+        );
 
-        if (!empty($attributeId)) {
-            $this->attributeIds[$key] = (int) $attributeId;
+        if (! empty($attributeId)) {
+            $this->attributeIds[ $key ] = (int)$attributeId;
 
-            return $this->attributeIds[$key];
+            return $this->attributeIds[ $key ];
         }
 
         return null;
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param int              $entityId
-     * @param string           $attributeCode
-     * @param int              $storeId
-     * @param bool             $useOptionValue
-     * @param bool             $strToLower
-     *
-     * @return mixed
      * @throws Exception
      */
     public function getAttributeValue(
@@ -412,19 +366,13 @@ class Attribute
             $strToLower
         );
 
-        return $this->arrays->getValue($attributeValues, strval($entityId));
+        return $this->arrays->getValue(
+            $attributeValues,
+            strval($entityId)
+        );
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param array            $entityIds
-     * @param string           $attributeCode
-     * @param int              $storeId
-     * @param bool             $useOptionValue
-     * @param bool             $strToLower
-     *
-     * @return array
      * @throws Exception
      * @throws LocalizedException
      */
@@ -446,20 +394,31 @@ class Attribute
                 $entityTypeCode,
                 $attributeCode,
                 $storeId,
-                var_export($useOptionValue, true)
+                var_export(
+                    $useOptionValue,
+                    true
+                )
             );
 
-            if (array_key_exists($key, $this->attributeValues)) {
-                $attributeValues[$entityId] = $this->attributeValues[$key];
+            if (array_key_exists(
+                $key,
+                $this->attributeValues
+            )) {
+                $attributeValues[ $entityId ] = $this->attributeValues[ $key ];
 
-                unset($entityIds[$key]);
+                unset($entityIds[ $key ]);
             }
         }
 
         $entityType = $this->entityTypeHelper->getEntityType($entityTypeCode);
 
         if (empty($entityType)) {
-            throw new Exception(sprintf('Could not load entity type with code: %s', $entityTypeCode));
+            throw new Exception(
+                sprintf(
+                    'Could not load entity type with code: %s',
+                    $entityTypeCode
+                )
+            );
         }
 
         $entityIdField = $entityType->getEntityIdField();
@@ -468,12 +427,20 @@ class Attribute
             $entityIdField = Entity::DEFAULT_ENTITY_ID_FIELD;
         }
 
-        if (strcasecmp($entityIdField, $attributeCode) === 0) {
+        $isEntityIdField = strcasecmp(
+                $entityIdField,
+                $attributeCode
+            ) === 0;
+
+        if ($isEntityIdField || ($entityTypeCode === Product::ENTITY && $attributeCode === 'type_id')) {
             $attributeTable = $this->databaseHelper->getTableName($entityType->getEntityTable());
 
             $isStatic = true;
         } else {
-            $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
+            $attribute = $this->getAttribute(
+                $entityTypeCode,
+                $attributeCode
+            );
 
             $attributeTable = $attribute->getBackend()->getTable();
 
@@ -481,32 +448,56 @@ class Attribute
         }
 
         if ($isStatic) {
-            $valueQuery = $dbAdapter->select()->from($attributeTable, [
-                $entityIdField,
-                $attributeCode,
-            ]);
+            $valueQuery = $dbAdapter->select()->from(
+                $attributeTable,
+                [
+                    $entityIdField,
+                    $attributeCode,
+                ]
+            );
 
             $valueQuery->where(
-                $dbAdapter->prepareSqlCondition($entityIdField, ['in' => $entityIds]),
+                $dbAdapter->prepareSqlCondition(
+                    $entityIdField,
+                    ['in' => $entityIds]
+                ),
                 null,
                 Select::TYPE_CONDITION
             );
 
-            $queryResult = $this->databaseHelper->fetchAssoc($valueQuery, $dbAdapter);
+            $queryResult = $this->databaseHelper->fetchAssoc(
+                $valueQuery,
+                $dbAdapter
+            );
 
-            if (!empty($queryResult)) {
+            if (! empty($queryResult)) {
                 foreach ($queryResult as $row) {
-                    if (array_key_exists($entityIdField, $row) && array_key_exists($attributeCode, $row)) {
-                        $key = sprintf('%d_%s_%s_%d', $row[$entityIdField], $entityTypeCode, $attributeCode, $storeId);
+                    if (array_key_exists(
+                            $entityIdField,
+                            $row
+                        ) && array_key_exists(
+                            $attributeCode,
+                            $row
+                        )) {
+                        $key = sprintf(
+                            '%d_%s_%s_%d',
+                            $row[ $entityIdField ],
+                            $entityTypeCode,
+                            $attributeCode,
+                            $storeId
+                        );
 
-                        $this->attributeValues[$key] = $row[$attributeCode];
+                        $this->attributeValues[ $key ] = $row[ $attributeCode ];
 
-                        $attributeValues[$row[$entityIdField]] = $row[$attributeCode];
+                        $attributeValues[ $row[ $entityIdField ] ] = $row[ $attributeCode ];
                     }
                 }
             }
         } else {
-            $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
+            $attribute = $this->getAttribute(
+                $entityTypeCode,
+                $attributeCode
+            );
 
             $columns = [
                 'entity_id',
@@ -517,56 +508,82 @@ class Attribute
                 $columns[] = 'store_id';
             }
 
-            $valueQuery = $dbAdapter->select()->from($attributeTable, $columns);
+            $valueQuery = $dbAdapter->select()->from(
+                $attributeTable,
+                $columns
+            );
 
             $valueQuery->where(
-                $dbAdapter->prepareSqlCondition('entity_id', ['in' => $entityIds]),
+                $dbAdapter->prepareSqlCondition(
+                    'entity_id',
+                    ['in' => $entityIds]
+                ),
                 null,
                 Select::TYPE_CONDITION
             );
             $valueQuery->where(
-                $dbAdapter->prepareSqlCondition('attribute_id', ['eq' => $attribute->getAttributeId()]),
+                $dbAdapter->prepareSqlCondition(
+                    'attribute_id',
+                    ['eq' => $attribute->getAttributeId()]
+                ),
                 null,
                 Select::TYPE_CONDITION
             );
 
             if ($entityTypeCode === Product::ENTITY || $entityTypeCode === Category::ENTITY) {
                 $valueQuery->where(
-                    $dbAdapter->prepareSqlCondition('store_id', [
-                        'in' => [
-                            0,
-                            $storeId,
-                        ],
-                    ]),
+                    $dbAdapter->prepareSqlCondition(
+                        'store_id',
+                        [
+                            'in' => [
+                                0,
+                                $storeId,
+                            ],
+                        ]
+                    ),
                     null,
                     Select::TYPE_CONDITION
                 );
             }
 
-            $queryResult = $this->databaseHelper->fetchAssoc($valueQuery, $dbAdapter);
+            $queryResult = $this->databaseHelper->fetchAssoc(
+                $valueQuery,
+                $dbAdapter
+            );
 
-            if (!empty($queryResult)) {
+            if (! empty($queryResult)) {
                 foreach ($entityIds as $entityId) {
                     $entityValues = [];
 
                     foreach ($queryResult as $key => $row) {
-                        if (array_key_exists('entity_id', $row) && array_key_exists('value', $row)
-                            && $row['entity_id'] == $entityId) {
+                        if (array_key_exists(
+                                'entity_id',
+                                $row
+                            ) && array_key_exists(
+                                'value',
+                                $row
+                            ) && $row[ 'entity_id' ] == $entityId) {
 
-                            if (array_key_exists('store_id', $row)) {
-                                $entityValues[$row['store_id']] = $row['value'];
+                            if (array_key_exists(
+                                'store_id',
+                                $row
+                            )) {
+                                $entityValues[ $row[ 'store_id' ] ] = $row[ 'value' ];
                             } else {
-                                $entityValues[$storeId] = $row['value'];
+                                $entityValues[ $storeId ] = $row[ 'value' ];
                             }
 
-                            unset($queryResult[$key]);
+                            unset($queryResult[ $key ]);
                         }
                     }
 
                     $attributeValue = $this->arrays->getValue(
                         $entityValues,
                         strval($storeId),
-                        $this->arrays->getValue($entityValues, '0')
+                        $this->arrays->getValue(
+                            $entityValues,
+                            '0'
+                        )
                     );
 
                     if ($attributeValue !== null && $useOptionValue === true && $attribute->usesSource()) {
@@ -593,9 +610,18 @@ class Attribute
                             $optionValue = null;
 
                             foreach ($source->getAllOptions() as $option) {
-                                if (array_key_exists('label', $option) && array_key_exists('value', $option)) {
-                                    if (strcasecmp(strval($option['value']), strval($attributeValue)) === 0) {
-                                        $optionValue = $option['label'];
+                                if (array_key_exists(
+                                        'label',
+                                        $option
+                                    ) && array_key_exists(
+                                        'value',
+                                        $option
+                                    )) {
+                                    if (strcasecmp(
+                                            strval($option[ 'value' ]),
+                                            strval($attributeValue)
+                                        ) === 0) {
+                                        $optionValue = $option[ 'label' ];
                                         break;
                                     }
                                 }
@@ -611,29 +637,30 @@ class Attribute
                         $entityTypeCode,
                         $attributeCode,
                         $storeId,
-                        var_export($useOptionValue, true)
+                        var_export(
+                            $useOptionValue,
+                            true
+                        )
                     );
 
-                    $this->attributeValues[$key] = $attributeValue;
+                    $this->attributeValues[ $key ] = $attributeValue;
 
-                    $attributeValues[$entityId] = $attributeValue;
+                    $attributeValues[ $entityId ] = $attributeValue;
                 }
             }
         }
 
         if ($strToLower) {
-            $attributeValues = array_map('strtolower', $attributeValues);
+            $attributeValues = array_map(
+                'strtolower',
+                $attributeValues
+            );
         }
 
         return $attributeValues;
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param string $optionId
-     *
      * @return int|array|null
      * @throws Exception
      */
@@ -643,42 +670,50 @@ class Attribute
         int $storeId,
         string $optionId
     ) {
-        $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
+        $attribute = $this->getAttribute(
+            $entityTypeCode,
+            $attributeCode
+        );
 
-        if (!$attribute->usesSource()) {
+        if (! $attribute->usesSource()) {
             return [];
         }
 
-        $attributeOptions = $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId);
+        $attributeOptions = $this->getAttributeOptionValues(
+            $entityTypeCode,
+            $attributeCode,
+            $storeId
+        );
 
         if ($attribute->getData('frontend_input') === 'multiselect') {
-            $optionIds = explode(',', $optionId);
+            $optionIds = explode(
+                ',',
+                $optionId
+            );
 
             $result = [];
 
             foreach ($optionIds as $nextOptionId) {
                 $nextOptionId = trim($nextOptionId);
 
-                if (array_key_exists($nextOptionId, $attributeOptions)) {
-                    $result[] = $attributeOptions[$nextOptionId];
+                if (array_key_exists(
+                    $nextOptionId,
+                    $attributeOptions
+                )) {
+                    $result[] = $attributeOptions[ $nextOptionId ];
                 }
             }
 
             return $result;
         } else {
-            return array_key_exists($optionId, $attributeOptions) ? $attributeOptions[$optionId] : null;
+            return array_key_exists(
+                $optionId,
+                $attributeOptions
+            ) ? $attributeOptions[ $optionId ] : null;
         }
     }
 
     /**
-     * Returns all values of the attribute without any labels.
-     *
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param bool   $strToLower
-     *
-     * @return array
      * @throws Exception
      */
     public function getAttributeOptionValues(
@@ -687,41 +722,55 @@ class Attribute
         int $storeId,
         bool $strToLower = false
     ): array {
-        $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
+        $attribute = $this->getAttribute(
+            $entityTypeCode,
+            $attributeCode
+        );
 
-        if (!$attribute->usesSource()) {
+        if (! $attribute->usesSource()) {
             return [];
         }
 
         $key = md5(json_encode([$entityTypeCode, $attributeCode, $storeId]));
 
-        if (!array_key_exists($key, $this->attributeOptionValues)) {
-            $this->initAttributeOptions($entityTypeCode, $attributeCode, $storeId);
+        if (! array_key_exists(
+            $key,
+            $this->attributeOptionValues
+        )) {
+            $this->initAttributeOptions(
+                $entityTypeCode,
+                $attributeCode,
+                $storeId
+            );
         }
 
-        $attributeOptionValues = $this->arrays->getValue($this->attributeOptionValues, $key, []);
+        $attributeOptionValues = $this->arrays->getValue(
+            $this->attributeOptionValues,
+            $key,
+            []
+        );
 
         if ($strToLower) {
-            $attributeOptionValues = array_map('strtolower', $attributeOptionValues);
+            $attributeOptionValues = array_map(
+                'strtolower',
+                $attributeOptionValues
+            );
         }
 
         return $attributeOptionValues;
     }
 
     /**
-     * Initialize all values and labels of the attribute.
-     *
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     *
      * @throws Exception
      */
     protected function initAttributeOptions(string $entityTypeCode, string $attributeCode, int $storeId)
     {
-        $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
+        $attribute = $this->getAttribute(
+            $entityTypeCode,
+            $attributeCode
+        );
 
-        if (!$attribute->usesSource()) {
+        if (! $attribute->usesSource()) {
             return;
         }
 
@@ -733,7 +782,10 @@ class Attribute
             }
 
             // only default (admin) store values used
-            $attribute->setData('store_id', $storeId);
+            $attribute->setData(
+                'store_id',
+                $storeId
+            );
 
             $values = [];
 
@@ -746,20 +798,27 @@ class Attribute
             );
 
             foreach ($attribute->getSource()->getAllOptions() as $option) {
-                $value = is_array($option) && array_key_exists('value', $option) && is_array($option['value']) ?
-                    $option['value'] : [$option];
+                $value = is_array($option) && array_key_exists(
+                    'value',
+                    $option
+                ) && is_array($option[ 'value' ]) ? $option[ 'value' ] : [$option];
 
                 foreach ($value as $innerOption) {
                     // skip ' -- Please Select -- ' option
-                    if (array_key_exists('value', $innerOption)) {
-                        $optionKey = $innerOption['value'];
-                        if (!$this->variables->isEmpty($optionKey)) {
-                            $optionValue =
-                                array_key_exists('label', $innerOption) ? $innerOption['label'] : $innerOption['value'];
+                    if (array_key_exists(
+                        'value',
+                        $innerOption
+                    )) {
+                        $optionKey = $innerOption[ 'value' ];
+                        if (! $this->variables->isEmpty($optionKey)) {
+                            $optionValue = array_key_exists(
+                                'label',
+                                $innerOption
+                            ) ? $innerOption[ 'label' ] : $innerOption[ 'value' ];
                             if ($optionValue instanceof Phrase) {
                                 $optionValue = $optionValue->getText();
                             }
-                            $values[$optionKey] = $optionValue;
+                            $values[ $optionKey ] = $optionValue;
                         }
                     }
                 }
@@ -771,26 +830,24 @@ class Attribute
                     count($values),
                     $attribute->getAttributeCode(),
                     $storeId,
-                    trim(print_r($values, true))
+                    trim(
+                        print_r(
+                            $values,
+                            true
+                        )
+                    )
                 )
             );
 
-            $this->attributeOptionValues[$key] = $values;
+            $this->attributeOptionValues[ $key ] = $values;
         } catch (Exception $exception) {
             $this->logging->critical($exception);
 
-            $this->attributeOptionValues[$key] = [];
+            $this->attributeOptionValues[ $key ] = [];
         }
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param string $value
-     * @param bool   $strToLower
-     *
-     * @return int|null
      * @throws Exception
      */
     public function getAttributeOptionId(
@@ -802,30 +859,41 @@ class Attribute
     ): ?int {
         $key = md5(json_encode([$entityTypeCode, $attributeCode, $storeId, $value, $strToLower]));
 
-        if (!array_key_exists($key, $this->attributeOptionIds)) {
-            $attributeOptions = $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId, $strToLower);
+        if (! array_key_exists(
+            $key,
+            $this->attributeOptionIds
+        )) {
+            $attributeOptions = $this->getAttributeOptionValues(
+                $entityTypeCode,
+                $attributeCode,
+                $storeId,
+                $strToLower
+            );
 
-            $searchKey = array_search($strToLower ? strtolower($value) : $value, $attributeOptions);
+            $searchKey = array_search(
+                $strToLower ? strtolower($value) : $value,
+                $attributeOptions
+            );
 
             $result = $searchKey !== false ? $searchKey : null;
 
             if ($result === null && $storeId !== 0) {
-                $result = $this->getAttributeOptionId($entityTypeCode, $attributeCode, 0, $value, $strToLower);
+                $result = $this->getAttributeOptionId(
+                    $entityTypeCode,
+                    $attributeCode,
+                    0,
+                    $value,
+                    $strToLower
+                );
             }
 
-            $this->attributeOptionIds[$key] = $result;
+            $this->attributeOptionIds[ $key ] = $result;
         }
 
-        return $this->attributeOptionIds[$key];
+        return $this->attributeOptionIds[ $key ];
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param int    $optionId
-     *
-     * @return bool
      * @throws Exception
      */
     public function checkAttributeOptionId(
@@ -835,22 +903,24 @@ class Attribute
         int $optionId
     ): bool {
         return $this->arrays->getValue(
-                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
+                $this->getAttributeOptionValues(
+                    $entityTypeCode,
+                    $attributeCode,
+                    $storeId
+                ),
                 strval($optionId),
                 $this->arrays->getValue(
-                    $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
+                    $this->getAttributeOptionValues(
+                        $entityTypeCode,
+                        $attributeCode,
+                        0
+                    ),
                     strval($optionId)
                 )
             ) !== null;
     }
 
     /**
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     * @param int    $storeId
-     * @param string $optionKey
-     *
-     * @return bool
      * @throws Exception
      */
     public function checkAttributeOptionKey(
@@ -860,27 +930,32 @@ class Attribute
         string $optionKey
     ): bool {
         return $this->arrays->getValue(
-                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId),
+                $this->getAttributeOptionValues(
+                    $entityTypeCode,
+                    $attributeCode,
+                    $storeId
+                ),
                 $optionKey,
                 $this->arrays->getValue(
-                    $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0),
+                    $this->getAttributeOptionValues(
+                        $entityTypeCode,
+                        $attributeCode,
+                        0
+                    ),
                     $optionKey
                 )
             ) !== null;
     }
 
     /**
-     * Get attribute type for upcoming validation.
-     *
-     * @param string $entityTypeCode
-     * @param string $attributeCode
-     *
-     * @return string
      * @throws Exception
      */
     public function getAttributeType(string $entityTypeCode, string $attributeCode): string
     {
-        $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
+        $attribute = $this->getAttribute(
+            $entityTypeCode,
+            $attributeCode
+        );
 
         if ($attribute->usesSource()) {
             return $attribute->getData('frontend_input') == 'multiselect' ? 'multiselect' : 'select';
@@ -888,21 +963,12 @@ class Attribute
             if ($attribute->isStatic()) {
                 return $attribute->getData('frontend_input') == 'date' ? 'datetime' : 'varchar';
             } else {
-                return (string) $attribute->getBackendType();
+                return (string)$attribute->getBackendType();
             }
         }
     }
 
     /**
-     * @param AdapterInterface $dbAdapter
-     * @param string           $entityTypeCode
-     * @param string           $attributeCode
-     * @param int              $sortOrder
-     * @param int              $storeId
-     * @param string|null      $value
-     * @param bool             $test
-     *
-     * @return int|null
      * @throws Exception
      */
     public function addAttributeOption(
@@ -911,8 +977,8 @@ class Attribute
         string $attributeCode,
         int $sortOrder,
         int $storeId,
-        string $value = null,
-        bool $test = false
+        ?string $value = null,
+        ?bool $test = false
     ): ?int {
         $this->logging->info(
             sprintf(
@@ -937,17 +1003,23 @@ class Attribute
             return null;
         }
 
-        $attribute = $this->getAttribute($entityTypeCode, $attributeCode);
+        $attribute = $this->getAttribute(
+            $entityTypeCode,
+            $attributeCode
+        );
 
         $optionTableName = $this->databaseHelper->getTableName('eav_attribute_option');
         $optionValueTableName = $this->databaseHelper->getTableName('eav_attribute_option_value');
 
-        if (!$test) {
+        if (! $test) {
             try {
-                $dbAdapter->insert($optionTableName, [
-                    'attribute_id' => $attribute->getId(),
-                    'sort_order'   => $sortOrder,
-                ]);
+                $dbAdapter->insert(
+                    $optionTableName,
+                    [
+                        'attribute_id' => $attribute->getId(),
+                        'sort_order'   => $sortOrder,
+                    ]
+                );
 
                 /** @var Mysql $dbAdapter */
                 $optionId = $dbAdapter->lastInsertId($optionTableName);
@@ -964,22 +1036,28 @@ class Attribute
 
                     return null;
                 } else {
-                    $optionId = (int) $optionId;
+                    $optionId = (int)$optionId;
                 }
 
                 if ($storeId !== 0) {
-                    $dbAdapter->insert($optionValueTableName, [
-                        'option_id' => $optionId,
-                        'store_id'  => 0,
-                        'value'     => $value,
-                    ]);
+                    $dbAdapter->insert(
+                        $optionValueTableName,
+                        [
+                            'option_id' => $optionId,
+                            'store_id'  => 0,
+                            'value'     => $value,
+                        ]
+                    );
                 }
 
-                $dbAdapter->insert($optionValueTableName, [
-                    'option_id' => $optionId,
-                    'store_id'  => $storeId,
-                    'value'     => $value,
-                ]);
+                $dbAdapter->insert(
+                    $optionValueTableName,
+                    [
+                        'option_id' => $optionId,
+                        'store_id'  => $storeId,
+                        'value'     => $value,
+                    ]
+                );
             } catch (Exception $exception) {
                 $this->logging->error(
                     sprintf(
@@ -993,28 +1071,51 @@ class Attribute
                 return null;
             }
         } else {
-            $optionId = rand(10000000, 99999999);
+            $optionId = rand(
+                10000000,
+                99999999
+            );
         }
 
         $key = md5(json_encode([$entityTypeCode, $attributeCode, $storeId]));
 
-        if (!array_key_exists($key, $this->attributeOptionValues)) {
-            $this->getAttributeOptionValues($entityTypeCode, $attributeCode, $storeId);
+        if (! array_key_exists(
+            $key,
+            $this->attributeOptionValues
+        )) {
+            $this->getAttributeOptionValues(
+                $entityTypeCode,
+                $attributeCode,
+                $storeId
+            );
         }
 
-        if (array_key_exists($key, $this->attributeOptionValues)) {
-            $this->attributeOptionValues[$key][$optionId] = $value;
+        if (array_key_exists(
+            $key,
+            $this->attributeOptionValues
+        )) {
+            $this->attributeOptionValues[ $key ][ $optionId ] = $value;
         }
 
         if ($storeId !== 0) {
-            $key = $attribute->getAttributeCode().'_0';
+            $key = $attribute->getAttributeCode() . '_0';
 
-            if (!array_key_exists($key, $this->attributeOptionValues)) {
-                $this->getAttributeOptionValues($entityTypeCode, $attributeCode, 0);
+            if (! array_key_exists(
+                $key,
+                $this->attributeOptionValues
+            )) {
+                $this->getAttributeOptionValues(
+                    $entityTypeCode,
+                    $attributeCode,
+                    0
+                );
             }
 
-            if (array_key_exists($key, $this->attributeOptionValues)) {
-                $this->attributeOptionValues[$key][$optionId] = $value;
+            if (array_key_exists(
+                $key,
+                $this->attributeOptionValues
+            )) {
+                $this->attributeOptionValues[ $key ][ $optionId ] = $value;
             }
         }
 
@@ -1022,9 +1123,6 @@ class Attribute
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
-     * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute
      * @throws Exception
      */
     public function getCatalogCategoryAttribute(
@@ -1032,25 +1130,35 @@ class Attribute
     ): \Magento\Catalog\Model\ResourceModel\Eav\Attribute {
         $attributeCode = $attribute->getAttributeCode();
 
-        if (!array_key_exists($attributeCode, $this->categoryAttributes)) {
-            $this->logging->debug(sprintf('Loading catalog category attribute with code: %s', $attributeCode));
+        if (! array_key_exists(
+            $attributeCode,
+            $this->categoryAttributes
+        )) {
+            $this->logging->debug(
+                sprintf(
+                    'Loading catalog category attribute with code: %s',
+                    $attributeCode
+                )
+            );
 
             $catalogAttribute = $this->loadCatalogEavAttribute($attribute);
 
-            if (!$catalogAttribute || !$catalogAttribute->getId()) {
-                throw new Exception(sprintf('Could not load catalog category attribute with code: %d', $attributeCode));
+            if (! $catalogAttribute || ! $catalogAttribute->getId()) {
+                throw new Exception(
+                    sprintf(
+                        'Could not load catalog category attribute with code: %d',
+                        $attributeCode
+                    )
+                );
             }
 
-            $this->categoryAttributes[$attributeCode] = $catalogAttribute;
+            $this->categoryAttributes[ $attributeCode ] = $catalogAttribute;
         }
 
-        return $this->categoryAttributes[$attributeCode];
+        return $this->categoryAttributes[ $attributeCode ];
     }
 
     /**
-     * @param Entity\Attribute $attribute
-     *
-     * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute
      * @throws Exception
      */
     public function getCatalogProductAttribute(
@@ -1058,43 +1166,60 @@ class Attribute
     ): \Magento\Catalog\Model\ResourceModel\Eav\Attribute {
         $attributeCode = $attribute->getAttributeCode();
 
-        if (!array_key_exists($attributeCode, $this->productAttributes)) {
-            $this->logging->debug(sprintf('Loading catalog product attribute with code: %s', $attributeCode));
+        if (! array_key_exists(
+            $attributeCode,
+            $this->productAttributes
+        )) {
+            $this->logging->debug(
+                sprintf(
+                    'Loading catalog product attribute with code: %s',
+                    $attributeCode
+                )
+            );
 
             $catalogAttribute = $this->loadCatalogEavAttribute($attribute);
 
-            if (!$catalogAttribute || !$catalogAttribute->getId()) {
-                throw new Exception(sprintf('Could not load catalog product attribute with code: %d', $attributeCode));
+            if (! $catalogAttribute || ! $catalogAttribute->getId()) {
+                throw new Exception(
+                    sprintf(
+                        'Could not load catalog product attribute with code: %d',
+                        $attributeCode
+                    )
+                );
             }
 
-            $this->productAttributes[$attributeCode] = $catalogAttribute;
+            $this->productAttributes[ $attributeCode ] = $catalogAttribute;
         }
 
-        return $this->productAttributes[$attributeCode];
+        return $this->productAttributes[ $attributeCode ];
     }
 
-    /**
-     * @param int $attributeSetId
-     *
-     * @return Set|null
-     */
     public function getAttributeSetById(int $attributeSetId): ?Set
     {
-        if (array_key_exists($attributeSetId, $this->attributeSetsById)) {
-            return $this->attributeSetsById[$attributeSetId];
+        if (array_key_exists(
+            $attributeSetId,
+            $this->attributeSetsById
+        )) {
+            return $this->attributeSetsById[ $attributeSetId ];
         }
 
         $attributeSet = $this->attributeSetFactory->create();
 
-        $this->attributeSetResourceFactory->create()->load($attributeSet, $attributeSetId);
+        $this->attributeSetResourceFactory->create()->load(
+            $attributeSet,
+            $attributeSetId
+        );
 
         if ($attributeSet->getId()) {
-            $this->attributeSetsById[$attributeSet->getId()] = $attributeSet;
+            $this->attributeSetsById[ $attributeSet->getId() ] = $attributeSet;
 
-            $attributeSetNameKey =
-                sprintf('%d_%s', $attributeSet->getEntityTypeId(), $attributeSet->getAttributeSetName());
+            $attributeSetNameKey = sprintf(
+                '%d_%s',
+                $attributeSet->getEntityTypeId(),
+                $attributeSet->getAttributeSetName()
+            );
 
-            $this->attributeSetsByName[$attributeSetNameKey] = $attributeSet;
+            $this->attributeSetsByName[ $attributeSetNameKey ] = $attributeSet;
 
             return $attributeSet;
         }
@@ -1102,24 +1227,28 @@ class Attribute
         return null;
     }
 
-    /**
-     * @param int    $entityTypeId
-     * @param string $attributeSetName
-     *
-     * @return Set|null
-     */
     public function getAttributeSetByName(int $entityTypeId, string $attributeSetName): ?Set
     {
-        $attributeSetNameKey = sprintf('%d_%s', $entityTypeId, $attributeSetName);
+        $attributeSetNameKey = sprintf(
+            '%d_%s',
+            $entityTypeId,
+            $attributeSetName
+        );
 
-        if (array_key_exists($attributeSetNameKey, $this->attributeSetsByName)) {
-            return $this->attributeSetsByName[$attributeSetNameKey];
+        if (array_key_exists(
+            $attributeSetNameKey,
+            $this->attributeSetsByName
+        )) {
+            return $this->attributeSetsByName[ $attributeSetNameKey ];
         }
 
         $attributeSetCollection = $this->attributeSetCollectionFactory->create();
 
         $attributeSetCollection->setEntityTypeFilter($entityTypeId);
-        $attributeSetCollection->addFieldToFilter('attribute_set_name', ['eq' => $attributeSetName]);
+        $attributeSetCollection->addFieldToFilter(
+            'attribute_set_name',
+            ['eq' => $attributeSetName]
+        );
 
         $attributeSetCollection->load();
 
@@ -1127,8 +1256,8 @@ class Attribute
             /* @var Set $attributeSet */
             $attributeSet = $attributeSetCollection->getFirstItem();
 
-            $this->attributeSetsById[$attributeSet->getId()] = $attributeSet;
-            $this->attributeSetsByName[$attributeSetNameKey] = $attributeSet;
+            $this->attributeSetsById[ $attributeSet->getId() ] = $attributeSet;
+            $this->attributeSetsByName[ $attributeSetNameKey ] = $attributeSet;
 
             return $attributeSet;
         }
