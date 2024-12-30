@@ -20,6 +20,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository;
 use Magento\Store\Model\ScopeInterface;
@@ -71,6 +72,9 @@ class Stores extends AbstractHelper
     /** @var ResolverInterface */
     protected $localeResolver;
 
+    /** @var TimezoneInterface */
+    protected $timezoneInterface;
+
     public function __construct(
         Context $context,
         Variables $variableHelper,
@@ -83,7 +87,8 @@ class Stores extends AbstractHelper
         Filesystem $filesystem,
         Repository $assetRepository,
         RequestInterface $request,
-        PriceCurrencyInterface $priceCurrency
+        PriceCurrencyInterface $priceCurrency,
+        TimezoneInterface $timezoneInterface
     ) {
         parent::__construct($context);
 
@@ -91,7 +96,6 @@ class Stores extends AbstractHelper
         $this->arrays = $arrayHelper;
         $this->databaseHelper = $databaseHelper;
         $this->instanceHelper = $instanceHelper;
-
         $this->logging = $logging;
         $this->storeManager = $storeManager;
         $this->configFactory = $configFactory;
@@ -99,6 +103,7 @@ class Stores extends AbstractHelper
         $this->assetRepository = $assetRepository;
         $this->request = $request;
         $this->priceCurrency = $priceCurrency;
+        $this->timezoneInterface = $timezoneInterface;
     }
 
     public function getStoreConfig(string $path, $defaultValue = null, bool $isFlag = false, ?int $storeId = null)
@@ -808,5 +813,10 @@ class Stores extends AbstractHelper
         }
 
         return $this->localeResolver->getLocale();
+    }
+
+    public function getDate($date = null, $useTimezone = true, $includeTime = true): \DateTime
+    {
+        return $this->timezoneInterface->date($date, null, $useTimezone, $includeTime);
     }
 }
