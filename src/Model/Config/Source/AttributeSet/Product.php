@@ -13,16 +13,14 @@ use Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory;
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Product
-    extends AttributeSet
+class Product extends AttributeSet
 {
-    /**
-     * @param EntityType        $entityTypeHelper
-     * @param CollectionFactory $attributeSetCollectionFactory
-     */
     public function __construct(EntityType $entityTypeHelper, CollectionFactory $attributeSetCollectionFactory)
     {
-        parent::__construct($entityTypeHelper, $attributeSetCollectionFactory);
+        parent::__construct(
+            $entityTypeHelper,
+            $attributeSetCollectionFactory
+        );
 
         $this->setProduct();
     }
