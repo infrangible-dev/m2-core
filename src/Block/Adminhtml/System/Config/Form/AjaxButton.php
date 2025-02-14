@@ -33,7 +33,10 @@ class AjaxButton extends Field
 
     public function __construct(Arrays $arrays, Context $context, array $data = [])
     {
-        parent::__construct($context, $data);
+        parent::__construct(
+            $context,
+            $data
+        );
 
         $this->arrays = $arrays;
     }
@@ -51,14 +54,28 @@ class AjaxButton extends Field
         $originalData = $element->getData('original_data');
 
         $this->setButtonId($element->getHtmlId());
-        $this->setButtonLabel($this->arrays->getValue($originalData, 'button_label'));
+        $this->setButtonLabel(
+            $this->arrays->getValue(
+                $originalData,
+                'button_label'
+            )
+        );
         $this->setAjaxUrl(
             $this->getUrl(
-                $this->arrays->getValue($originalData, 'button_url'),
+                $this->arrays->getValue(
+                    $originalData,
+                    'button_url'
+                ),
                 ['_current' => true]
             )
         );
-        $this->setDataHtmlIds($this->arrays->getValue($originalData, 'data_html_ids'));
+        $this->setDataHtmlIds(
+            $this->arrays->getValue(
+                $originalData,
+                'data_html_ids',
+                ''
+            )
+        );
 
         return $this->_toHtml();
     }

@@ -1,5 +1,10 @@
 // noinspection JSUnresolvedFunction,JSCheckFunctionSignatures,JSUnusedGlobalSymbols,JSUnresolvedVariable
 
+/* jshint esversion: 6 */
+/* global console */
+/* global define */
+/* global require */
+
 /**
  * @author      Andreas Knollmann
  * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
@@ -79,13 +84,13 @@ define([
         _getData: function () {
             var data = {
                 form_key: this.options.formKey
-            }
+            };
             if (this.options.dataHtmlIds) {
                 var dataHtmlIds = this.options.dataHtmlIds.split(',');
                 dataHtmlIds.forEach(function (dataHtmlId) {
                     var dataHtmlElement = $('#' + dataHtmlId);
                     if (dataHtmlElement.length > 0) {
-                        if (dataHtmlElement.attr('type') == 'password') {
+                        if (dataHtmlElement.attr('type') === 'password') {
                             dataHtmlElement.prop('type', 'text');
                             data[dataHtmlId] = dataHtmlElement.val();
                             dataHtmlElement.prop('type', 'password');
@@ -93,7 +98,7 @@ define([
                             data[dataHtmlId] = dataHtmlElement.val();
                         }
                     }
-                })
+                });
             }
             return data;
         }

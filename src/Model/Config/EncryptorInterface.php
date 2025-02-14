@@ -13,8 +13,5 @@ interface EncryptorInterface
 {
     public function decrypt(string $key, string $text): string;
 
-    /**
-     * @param mixed  $text
-     */
     public function encrypt(string $key, string $text): string;
 }

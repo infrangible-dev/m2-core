@@ -23,7 +23,7 @@ class Instances
     }
 
     /**
-     * @return object
+     * @return object|null
      */
     public function getInstance(string $className, array $arguments = [])
     {
@@ -37,7 +37,7 @@ class Instances
     }
 
     /**
-     * @return object
+     * @return object|null
      */
     public function getSingleton(string $className)
     {

@@ -17,7 +17,10 @@ class Product extends AttributeSet
 {
     public function __construct(EntityType $entityTypeHelper, CollectionFactory $attributeSetCollectionFactory)
     {
-        parent::__construct($entityTypeHelper, $attributeSetCollectionFactory);
+        parent::__construct(
+            $entityTypeHelper,
+            $attributeSetCollectionFactory
+        );
 
         $this->setProduct();
     }

@@ -22,6 +22,12 @@ class AttributeSet extends Eav
     /** @var CollectionFactory */
     protected $attributeSetCollectionFactory;
 
+    /** @var bool */
+    private $addPleaseSelect = true;
+
+    /** @var bool */
+    private $addAllSelect = false;
+
     public function __construct(
         \Infrangible\Core\Helper\EntityType $entityTypeHelper,
         CollectionFactory $attributeSetCollectionFactory
@@ -30,35 +36,104 @@ class AttributeSet extends Eav
         $this->attributeSetCollectionFactory = $attributeSetCollectionFactory;
     }
 
+    public function isAddPleaseSelect(): bool
+    {
+        return $this->addPleaseSelect;
+    }
+
+    public function setAddPleaseSelect(bool $addPleaseSelect): void
+    {
+        $this->addPleaseSelect = $addPleaseSelect;
+    }
+
+    public function isAddAllSelect(): bool
+    {
+        return $this->addAllSelect;
+    }
+
+    public function setAddAllSelect(bool $addAllSelect): void
+    {
+        $this->addAllSelect = $addAllSelect;
+    }
+
     /**
      * @throws LocalizedException
      */
     public function toOptionArray(): array
     {
-        $attributeSets = [['value' => '', 'label' => __('--Please Select--')]];
+        $attributeSets = [];
+
+        if ($this->isAddPleaseSelect()) {
+            $attributeSets[] = [
+                'value' => '',
+                'label' => __('--Please Select--')
+            ];
+        }
+
+        if ($this->isAddAllSelect()) {
+            $attributeSets[] = [
+                'value' => 'all',
+                'label' => __('All')
+            ];
+        }
+
+        $groups = 0;
+
+        if ($this->isCustomer()) {
+            $groups++;
+        }
+
+        if ($this->isAddress()) {
+            $groups++;
+        }
+
+        if ($this->isCategory()) {
+            $groups++;
+        }
+
+        if ($this->isProduct()) {
+            $groups++;
+        }
+
+        $isGrouped = $groups > 1;
 
         if ($this->isCustomer()) {
             $customerEntityType = $this->entityTypeHelper->getCustomerEntityType();
 
             $customerAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $customerAttributeSetCollection->addFieldToFilter('entity_type_id', $customerEntityType->getId());
-            $customerAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $customerAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $customerEntityType->getId()
+            );
+            $customerAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             $customerAttributeSets = [];
 
             /** @var Set $customerAttributeSet */
             foreach ($customerAttributeSetCollection as $customerAttributeSet) {
-                $customerAttributeSets[] = [
-                    'value' => $customerAttributeSet->getId(),
-                    'label' => $customerAttributeSet->getAttributeSetName()
-                ];
+                if ($isGrouped) {
+                    $customerAttributeSets[] = [
+                        'value' => $customerAttributeSet->getId(),
+                        'label' => $customerAttributeSet->getAttributeSetName()
+                    ];
+                } else {
+                    $attributeSets[] = [
+                        'value' => $customerAttributeSet->getId(),
+                        'label' => $customerAttributeSet->getAttributeSetName()
+                    ];
+                }
             }
 
-            $attributeSets[] = [
-                'value' => $customerAttributeSets,
-                'label' => __('Customer')
-            ];
+            if ($isGrouped) {
+                $attributeSets[] = [
+                    'value' => $customerAttributeSets,
+                    'label' => __('Customer')
+                ];
+            }
         }
 
         if ($this->isAddress()) {
@@ -66,23 +141,38 @@ class AttributeSet extends Eav
 
             $addressAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $addressAttributeSetCollection->addFieldToFilter('entity_type_id', $addressEntityType->getId());
-            $addressAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $addressAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $addressEntityType->getId()
+            );
+            $addressAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             $addressAttributeSets = [];
 
             /** @var Set $addressAttributeSet */
             foreach ($addressAttributeSetCollection as $addressAttributeSet) {
-                $addressAttributeSets[] = [
-                    'value' => $addressAttributeSet->getId(),
-                    'label' => $addressAttributeSet->getAttributeSetName()
-                ];
+                if ($isGrouped) {
+                    $addressAttributeSets[] = [
+                        'value' => $addressAttributeSet->getId(),
+                        'label' => $addressAttributeSet->getAttributeSetName()
+                    ];
+                } else {
+                    $attributeSets[] = [
+                        'value' => $addressAttributeSet->getId(),
+                        'label' => $addressAttributeSet->getAttributeSetName()
+                    ];
+                }
             }
 
-            $attributeSets[] = [
-                'value' => $addressAttributeSets,
-                'label' => __('Address')
-            ];
+            if ($isGrouped) {
+                $attributeSets[] = [
+                    'value' => $addressAttributeSets,
+                    'label' => __('Address')
+                ];
+            }
         }
 
         if ($this->isCategory()) {
@@ -90,23 +180,38 @@ class AttributeSet extends Eav
 
             $categoryAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $categoryAttributeSetCollection->addFieldToFilter('entity_type_id', $categoryEntityType->getId());
-            $categoryAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $categoryAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $categoryEntityType->getId()
+            );
+            $categoryAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             $categoryAttributeSets = [];
 
             /** @var Set $categoryAttributeSet */
             foreach ($categoryAttributeSetCollection as $categoryAttributeSet) {
-                $categoryAttributeSets[] = [
-                    'value' => $categoryAttributeSet->getId(),
-                    'label' => $categoryAttributeSet->getAttributeSetName()
-                ];
+                if ($isGrouped) {
+                    $categoryAttributeSets[] = [
+                        'value' => $categoryAttributeSet->getId(),
+                        'label' => $categoryAttributeSet->getAttributeSetName()
+                    ];
+                } else {
+                    $attributeSets[] = [
+                        'value' => $categoryAttributeSet->getId(),
+                        'label' => $categoryAttributeSet->getAttributeSetName()
+                    ];
+                }
             }
 
-            $attributeSets[] = [
-                'value' => $categoryAttributeSets,
-                'label' => __('Category')
-            ];
+            if ($isGrouped) {
+                $attributeSets[] = [
+                    'value' => $categoryAttributeSets,
+                    'label' => __('Category')
+                ];
+            }
         }
 
         if ($this->isProduct()) {
@@ -114,23 +219,38 @@ class AttributeSet extends Eav
 
             $productAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $productAttributeSetCollection->addFieldToFilter('entity_type_id', $productEntityType->getId());
-            $productAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $productAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $productEntityType->getId()
+            );
+            $productAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             $productAttributeSets = [];
 
             /** @var Set $productAttributeSet */
             foreach ($productAttributeSetCollection as $productAttributeSet) {
-                $productAttributeSets[] = [
-                    'value' => $productAttributeSet->getId(),
-                    'label' => $productAttributeSet->getAttributeSetName()
-                ];
+                if ($isGrouped) {
+                    $productAttributeSets[] = [
+                        'value' => $productAttributeSet->getId(),
+                        'label' => $productAttributeSet->getAttributeSetName()
+                    ];
+                } else {
+                    $attributeSets[] = [
+                        'value' => $productAttributeSet->getId(),
+                        'label' => $productAttributeSet->getAttributeSetName()
+                    ];
+                }
             }
 
-            $attributeSets[] = [
-                'value' => $productAttributeSets,
-                'label' => __('Product')
-            ];
+            if ($isGrouped) {
+                $attributeSets[] = [
+                    'value' => $productAttributeSets,
+                    'label' => __('Product')
+                ];
+            }
         }
 
         return $attributeSets;
@@ -143,18 +263,31 @@ class AttributeSet extends Eav
     {
         $attributeSets = [];
 
+        if ($this->isAddAllSelect()) {
+            $attributeSets[ 'all' ] = __('All');
+        }
+
         if ($this->isCustomer()) {
             $customerEntityType = $this->entityTypeHelper->getCustomerEntityType();
 
             $customerAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $customerAttributeSetCollection->addFieldToFilter('entity_type_id', $customerEntityType->getId());
-            $customerAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $customerAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $customerEntityType->getId()
+            );
+            $customerAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             /** @var Set $customerAttributeSet */
             foreach ($customerAttributeSetCollection as $customerAttributeSet) {
-                $attributeSets[ $customerAttributeSet->getId() ] =
-                    sprintf('%s | %s', __('Customer'), $customerAttributeSet->getAttributeSetName());
+                $attributeSets[ $customerAttributeSet->getId() ] = sprintf(
+                    '%s | %s',
+                    __('Customer'),
+                    $customerAttributeSet->getAttributeSetName()
+                );
             }
         }
 
@@ -163,13 +296,22 @@ class AttributeSet extends Eav
 
             $addressAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $addressAttributeSetCollection->addFieldToFilter('entity_type_id', $addressEntityType->getId());
-            $addressAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $addressAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $addressEntityType->getId()
+            );
+            $addressAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             /** @var Set $addressAttributeSet */
             foreach ($addressAttributeSetCollection as $addressAttributeSet) {
-                $attributeSets[ $addressAttributeSet->getId() ] =
-                    sprintf('%s | %s', __('Address'), $addressAttributeSet->getAttributeSetName());
+                $attributeSets[ $addressAttributeSet->getId() ] = sprintf(
+                    '%s | %s',
+                    __('Address'),
+                    $addressAttributeSet->getAttributeSetName()
+                );
             }
         }
 
@@ -178,13 +320,22 @@ class AttributeSet extends Eav
 
             $categoryAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $categoryAttributeSetCollection->addFieldToFilter('entity_type_id', $categoryEntityType->getId());
-            $categoryAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $categoryAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $categoryEntityType->getId()
+            );
+            $categoryAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             /** @var Set $categoryAttributeSet */
             foreach ($categoryAttributeSetCollection as $categoryAttributeSet) {
-                $attributeSets[ $categoryAttributeSet->getId() ] =
-                    sprintf('%s | %s', __('Category'), $categoryAttributeSet->getAttributeSetName());
+                $attributeSets[ $categoryAttributeSet->getId() ] = sprintf(
+                    '%s | %s',
+                    __('Category'),
+                    $categoryAttributeSet->getAttributeSetName()
+                );
             }
         }
 
@@ -193,13 +344,22 @@ class AttributeSet extends Eav
 
             $productAttributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            $productAttributeSetCollection->addFieldToFilter('entity_type_id', $productEntityType->getId());
-            $productAttributeSetCollection->addOrder('attribute_set_name', Collection::SORT_ORDER_ASC);
+            $productAttributeSetCollection->addFieldToFilter(
+                'entity_type_id',
+                $productEntityType->getId()
+            );
+            $productAttributeSetCollection->addOrder(
+                'attribute_set_name',
+                Collection::SORT_ORDER_ASC
+            );
 
             /** @var Set $productAttributeSet */
             foreach ($productAttributeSetCollection as $productAttributeSet) {
-                $attributeSets[ $productAttributeSet->getId() ] =
-                    sprintf('%s | %s', __('Product'), $productAttributeSet->getAttributeSetName());
+                $attributeSets[ $productAttributeSet->getId() ] = sprintf(
+                    '%s | %s',
+                    __('Product'),
+                    $productAttributeSet->getAttributeSetName()
+                );
             }
         }
 

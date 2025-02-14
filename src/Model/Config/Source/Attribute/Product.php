@@ -28,18 +28,17 @@ class Product implements OptionSourceInterface
     {
         $options = [['value' => '', 'label' => __('--Please Select--')]];
 
-        $productAttributeCollection = $this->productAttributeCollectionFactory->create();
-
-        $productAttributeCollection->addOrder('frontend_label', Collection::SORT_ORDER_ASC);
-
-        /** @var Attribute $catalogAttribute */
-        foreach ($productAttributeCollection as $catalogAttribute) {
+        foreach ($this->getList() as $catalogAttribute) {
             $frontendLabel = $catalogAttribute->getData('frontend_label');
 
             if (! empty($frontendLabel)) {
                 $options[] = [
                     'value' => $this->getAttributeValue($catalogAttribute),
-                    'label' => sprintf('%s (%s)', $frontendLabel, $catalogAttribute->getAttributeCode())
+                    'label' => sprintf(
+                        '%s (%s)',
+                        $frontendLabel,
+                        $catalogAttribute->getAttributeCode()
+                    )
                 ];
             }
         }
@@ -51,17 +50,15 @@ class Product implements OptionSourceInterface
     {
         $options = [];
 
-        $productAttributeCollection = $this->productAttributeCollectionFactory->create();
-
-        $productAttributeCollection->addOrder('frontend_label', Collection::SORT_ORDER_ASC);
-
-        /** @var Attribute $catalogAttribute */
-        foreach ($productAttributeCollection as $catalogAttribute) {
+        foreach ($this->getList() as $catalogAttribute) {
             $frontendLabel = $catalogAttribute->getData('frontend_label');
 
             if (! empty($frontendLabel)) {
-                $options[ $this->getAttributeValue($catalogAttribute) ] =
-                    sprintf('%s (%s)', $frontendLabel, $catalogAttribute->getAttributeCode());
+                $options[ $this->getAttributeValue($catalogAttribute) ] = sprintf(
+                    '%s (%s)',
+                    $frontendLabel,
+                    $catalogAttribute->getAttributeCode()
+                );
             }
         }
 
@@ -71,5 +68,20 @@ class Product implements OptionSourceInterface
     protected function getAttributeValue(Attribute $catalogAttribute): string
     {
         return $catalogAttribute->getAttributeId();
+    }
+
+    /**
+     * @return Attribute[]
+     */
+    protected function getList(): array
+    {
+        $productAttributeCollection = $this->productAttributeCollectionFactory->create();
+
+        $productAttributeCollection->addOrder(
+            'frontend_label',
+            Collection::SORT_ORDER_ASC
+        );
+
+        return $productAttributeCollection->getItems();
     }
 }

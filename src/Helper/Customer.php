@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Infrangible\Core\Helper;
 
-use Exception;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\Group;
 use Magento\Customer\Model\GroupFactory;
@@ -69,7 +68,10 @@ class Customer
     {
         $customer = $this->newCustomer();
 
-        $this->customerResourceFactory->create()->load($customer, $customerId);
+        $this->customerResourceFactory->create()->load(
+            $customer,
+            $customerId
+        );
 
         return $customer;
     }
@@ -109,17 +111,20 @@ class Customer
     {
         $group = $this->newCustomerGroup();
 
-        $this->customerResourceFactory->create()->load($group, $customerGroupId);
+        $this->customerResourceFactory->create()->load(
+            $group,
+            $customerGroupId
+        );
 
         return $group;
     }
 
     /**
-     * @throws Exception
+     * @throws AlreadyExistsException
      */
     public function saveCustomerGroup(Group $group): void
     {
-        $this->customerResourceFactory->create()->save($group);
+        $this->customerGroupResourceFactory->create()->save($group);
     }
 
     public function getCustomerGroupCollection(): \Magento\Customer\Model\ResourceModel\Group\Collection

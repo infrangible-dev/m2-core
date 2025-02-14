@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Infrangible\Core\Helper;
 
+use FeWeDev\Base\Variables;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -35,19 +36,23 @@ class Payment
     /** @var Factory */
     protected $paymentMethodFactory;
 
+    /** @var Variables */
+    protected $variables;
+
     public function __construct(
         Stores $storeHelper,
         PaymentFactory $paymentFactory,
         \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory,
         CollectionFactory $paymentCollectionFactory,
-        Factory $paymentMethodFactory
+        Factory $paymentMethodFactory,
+        Variables $variables
     ) {
         $this->storeHelper = $storeHelper;
-
         $this->paymentFactory = $paymentFactory;
         $this->paymentResourceFactory = $paymentResourceFactory;
         $this->paymentCollectionFactory = $paymentCollectionFactory;
         $this->paymentMethodFactory = $paymentMethodFactory;
+        $this->variables = $variables;
     }
 
     public function newPayment(): \Magento\Sales\Model\Order\Payment
@@ -59,7 +64,10 @@ class Payment
     {
         $payment = $this->newPayment();
 
-        $this->paymentResourceFactory->create()->load($payment, $paymentId);
+        $this->paymentResourceFactory->create()->load(
+            $payment,
+            $paymentId
+        );
 
         return $payment;
     }
@@ -79,6 +87,7 @@ class Payment
 
     /**
      * @return AbstractMethod[]
+     * @throws \Exception
      */
     public function getActiveMethods(bool $allStores = false, bool $withDefault = true): array
     {
@@ -96,19 +105,29 @@ class Payment
         }
 
         foreach ($stores as $store) {
-            $storePaymentData = $this->storeHelper->getStoreConfig('payment', [], false, $store->getId());
+            $storePaymentData = $this->storeHelper->getStoreConfig(
+                'payment',
+                [],
+                false,
+                $this->variables->intValue($store->getId())
+            );
 
             foreach ($storePaymentData as $code => $data) {
-                if (is_array($data) && array_key_exists('model', $data)) {
-                    try {
-                        $methodModel = $this->paymentMethodFactory->create($data[ 'model' ]);
+                if (is_array($data)) {
+                    if (array_key_exists(
+                        'model',
+                        $data
+                    )) {
+                        try {
+                            $methodModel = $this->paymentMethodFactory->create($data[ 'model' ]);
 
-                        $methodModel->setStore($store->getId());
+                            $methodModel->setStore($store->getId());
 
-                        if ($methodModel->getConfigData('active')) {
-                            $methods[ $code ] = $methodModel;
+                            if ($methodModel->getConfigData('active')) {
+                                $methods[ $code ] = $methodModel;
+                            }
+                        } catch (LocalizedException $exception) {
                         }
-                    } catch (LocalizedException $exception) {
                     }
                 }
             }

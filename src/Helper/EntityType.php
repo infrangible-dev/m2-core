@@ -38,19 +38,18 @@ class EntityType
      */
     public function getEntityType(string $entityTypeCode): ?Type
     {
-        if (array_key_exists($entityTypeCode, $this->entityTypes)) {
-            return $this->entityTypes[$entityTypeCode];
+        if (array_key_exists(
+            $entityTypeCode,
+            $this->entityTypes
+        )) {
+            return $this->entityTypes[ $entityTypeCode ];
         }
 
         $entityType = $this->eavConfig->getEntityType($entityTypeCode);
 
-        if (!empty($entityType)) {
-            $this->entityTypes[$entityTypeCode] = $entityType;
+        $this->entityTypes[ $entityTypeCode ] = $entityType;
 
-            return $entityType;
-        }
-
-        return null;
+        return $entityType;
     }
 
     /**
@@ -127,7 +126,7 @@ class EntityType
     {
         $productEntityType = $this->getProductEntityType();
 
-        return empty($productEntityType) ? null : (int) $productEntityType->getDefaultAttributeSetId();
+        return empty($productEntityType) ? null : (int)$productEntityType->getDefaultAttributeSetId();
     }
 
     /**

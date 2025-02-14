@@ -49,45 +49,59 @@ class Files
     }
 
     /**
-     * Method to set path as relative (in Magento directories) or absolute for server
-     *
-     * @param null   $basePath
-     *
      * @throws Exception
      */
-    public function determineFilePath(string $path, $basePath = null, bool $makeDir = false): string
+    public function determineFilePath(string $path, ?string $basePath = null, bool $makeDir = false): string
     {
-        $this->logging->debug(sprintf('Determine path of: %s with a prefix base path: %s', $path, $basePath));
+        $this->logging->debug(
+            sprintf(
+                'Determine path of: %s with a prefix base path: %s',
+                $path,
+                $basePath
+            )
+        );
 
         if ($this->variables->isEmpty($basePath)) {
             $basePath = $this->directoryList->getRoot();
         }
 
-        $path = $this->files->determineFilePath($path, $basePath, $makeDir);
+        $path = $this->files->determineFilePath(
+            $path,
+            $basePath,
+            $makeDir
+        );
 
-        $this->logging->debug(sprintf('Determined absolute path: %s', $path));
+        $this->logging->debug(
+            sprintf(
+                'Determined absolute path: %s',
+                $path
+            )
+        );
 
         return $path;
     }
 
     /**
-     * Method to read Files from directory
-     *
      * @throws Exception
      */
     public function determineFilesFromFilePath(string $path): array
     {
-        return $this->determineFromFilePath($path, true, false);
+        return $this->determineFromFilePath(
+            $path,
+            true,
+            false
+        );
     }
 
     /**
-     * Method to read Files from directory
-     *
      * @throws Exception
      */
     public function determineDirectoriesFromFilePath(string $path): array
     {
-        return $this->determineFromFilePath($path, false);
+        return $this->determineFromFilePath(
+            $path,
+            false
+        );
     }
 
     /**
@@ -117,5 +131,23 @@ class Files
         } catch (FileSystemException $exception) {
             return sys_get_temp_dir();
         }
+    }
+
+    public function read(string $fileName): string
+    {
+        if (file_exists($fileName) && is_readable($fileName)) {
+            $fileContent = @file_get_contents($fileName);
+
+            if ($fileContent) {
+                return $fileContent;
+            }
+        }
+
+        return '';
+    }
+
+    public function removeFile(string $fileName): bool
+    {
+        return $this->file->rm($fileName);
     }
 }

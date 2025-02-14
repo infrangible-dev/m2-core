@@ -16,6 +16,7 @@ use Magento\Catalog\Model\ProductTypes\ConfigInterface;
 use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection as AttributeCollection;
 use Magento\Customer\Model\Address\AbstractAddress;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
@@ -288,11 +289,13 @@ class Product
         );
         $childColumnName = $useSuperLink ? 'product_id' : 'child_id';
 
-        $childIdQuery = $dbAdapter->select()->from([$tableName],
+        $childIdQuery = $dbAdapter->select()->from(
+            [$tableName],
             [
                 $childColumnName,
                 'parent_id'
-            ]);
+            ]
+        );
 
         $childIdQuery->where(
             $dbAdapter->prepareSqlCondition(
@@ -541,11 +544,13 @@ class Product
     ): Select {
         $tableName = $this->databaseHelper->getTableName('catalog_product_bundle_selection');
 
-        $bundleIdQuery = $dbAdapter->select()->from([$tableName],
+        $bundleIdQuery = $dbAdapter->select()->from(
+            [$tableName],
             [
                 'product_id',
                 'parent_product_id'
-            ]);
+            ]
+        );
 
         $bundleIdQuery->where(
             $dbAdapter->prepareSqlCondition(
@@ -701,8 +706,7 @@ class Product
         );
     }
 
-    public function getConfigurableAttributeCollection(
-    ): \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection
+    public function getConfigurableAttributeCollection(): AttributeCollection
     {
         return $this->configurableAttributeCollectionFactory->create();
     }
@@ -747,10 +751,12 @@ class Product
                 $productCollection = $this->getProductCollection();
 
                 $productCollection->getSelect()->reset(Zend_Db_Select::COLUMNS);
-                $productCollection->getSelect()->columns([
-                    'entity_id',
-                    'sku'
-                ]);
+                $productCollection->getSelect()->columns(
+                    [
+                        'entity_id',
+                        'sku'
+                    ]
+                );
 
                 $productCollection->addAttributeToFilter(
                     'entity_id',
@@ -761,15 +767,17 @@ class Product
 
                 foreach ($entityIdChunk as $elementNumber => $entityId) {
                     if (array_key_exists(
-                            $entityId,
-                            $productData
-                        ) && array_key_exists(
+                        $entityId,
+                        $productData
+                    )) {
+                        if (array_key_exists(
                             'sku',
                             $productData[ $entityId ]
                         )) {
-                        $skus[ $keepAssociation ? $entityId : $elementNumber ] = $productData[ $entityId ][ 'sku' ];
+                            $skus[ $keepAssociation ? $entityId : $elementNumber ] = $productData[ $entityId ][ 'sku' ];
 
-                        $this->entitySkus[ $entityId ] = $productData[ $entityId ][ 'sku' ];
+                            $this->entitySkus[ $entityId ] = $productData[ $entityId ][ 'sku' ];
+                        }
                     }
                 }
             }
@@ -829,10 +837,12 @@ class Product
                 $productCollection = $this->getProductCollection();
 
                 $productCollection->getSelect()->reset(Zend_Db_Select::COLUMNS);
-                $productCollection->getSelect()->columns([
-                    'sku',
-                    'entity_id'
-                ]);
+                $productCollection->getSelect()->columns(
+                    [
+                        'sku',
+                        'entity_id'
+                    ]
+                );
 
                 $productCollection->addAttributeToFilter(
                     'sku',
@@ -843,15 +853,17 @@ class Product
 
                 foreach ($skuChunk as $elementNumber => $sku) {
                     if (array_key_exists(
-                            $sku,
-                            $productData
-                        ) && array_key_exists(
+                        $sku,
+                        $productData
+                    )) {
+                        if (array_key_exists(
                             'entity_id',
                             $productData[ $sku ]
                         )) {
-                        $entityIds[ $elementNumber ] = $productData[ $sku ][ 'entity_id' ];
+                            $entityIds[ $elementNumber ] = $productData[ $sku ][ 'entity_id' ];
 
-                        $this->entitySkus[ $productData[ $sku ][ 'entity_id' ] ] = $sku;
+                            $this->entitySkus[ $productData[ $sku ][ 'entity_id' ] ] = $sku;
+                        }
                     }
                 }
             }
@@ -890,11 +902,13 @@ class Product
 
         $childColumnName = $useSuperLink ? 'product_id' : 'child_id';
 
-        $superLinkQuery = $dbAdapter->select()->from([$tableName],
+        $superLinkQuery = $dbAdapter->select()->from(
+            [$tableName],
             [
                 'parent_id',
                 $childColumnName
-            ]);
+            ]
+        );
 
         $superLinkQuery->where(
             $dbAdapter->prepareSqlCondition(
@@ -948,8 +962,10 @@ class Product
         )) {
             $tableName = $this->databaseHelper->getTableName('catalog_product_website');
 
-            $websiteQuery = $dbAdapter->select()->from([$tableName],
-                ['website_id']);
+            $websiteQuery = $dbAdapter->select()->from(
+                [$tableName],
+                ['website_id']
+            );
 
             $websiteQuery->where(
                 $dbAdapter->prepareSqlCondition(
@@ -1094,7 +1110,7 @@ class Product
             if ($typeInstance instanceof Configurable) {
                 $allProducts = $typeInstance->getUsedProducts($product);
 
-                /** @var \Magento\Catalog\Model\Product $product */
+                /** @var \Magento\Catalog\Model\Product $simpleProduct */
                 foreach ($allProducts as $simpleProduct) {
                     $add = true;
 
