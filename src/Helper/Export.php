@@ -531,6 +531,76 @@ class Export
     }
 
     /**
+     * @param int[] $categoryIds
+     *
+     * @throws Exception
+     */
+    public function getCategoriesData(
+        AdapterInterface $dbAdapter,
+        array $categoryIds,
+        int $storeId,
+        array $requiredEavAttributeCodes = []
+    ): array {
+        $attributeValues = $this->getCurrentAttributeValues(
+            $dbAdapter,
+            \Magento\Catalog\Model\Category::ENTITY,
+            $storeId,
+            $requiredEavAttributeCodes,
+            $categoryIds,
+            ['entity_id' => true, 'store_id' => true]
+        );
+
+        $urlRewrites = $this->getUrlRewrites(
+            $dbAdapter,
+            $categoryIds,
+            $storeId,
+            'category'
+        );
+
+        $specialAttributes = ['entity_id', 'attribute_set_id', 'parent_id', 'created_at', 'updated_at'];
+
+        $categoryData = [];
+
+        foreach ($attributeValues as $categoryId => $categoryAttributeValues) {
+            foreach ($categoryAttributeValues as $attributeCode => $attributeValue) {
+                if (! $this->variables->isEmpty($attributeValue)) {
+                    if (! in_array(
+                        $attributeCode,
+                        $specialAttributes
+                    )) {
+                        $attribute = $this->attributeHelper->getAttribute(
+                            \Magento\Catalog\Model\Category::ENTITY,
+                            $attributeCode
+                        );
+
+                        if ($attribute->usesSource()) {
+                            $attributeValue = [
+                                'id'    => $attributeValue,
+                                'value' => $this->attributeHelper->getAttributeOptionValue(
+                                    \Magento\Catalog\Model\Category::ENTITY,
+                                    $attributeCode,
+                                    $storeId,
+                                    $attributeValue
+                                )
+                            ];
+                        }
+                    }
+
+                    $categoryData[ $categoryId ][ $attributeCode ] = $attributeValue;
+                }
+            }
+
+            $categoryData[ $categoryId ][ 'url_rewrites' ] = $this->arrays->getValue(
+                $urlRewrites,
+                $this->variables->stringValue($categoryId),
+                []
+            );
+        }
+
+        return $categoryData;
+    }
+
+    /**
      * @param int[] $productIds
      *
      * @throws Exception
@@ -549,7 +619,7 @@ class Export
         );
 
         $attributeValues = $this->getCurrentAttributeValues(
-            $this->databaseHelper->getDefaultConnection(),
+            $dbAdapter,
             \Magento\Catalog\Model\Product::ENTITY,
             $storeId,
             array_keys($searchableAttributes),
@@ -688,7 +758,7 @@ class Export
 
         if (count($configurableProductIds) > 0) {
             $childIds = $this->productHelper->getChildIds(
-                $this->databaseHelper->getDefaultConnection(),
+                $dbAdapter,
                 $configurableProductIds,
                 true,
                 ! $showOutOfStock,
@@ -723,7 +793,7 @@ class Export
 
         if (count($bundleProductIds) > 0) {
             $bundledIds = $this->productHelper->getBundledIds(
-                $this->databaseHelper->getDefaultConnection(),
+                $dbAdapter,
                 $bundleProductIds,
                 true,
                 ! $showOutOfStock,
@@ -756,7 +826,7 @@ class Export
 
         if (count($groupProductIds) > 0) {
             $groupedIds = $this->productHelper->getGroupedIds(
-                $this->databaseHelper->getDefaultConnection(),
+                $dbAdapter,
                 $groupProductIds,
                 true,
                 ! $showOutOfStock,
@@ -1007,8 +1077,12 @@ class Export
         return $categoryPaths;
     }
 
-    public function getUrlRewrites(AdapterInterface $dbAdapter, array $productIds, int $storeId): ?array
-    {
+    public function getUrlRewrites(
+        AdapterInterface $dbAdapter,
+        array $entityIds,
+        int $storeId,
+        string $entityType = 'product'
+    ): ?array {
         $urlRewriteQuery = $dbAdapter->select()->from(
             $this->databaseHelper->getTableName('url_rewrite'),
             [
@@ -1019,12 +1093,12 @@ class Export
 
         $urlRewriteQuery->where(
             'entity_type = ?',
-            'product',
+            $entityType,
             Select::TYPE_CONDITION
         );
         $urlRewriteQuery->where(
             'entity_id IN (?)',
-            $productIds,
+            $entityIds,
             Select::TYPE_CONDITION
         );
         $urlRewriteQuery->where(
@@ -1037,31 +1111,43 @@ class Export
             1
         );
 
-        $urlRewriteQuery->joinLeft(
-            $this->databaseHelper->getTableName('catalog_url_rewrite_product_category'),
-            'catalog_url_rewrite_product_category.url_rewrite_id = url_rewrite.url_rewrite_id',
-            ['category_id']
-        );
+        if ($entityType === 'product') {
+            $urlRewriteQuery->joinLeft(
+                $this->databaseHelper->getTableName('catalog_url_rewrite_product_category'),
+                'catalog_url_rewrite_product_category.url_rewrite_id = url_rewrite.url_rewrite_id',
+                ['category_id']
+            );
+        }
 
         $queryResult = $this->databaseHelper->fetchAll($urlRewriteQuery);
 
         $result = [];
 
         foreach ($queryResult as $queryRow) {
-            $productId = $this->arrays->getValue(
-                $queryRow,
-                'entity_id'
-            );
             $requestPath = $this->arrays->getValue(
                 $queryRow,
                 'request_path'
             );
-            $categoryId = (int)$this->arrays->getValue(
-                $queryRow,
-                'category_id'
-            );
 
-            $result[ $productId ][ $categoryId ] = $requestPath;
+            if ($entityType === 'product') {
+                $productId = $this->arrays->getValue(
+                    $queryRow,
+                    'entity_id'
+                );
+                $categoryId = (int)$this->arrays->getValue(
+                    $queryRow,
+                    'category_id'
+                );
+
+                $result[ $productId ][ $categoryId ] = $requestPath;
+            } else {
+                $entityId = $this->arrays->getValue(
+                    $queryRow,
+                    'entity_id'
+                );
+
+                $result[ $entityId ][] = $requestPath;
+            }
         }
 
         return $result;
