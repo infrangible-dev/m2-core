@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Infrangible\Core\Helper;
 
+use FeWeDev\Base\Variables;
 use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Product;
 use Magento\Customer\Model\Customer;
@@ -18,19 +19,23 @@ use Magento\Framework\Exception\LocalizedException;
  */
 class EntityType
 {
+    /** @var Config */
+    protected $eavConfig;
+
     /** @var Database */
     protected $databaseHelper;
 
-    /** @var Config */
-    private $eavConfig;
+    /** @var Variables */
+    protected $variables;
 
     /** @var array */
     private $entityTypes = [];
 
-    public function __construct(Config $eavConfig, Database $databaseHelper)
+    public function __construct(Config $eavConfig, Database $databaseHelper, Variables $variables)
     {
         $this->eavConfig = $eavConfig;
         $this->databaseHelper = $databaseHelper;
+        $this->variables = $variables;
     }
 
     /**
@@ -77,12 +82,13 @@ class EntityType
 
     /**
      * @throws LocalizedException
+     * @throws \Exception
      */
     public function getCategoryEntityTypeId(): ?int
     {
         $categoryEntityType = $this->getCategoryEntityType();
 
-        return empty($categoryEntityType) ? null : $categoryEntityType->getId();
+        return empty($categoryEntityType) ? null : $this->variables->intValue($categoryEntityType->getId());
     }
 
     /**
@@ -103,12 +109,13 @@ class EntityType
 
     /**
      * @throws LocalizedException
+     * @throws \Exception
      */
     public function getProductEntityTypeId(): ?int
     {
         $productEntityType = $this->getProductEntityType();
 
-        return empty($productEntityType) ? null : $productEntityType->getId();
+        return empty($productEntityType) ? null : $this->variables->intValue($productEntityType->getId());
     }
 
     /**
@@ -121,12 +128,14 @@ class EntityType
 
     /**
      * @throws LocalizedException
+     * @throws \Exception
      */
     public function getProductEntityTypeDefaultAttributeSetId(): ?int
     {
         $productEntityType = $this->getProductEntityType();
 
-        return empty($productEntityType) ? null : (int)$productEntityType->getDefaultAttributeSetId();
+        return empty($productEntityType) ? null :
+            $this->variables->intValue($productEntityType->getDefaultAttributeSetId());
     }
 
     /**
