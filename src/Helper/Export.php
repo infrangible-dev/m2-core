@@ -1496,30 +1496,33 @@ class Export
             true
         );
 
-        foreach ($attributeCodeChunks as $attributeChunk) {
-            if ($collection === null) {
-                if ($entityTypeCode == \Magento\Catalog\Model\Product::ENTITY) {
-                    $collection = $this->productHelper->getProductCollection();
-                    $collection->setStoreId($storeId);
-                } elseif ($entityTypeCode == \Magento\Catalog\Model\Category::ENTITY) {
-                    $collection = $this->categoryHelper->getCategoryCollection();
-                    $collection->setStoreId($storeId);
-                } elseif ($entityTypeCode == 'customer') {
-                    $collection = $this->customerHelper->getCustomerCollection();
-                } elseif ($entityTypeCode == 'customer_address') {
-                    $collection = $this->addressHelper->getAddressCollection();
-                } else {
-                    throw new Exception(
-                        sprintf(
-                            'Entity type: %s not implemented yet',
-                            $entityTypeCode
-                        )
-                    );
-                }
+        if ($collection === null) {
+            if ($entityTypeCode == \Magento\Catalog\Model\Product::ENTITY) {
+                $collection = $this->productHelper->getProductCollection();
+                $collection->setStoreId($storeId);
+            } elseif ($entityTypeCode == \Magento\Catalog\Model\Category::ENTITY) {
+                $collection = $this->categoryHelper->getCategoryCollection();
+                $collection->setStoreId($storeId);
+            } elseif ($entityTypeCode == 'customer') {
+                $collection = $this->customerHelper->getCustomerCollection();
+            } elseif ($entityTypeCode == 'customer_address') {
+                $collection = $this->addressHelper->getAddressCollection();
+            } else {
+                throw new Exception(
+                    sprintf(
+                        'Entity type: %s not implemented yet',
+                        $entityTypeCode
+                    )
+                );
             }
+        }
+
+        foreach ($attributeCodeChunks as $attributeChunk) {
+            $chunkCollection = clone $collection;
+            $chunkCollection->clear();
 
             foreach ($attributeChunk as $attributeCode) {
-                $collection->addAttributeToSelect(
+                $chunkCollection->addAttributeToSelect(
                     $attributeCode,
                     in_array(
                         $attributeCode,
@@ -1531,18 +1534,18 @@ class Export
             if (count($entityIds) == 1) {
                 $entityId = reset($entityIds);
 
-                $collection->addAttributeToFilter(
+                $chunkCollection->addAttributeToFilter(
                     'entity_id',
                     ['eq' => $entityId]
                 );
             } else {
-                $collection->addAttributeToFilter(
+                $chunkCollection->addAttributeToFilter(
                     'entity_id',
                     ['in' => $entityIds]
                 );
             }
 
-            $columns = $collection->getSelect()->getPart(Zend_Db_Select::COLUMNS);
+            $columns = $chunkCollection->getSelect()->getPart(Zend_Db_Select::COLUMNS);
 
             foreach ($columns as $key => $column) {
                 if (array_key_exists(
@@ -1560,13 +1563,13 @@ class Export
                 ['0' => 'e', 1 => 'entity_id', 2 => 'entity_id']
             );
 
-            $collection->getSelect()->setPart(
+            $chunkCollection->getSelect()->setPart(
                 Zend_Db_Select::COLUMNS,
                 $columns
             );
 
             $queryResult = $this->databaseHelper->fetchAssoc(
-                $collection->getSelect(),
+                $chunkCollection->getSelect(),
                 $dbAdapter
             );
 
