@@ -63,11 +63,21 @@ class Cache
         $this->reinitableConfig->reinit();
     }
 
+    public function invalidateConfigCache(): void
+    {
+        $this->typeList->invalidate('config');
+    }
+
     public function cleanBlockCache(): void
     {
         $this->logging->info('Cleaning block cache');
 
         $this->typeList->cleanType('block_html');
+    }
+
+    public function invalidateBlockCache(): void
+    {
+        $this->typeList->invalidate('block_html');
     }
 
     public function cleanFullPageCache(): void
@@ -79,11 +89,23 @@ class Cache
         }
     }
 
+    public function invalidateFullPageCache(): void
+    {
+        if ($this->pageCacheConfig->isEnabled()) {
+            $this->typeList->invalidate('full_page');
+        }
+    }
+
     public function cleanLayoutCache(): void
     {
         $this->logging->info('Cleaning layout cache');
 
         $this->typeList->cleanType('layout');
+    }
+
+    public function invalidateLayoutCache(): void
+    {
+        $this->typeList->invalidate('layout');
     }
 
     public function loadCache(string $id): ?string
@@ -96,7 +118,12 @@ class Cache
 
     public function saveCache(string $data, string $id, array $tags = [], int $lifeTime = null): void
     {
-        $this->cache->save($data, $id, $tags, $lifeTime);
+        $this->cache->save(
+            $data,
+            $id,
+            $tags,
+            $lifeTime
+        );
     }
 
     public function removeCache(string $id): void
