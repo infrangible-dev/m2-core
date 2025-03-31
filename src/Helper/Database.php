@@ -60,14 +60,29 @@ class Database extends AbstractHelper
     public function fetchAll(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
+            $this->logging->debug(
+                sprintf(
+                    'Executing query: %s',
+                    $select->assemble()
+                )
+            );
         }
 
-        $result = !is_null($specialAdapter) ? $specialAdapter->fetchAll($select) :
+        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchAll($select) :
             $this->getDefaultConnection()->fetchAll($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Query result: %s', trim(print_r($result, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Query result: %s',
+                    trim(
+                        print_r(
+                            $result,
+                            true
+                        )
+                    )
+                )
+            );
         }
 
         return $result;
@@ -79,14 +94,29 @@ class Database extends AbstractHelper
         bool $allowLogging = true
     ): array {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
+            $this->logging->debug(
+                sprintf(
+                    'Executing query: %s',
+                    $select->assemble()
+                )
+            );
         }
 
-        $result = !is_null($specialAdapter) ? $specialAdapter->fetchAssoc($select) :
+        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchAssoc($select) :
             $this->getDefaultConnection()->fetchAssoc($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Query result: %s', trim(print_r($result, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Query result: %s',
+                    trim(
+                        print_r(
+                            $result,
+                            true
+                        )
+                    )
+                )
+            );
         }
 
         return $result;
@@ -98,14 +128,29 @@ class Database extends AbstractHelper
         bool $allowLogging = true
     ): array {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
+            $this->logging->debug(
+                sprintf(
+                    'Executing query: %s',
+                    $select->assemble()
+                )
+            );
         }
 
-        $result = !is_null($specialAdapter) ? $specialAdapter->fetchPairs($select) :
+        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchPairs($select) :
             $this->getDefaultConnection()->fetchPairs($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Query result: %s', trim(print_r($result, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Query result: %s',
+                    trim(
+                        print_r(
+                            $result,
+                            true
+                        )
+                    )
+                )
+            );
         }
 
         return $result;
@@ -117,14 +162,29 @@ class Database extends AbstractHelper
         bool $allowLogging = true
     ): ?string {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
+            $this->logging->debug(
+                sprintf(
+                    'Executing query: %s',
+                    $select->assemble()
+                )
+            );
         }
 
-        $result = !is_null($specialAdapter) ? $specialAdapter->fetchOne($select) :
+        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchOne($select) :
             $this->getDefaultConnection()->fetchOne($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Query result: %s', trim(print_r($result, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Query result: %s',
+                    trim(
+                        print_r(
+                            $result,
+                            true
+                        )
+                    )
+                )
+            );
         }
 
         if (is_bool($result)) {
@@ -134,17 +194,36 @@ class Database extends AbstractHelper
         return $result;
     }
 
-    public function fetchRow(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
+    public function fetchRow(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): ?array
     {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
+            $this->logging->debug(
+                sprintf(
+                    'Executing query: %s',
+                    $select->assemble()
+                )
+            );
         }
 
-        $result = !is_null($specialAdapter) ? $specialAdapter->fetchRow($select) :
+        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchRow($select) :
             $this->getDefaultConnection()->fetchRow($select);
 
+        if (is_bool($result)) {
+            $result = null;
+        }
+
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Query result: %s', trim(print_r($result, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Query result: %s',
+                    trim(
+                        print_r(
+                            $result,
+                            true
+                        )
+                    )
+                )
+            );
         }
 
         return $result;
@@ -153,14 +232,29 @@ class Database extends AbstractHelper
     public function fetchCol(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
+            $this->logging->debug(
+                sprintf(
+                    'Executing query: %s',
+                    $select->assemble()
+                )
+            );
         }
 
-        $result = !is_null($specialAdapter) ? $specialAdapter->fetchCol($select) :
+        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchCol($select) :
             $this->getDefaultConnection()->fetchCol($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Query result: %s', trim(print_r($result, true))));
+            $this->logging->debug(
+                sprintf(
+                    'Query result: %s',
+                    trim(
+                        print_r(
+                            $result,
+                            true
+                        )
+                    )
+                )
+            );
         }
 
         return $result;
@@ -170,7 +264,10 @@ class Database extends AbstractHelper
         string $modelEntity,
         string $connectionName = ResourceConnection::DEFAULT_CONNECTION
     ): string {
-        return $this->resourceConnection->getTableName($modelEntity, $connectionName);
+        return $this->resourceConnection->getTableName(
+            $modelEntity,
+            $connectionName
+        );
     }
 
     /**
@@ -185,7 +282,7 @@ class Database extends AbstractHelper
         $createdIds = [];
 
         foreach ($createTableData as $tableName => $dbEntries) {
-            $createdIds[$tableName] = [];
+            $createdIds[ $tableName ] = [];
 
             foreach ($dbEntries as $key => $tableData) {
                 if ($allowLogging && $this->isQueryLogging()) {
@@ -193,24 +290,37 @@ class Database extends AbstractHelper
                         sprintf(
                             'Inserting data into table: %s with values: %s',
                             $tableName,
-                            trim(print_r($dbEntries, true))
+                            trim(
+                                print_r(
+                                    $dbEntries,
+                                    true
+                                )
+                            )
                         )
                     );
                 }
 
-                if (!$test) {
+                if (! $test) {
                     try {
-                        $dbAdapter->insert($tableName, $tableData);
+                        $dbAdapter->insert(
+                            $tableName,
+                            $tableData
+                        );
 
                         /** @var Mysql $dbAdapter */
-                        $createdIds[$tableName][$key] = $dbAdapter->lastInsertId($tableName);
+                        $createdIds[ $tableName ][ $key ] = $dbAdapter->lastInsertId($tableName);
                     } catch (Exception $exception) {
                         $this->logging->error(
                             sprintf(
                                 'Could not insert data into table: %s because: %s using values: %s',
                                 $tableName,
                                 $exception->getMessage(),
-                                trim(print_r($tableData, true))
+                                trim(
+                                    print_r(
+                                        $tableData,
+                                        true
+                                    )
+                                )
                             )
                         );
 
@@ -225,7 +335,10 @@ class Database extends AbstractHelper
                         );
                     }
                 } else {
-                    $createdIds[$tableName][$key] = rand(10000000, 99999999);
+                    $createdIds[ $tableName ][ $key ] = rand(
+                        10000000,
+                        99999999
+                    );
                 }
 
                 if ($allowLogging && $this->isQueryLogging()) {
@@ -233,7 +346,10 @@ class Database extends AbstractHelper
                         sprintf(
                             'Created entry in table: %s with id: %s',
                             $tableName,
-                            array_key_exists($key, $createdIds[$tableName]) ? $createdIds[$tableName][$key] : null
+                            array_key_exists(
+                                $key,
+                                $createdIds[ $tableName ]
+                            ) ? $createdIds[ $tableName ][ $key ] : null
                         )
                     );
                 }
@@ -253,8 +369,18 @@ class Database extends AbstractHelper
         bool $test = false,
         bool $allowLogging = true
     ): void {
-        $this->saveSingleAttributeTableData($dbAdapter, $singleAttributeTableData, $test, $allowLogging);
-        $this->saveEavAttributeTableData($dbAdapter, $eavAttributeTableData, $test, $allowLogging);
+        $this->saveSingleAttributeTableData(
+            $dbAdapter,
+            $singleAttributeTableData,
+            $test,
+            $allowLogging
+        );
+        $this->saveEavAttributeTableData(
+            $dbAdapter,
+            $eavAttributeTableData,
+            $test,
+            $allowLogging
+        );
     }
 
     /**
@@ -274,21 +400,35 @@ class Database extends AbstractHelper
                             'Updating single attribute: %s in table: %s with values: %s',
                             $attributeName,
                             $tableName,
-                            trim(print_r($dbEntries, true))
+                            trim(
+                                print_r(
+                                    $dbEntries,
+                                    true
+                                )
+                            )
                         )
                     );
                 }
 
-                if (!$test) {
+                if (! $test) {
                     try {
-                        $dbAdapter->insertOnDuplicate($tableName, $dbEntries, [$attributeName]);
+                        $dbAdapter->insertOnDuplicate(
+                            $tableName,
+                            $dbEntries,
+                            [$attributeName]
+                        );
                     } catch (Exception $exception) {
                         $this->logging->error(
                             sprintf(
                                 'Could not update data in table: %s because: %s using values: %s',
                                 $tableName,
                                 $exception->getMessage(),
-                                trim(print_r($dbEntries, true))
+                                trim(
+                                    print_r(
+                                        $dbEntries,
+                                        true
+                                    )
+                                )
                             )
                         );
 
@@ -322,21 +462,35 @@ class Database extends AbstractHelper
                     sprintf(
                         'Updating eav attribute in table: %s with values: %s',
                         $tableName,
-                        trim(print_r($dbEntries, true))
+                        trim(
+                            print_r(
+                                $dbEntries,
+                                true
+                            )
+                        )
                     )
                 );
             }
 
-            if (!$test) {
+            if (! $test) {
                 try {
-                    $dbAdapter->insertOnDuplicate($tableName, $dbEntries, ['value']);
+                    $dbAdapter->insertOnDuplicate(
+                        $tableName,
+                        $dbEntries,
+                        ['value']
+                    );
                 } catch (Exception $exception) {
                     $this->logging->error(
                         sprintf(
                             'Could not update data in table: %s because: %s using values: %s',
                             $tableName,
                             $exception->getMessage(),
-                            trim(print_r($dbEntries, true))
+                            trim(
+                                print_r(
+                                    $dbEntries,
+                                    true
+                                )
+                            )
                         )
                     );
 
@@ -370,28 +524,44 @@ class Database extends AbstractHelper
                 sprintf(
                     'Inserting data into table: %s with values: %s',
                     $tableName,
-                    trim(print_r($tableData, true))
+                    trim(
+                        print_r(
+                            $tableData,
+                            true
+                        )
+                    )
                 )
             );
         }
 
-        if (!$test) {
+        if (! $test) {
             try {
                 if ($checkDuplicate) {
-                    $dbAdapter->insertOnDuplicate($tableName, $tableData);
+                    $dbAdapter->insertOnDuplicate(
+                        $tableName,
+                        $tableData
+                    );
                 } else {
-                    $dbAdapter->insert($tableName, $tableData);
+                    $dbAdapter->insert(
+                        $tableName,
+                        $tableData
+                    );
                 }
 
                 /** @var Mysql $dbAdapter */
-                return (int) $dbAdapter->lastInsertId($tableName);
+                return (int)$dbAdapter->lastInsertId($tableName);
             } catch (Exception $exception) {
                 $this->logging->error(
                     sprintf(
                         'Could not insert data into table: %s because: %s using values: %s',
                         $tableName,
                         $exception->getMessage(),
-                        trim(print_r($tableData, true))
+                        trim(
+                            print_r(
+                                $tableData,
+                                true
+                            )
+                        )
                     )
                 );
 
@@ -406,7 +576,10 @@ class Database extends AbstractHelper
                 );
             }
         } else {
-            return rand(10000000, 99999999);
+            return rand(
+                10000000,
+                99999999
+            );
         }
     }
 
@@ -427,7 +600,12 @@ class Database extends AbstractHelper
                     sprintf(
                         'Updating data in table: %s with values: %s',
                         $tableName,
-                        trim(print_r($tableData, true))
+                        trim(
+                            print_r(
+                                $tableData,
+                                true
+                            )
+                        )
                     )
                 );
             } else {
@@ -435,19 +613,36 @@ class Database extends AbstractHelper
                     sprintf(
                         'Updating data in table: %s with values: %s where: %s',
                         $tableName,
-                        trim(print_r($tableData, true)),
-                        trim(print_r($where, true))
+                        trim(
+                            print_r(
+                                $tableData,
+                                true
+                            )
+                        ),
+                        trim(
+                            print_r(
+                                $where,
+                                true
+                            )
+                        )
                     )
                 );
             }
         }
 
-        if (!$test) {
+        if (! $test) {
             try {
                 if (empty($where)) {
-                    $dbAdapter->insertOnDuplicate($tableName, $tableData);
+                    $dbAdapter->insertOnDuplicate(
+                        $tableName,
+                        $tableData
+                    );
                 } else {
-                    $dbAdapter->update($tableName, $tableData, $where);
+                    $dbAdapter->update(
+                        $tableName,
+                        $tableData,
+                        $where
+                    );
                 }
             } catch (Exception $exception) {
                 $this->logging->error(
@@ -455,7 +650,12 @@ class Database extends AbstractHelper
                         'Could not update data in table: %s because: %s using values: %s',
                         $tableName,
                         $exception->getMessage(),
-                        trim(print_r($tableData, true))
+                        trim(
+                            print_r(
+                                $tableData,
+                                true
+                            )
+                        )
                     )
                 );
 
@@ -487,14 +687,22 @@ class Database extends AbstractHelper
                 sprintf(
                     'Deleting data in table: %s where: %s',
                     $tableName,
-                    trim(print_r($where, true))
+                    trim(
+                        print_r(
+                            $where,
+                            true
+                        )
+                    )
                 )
             );
         }
 
-        if (!$test) {
+        if (! $test) {
             try {
-                $dbAdapter->delete($tableName, $where);
+                $dbAdapter->delete(
+                    $tableName,
+                    $where
+                );
             } catch (Exception $exception) {
                 $this->logging->error(
                     sprintf(
@@ -545,7 +753,12 @@ class Database extends AbstractHelper
         bool $allowLogging = true
     ): Zend_Db_Statement_Interface {
         if ($allowLogging && $this->isQueryLogging()) {
-            $this->logging->debug(sprintf('Executing query: %s', $select->assemble()));
+            $this->logging->debug(
+                sprintf(
+                    'Executing query: %s',
+                    $select->assemble()
+                )
+            );
         }
 
         return $dbAdapter->query($select);
@@ -553,7 +766,11 @@ class Database extends AbstractHelper
 
     public function select($name, $cols = '*', string $schema = null): Select
     {
-        return $this->getDefaultConnection()->select()->from($name, $cols, $schema);
+        return $this->getDefaultConnection()->select()->from(
+            $name,
+            $cols,
+            $schema
+        );
     }
 
     /**
