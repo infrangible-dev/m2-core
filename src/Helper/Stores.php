@@ -517,6 +517,20 @@ class Stores extends AbstractHelper
         return $store;
     }
 
+    public function getStoreId(): int
+    {
+        try {
+            /** @var Store $store */
+            $store = $this->storeManager->getStore();
+
+            return $this->variables->intValue($store->getId());
+        } catch (NoSuchEntityException|Exception $exception) {
+            $this->logging->error($exception->getMessage());
+
+            return Store::DEFAULT_STORE_ID;
+        }
+    }
+
     /**
      * @throws LocalizedException
      */
@@ -540,6 +554,20 @@ class Stores extends AbstractHelper
         $website = $this->storeManager->getWebsite($websiteId);
 
         return $website;
+    }
+
+    public function getWebsiteId(): int
+    {
+        try {
+            /** @var Website $website */
+            $website = $this->storeManager->getWebsite();
+
+            return $this->variables->intValue($website->getId());
+        } catch (NoSuchEntityException|Exception $exception) {
+            $this->logging->error($exception->getMessage());
+
+            return 0;
+        }
     }
 
     /**
