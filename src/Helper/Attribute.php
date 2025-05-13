@@ -1288,4 +1288,25 @@ class Attribute
 
         return null;
     }
+
+    /**
+     * @throws Exception
+     */
+    public function getProductAttributeValue(
+        int $entityId,
+        string $attributeCode,
+        int $storeId,
+        bool $useOptionValue = true,
+        bool $strToLower = false
+    ) {
+        return $this->getAttributeValue(
+            $this->databaseHelper->getDefaultConnection(),
+            Product::ENTITY,
+            $attributeCode,
+            $entityId,
+            $storeId,
+            $useOptionValue,
+            $strToLower
+        );
+    }
 }
