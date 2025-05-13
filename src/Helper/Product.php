@@ -15,18 +15,21 @@ use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ProductTypes\ConfigInterface;
 use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
+use Magento\Catalog\Pricing\Price\TierPrice;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection as AttributeCollection;
 use Magento\Customer\Model\Address\AbstractAddress;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\Locale\Format;
+use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Store\Model\Store;
 use Psr\Log\LoggerInterface;
 use Zend_Db_Select;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Product
@@ -67,6 +70,15 @@ class Product
     /** @var Variables */
     protected $variables;
 
+    /** @var Format */
+    protected $localeFormat;
+
+    /** @var \Magento\Tax\Helper\Data */
+    protected $taxHelper;
+
+    /** @var PriceCurrencyInterface */
+    protected $priceCurrency;
+
     /** @var array */
     private $entitySkus = [];
 
@@ -100,7 +112,10 @@ class Product
         Config $productMediaConfig,
         \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\CollectionFactory $configurableAttributeCollectionFactory,
         ConfigInterface $config,
-        Variables $variables
+        Variables $variables,
+        Format $localeFormat,
+        \Magento\Tax\Helper\Data $taxHelper,
+        PriceCurrencyInterface $priceCurrency
     ) {
         $this->arrays = $arrays;
         $this->attributeHelper = $attributeHelper;
@@ -114,6 +129,9 @@ class Product
         $this->configurableAttributeCollectionFactory = $configurableAttributeCollectionFactory;
         $this->config = $config;
         $this->variables = $variables;
+        $this->localeFormat = $localeFormat;
+        $this->taxHelper = $taxHelper;
+        $this->priceCurrency = $priceCurrency;
     }
 
     public function newProduct(): \Magento\Catalog\Model\Product
@@ -1213,6 +1231,60 @@ class Product
         return $this->usedProductAttributes[ $cacheKey ];
     }
 
+    public function getUsedProductsPrices(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
+    {
+        $prices = [];
+
+        foreach ($this->getUsedProducts(
+            $product,
+            $onlyEnabled
+        ) as $usedProduct) {
+            $priceInfo = $usedProduct->getPriceInfo();
+
+            $prices[ $usedProduct->getId() ] = [
+                'baseOldPrice' => [
+                    'amount' => $this->localeFormat->getNumber(
+                        $priceInfo->getPrice('regular_price')->getAmount()->getBaseAmount()
+                    ),
+                ],
+                'oldPrice'     => [
+                    'amount' => $this->localeFormat->getNumber(
+                        $priceInfo->getPrice('regular_price')->getAmount()->getValue()
+                    ),
+                ],
+                'basePrice'    => [
+                    'amount' => $this->localeFormat->getNumber(
+                        $priceInfo->getPrice('final_price')->getAmount()->getBaseAmount()
+                    ),
+                ],
+                'finalPrice'   => [
+                    'amount' => $this->localeFormat->getNumber(
+                        $priceInfo->getPrice('final_price')->getAmount()->getValue()
+                    ),
+                ],
+                'tierPrices'   => $this->getTierPricesByProduct($product),
+                'msrpPrice'    => [
+                    'amount' => $this->localeFormat->getNumber(
+                        $this->priceCurrency->convertAndRound($product->getDataUsingMethod('msrp'))
+                    ),
+                ],
+            ];
+        }
+
+        return $prices;
+    }
+
+    public function getUsedProductsSkus(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
+    {
+        $skus = [];
+
+        foreach ($this->getUsedProducts($product, $onlyEnabled) as $product) {
+            $skus[ $product->getId() ] = $product->getSku();
+        }
+
+        return $skus;
+    }
+
     /**
      * @return ProductTierPriceInterface[]
      */
@@ -1233,5 +1305,36 @@ class Product
         }
 
         return $customerGroupTierPrices;
+    }
+
+    public function getTierPricesByProduct(\Magento\Catalog\Model\Product $product): array
+    {
+        $tierPrices = [];
+
+        /** @var TierPrice $tierPriceModel */
+        $tierPriceModel = $product->getPriceInfo()->getPrice('tier_price');
+
+        foreach ($tierPriceModel->getTierPriceList() as $tierPrice) {
+            $price = $this->taxHelper->displayPriceExcludingTax() ? $tierPrice[ 'price' ]->getBaseAmount() :
+                $tierPrice[ 'price' ]->getValue();
+
+            $tierPriceData = [
+                'qty'        => $this->localeFormat->getNumber($tierPrice[ 'price_qty' ]),
+                'price'      => $this->localeFormat->getNumber($price),
+                'percentage' => $this->localeFormat->getNumber(
+                    $tierPriceModel->getSavePercent($tierPrice[ 'price' ])
+                ),
+            ];
+
+            if ($this->taxHelper->displayBothPrices()) {
+                $tierPriceData[ 'basePrice' ] = $this->localeFormat->getNumber(
+                    $tierPrice[ 'price' ]->getBaseAmount()
+                );
+            }
+
+            $tierPrices[] = $tierPriceData;
+        }
+
+        return $tierPrices;
     }
 }
