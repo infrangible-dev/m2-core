@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Infrangible\Core\Helper;
 
 use FeWeDev\Base\Arrays;
+use Magento\Catalog\Model\Product\Option\Type\File;
 use Magento\Catalog\Model\Product\Type\AbstractType;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
 
@@ -22,10 +24,14 @@ class Cart
     /** @var Arrays */
     protected $arrays;
 
-    public function __construct(Json $serializer, Arrays $arrays)
+    /** @var RequestInterface */
+    protected $request;
+
+    public function __construct(Json $serializer, Arrays $arrays, RequestInterface $request)
     {
         $this->serializer = $serializer;
         $this->arrays = $arrays;
+        $this->request = $request;
     }
 
     /**
@@ -42,11 +48,24 @@ class Cart
                 continue;
             }
 
-            if (! array_key_exists(
-                'options',
-                $itemInfo
-            )) {
-                continue;
+            $fileNames = [];
+
+            $requestParams = $this->request->getParams();
+
+            foreach ($requestParams as $requestParamName => $requestParamValue) {
+                if (preg_match(
+                    sprintf(
+                        '/cart_%s_options_([0-9]+)_file_action/',
+                        $item->getId()
+                    ),
+                    $requestParamName,
+                    $matches
+                )) {
+                    $optionId = $matches[ 1 ];
+
+                    $fileNames[ $optionId ] = $requestParamName;
+                    $itemInfo[ $requestParamName ] = $requestParamValue;
+                }
             }
 
             $buyRequestOption = $item->getOptionByCode('info_buyRequest');
@@ -59,8 +78,13 @@ class Cart
                 []
             );
 
-            foreach ($itemInfo[ 'options' ] as $optionId => $optionValue) {
-                $options[ $optionId ] = $optionValue;
+            if (array_key_exists(
+                'options',
+                $itemInfo
+            )) {
+                foreach ($itemInfo[ 'options' ] as $optionId => $optionValue) {
+                    $options[ $optionId ] = $optionValue;
+                }
             }
 
             $buyRequestData[ 'options' ] = $options;
@@ -77,10 +101,34 @@ class Cart
             $product = $item->getProduct();
             $buyRequest = $item->getBuyRequest();
 
-            foreach (array_keys($itemInfo[ 'options' ]) as $optionId) {
+            foreach ($fileNames as $fileName) {
+                $buyRequest->setData(
+                    $fileName,
+                    $this->request->getParam($fileName)
+                );
+            }
+
+            $optionIds = array_merge(
+                array_key_exists(
+                    'options',
+                    $itemInfo
+                ) ? array_keys($itemInfo[ 'options' ]) : [],
+                array_keys($fileNames)
+            );
+
+            $options = $buyRequest->getData('options');
+
+            foreach ($optionIds as $optionId) {
                 $option = $product->getOptionById($optionId);
 
                 $group = $option->groupFactory($option->getType());
+
+                if ($group instanceof File) {
+                    $options[ 'files_prefix' ] = sprintf(
+                        'cart_%d_',
+                        $itemId
+                    );
+                }
 
                 $group->setOption($option);
                 $group->setProduct($product);
@@ -93,7 +141,7 @@ class Cart
                     AbstractType::PROCESS_MODE_FULL
                 );
 
-                $group->validateUserValue($buyRequest->getData('options'));
+                $group->validateUserValue($options);
 
                 $preparedValue = $group->prepareForCart();
 
