@@ -146,33 +146,47 @@ class Cart
                 $preparedValue = $group->prepareForCart();
 
                 if ($preparedValue === null) {
-                    continue;
-                }
-
-                $item->addOption(
-                    [
-                        'code'  => sprintf(
+                    $item->removeOption(
+                        sprintf(
                             'option_%d',
                             $optionId
-                        ),
-                        'value' => $preparedValue
-                    ]
-                );
+                        )
+                    );
 
-                $optionOption = $item->getOptionByCode(
-                    sprintf(
-                        'option_%d',
-                        $optionId
-                    )
-                );
+                    $optionIdKey = array_search(
+                        $optionId,
+                        $optionsOptionValue
+                    );
 
-                $optionOption->setProduct($product);
+                    if ($optionIdKey !== false) {
+                        unset($optionsOptionValue[ $optionIdKey ]);
+                    }
+                } else {
+                    $item->addOption(
+                        [
+                            'code'  => sprintf(
+                                'option_%d',
+                                $optionId
+                            ),
+                            'value' => $preparedValue
+                        ]
+                    );
 
-                if (! in_array(
-                    $optionId,
-                    $optionsOptionValue
-                )) {
-                    $optionsOptionValue[] = $optionId;
+                    $optionOption = $item->getOptionByCode(
+                        sprintf(
+                            'option_%d',
+                            $optionId
+                        )
+                    );
+
+                    $optionOption->setProduct($product);
+
+                    if (! in_array(
+                        $optionId,
+                        $optionsOptionValue
+                    )) {
+                        $optionsOptionValue[] = $optionId;
+                    }
                 }
             }
 
