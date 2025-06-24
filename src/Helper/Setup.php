@@ -7,6 +7,7 @@ namespace Infrangible\Core\Helper;
 use FeWeDev\Base\Arrays;
 use Magento\Catalog\Model\Product;
 use Magento\Eav\Setup\EavSetup;
+use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\Exception\LocalizedException;
@@ -31,9 +32,18 @@ class Setup
     /** @var Arrays */
     protected $arrays;
 
-    public function __construct(Arrays $arrayHelper)
+    /** @var EavSetupFactory */
+    protected $eavSetupFactory;
+
+    public function __construct(Arrays $arrayHelper, EavSetupFactory $eavSetupFactory)
     {
         $this->arrays = $arrayHelper;
+        $this->eavSetupFactory = $eavSetupFactory;
+    }
+
+    public function getEavSetup(SetupInterface $setup)
+    {
+        $this->eavSetupFactory->create(['setup' => $setup]);
     }
 
     public function addEntityType(
@@ -46,11 +56,16 @@ class Setup
     ): void {
         $entityType = $setup->getEntityType($entityTypeName);
 
-        if (!$entityType) {
-            $setup->addEntityType($entityTypeName, ['entity_model' => $entityTypeModel,
-                'attribute_model' => $attributeModel,
-                'entity_attribute_collection' => $attributeCollectionModel,
-                'table' => $entityTypeTableName]);
+        if (! $entityType) {
+            $setup->addEntityType(
+                $entityTypeName,
+                [
+                    'entity_model'                => $entityTypeModel,
+                    'attribute_model'             => $attributeModel,
+                    'entity_attribute_collection' => $attributeCollectionModel,
+                    'table'                       => $entityTypeTableName
+                ]
+            );
         }
     }
 
@@ -65,13 +80,21 @@ class Setup
 
         $entityTypeTableName = $setup->getTable($entityTypeTableName);
 
-        if (!$connection->isTableExists($entityTypeTableName)) {
+        if (! $connection->isTableExists($entityTypeTableName)) {
             $entityTypeTable = $connection->newTable($entityTypeTableName);
 
-            $entityTypeTable->addColumn('entity_id', Table::TYPE_INTEGER, null, ['identity' => true,
-                'unsigned' => true,
-                'nullable' => false,
-                'primary' => true,], 'Entity ID');
+            $entityTypeTable->addColumn(
+                'entity_id',
+                Table::TYPE_INTEGER,
+                null,
+                [
+                    'identity' => true,
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'primary'  => true,
+                ],
+                'Entity ID'
+            );
             $entityTypeTable->addColumn(
                 'created_at',
                 Table::TYPE_DATETIME,
@@ -79,48 +102,123 @@ class Setup
                 ['nullable' => false],
                 'Creation Time'
             );
-            $entityTypeTable->addColumn('updated_at', Table::TYPE_DATETIME, null, ['nullable' => false], 'Update Time');
+            $entityTypeTable->addColumn(
+                'updated_at',
+                Table::TYPE_DATETIME,
+                null,
+                ['nullable' => false],
+                'Update Time'
+            );
 
             $connection->createTable($entityTypeTable);
         }
 
-        $this->addEntityAttributeType($setup, $entityTypeTableName, static::ATTRIBUTE_TYPE_DATETIME);
-        $this->addEntityAttributeType($setup, $entityTypeTableName, static::ATTRIBUTE_TYPE_DECIMAL);
-        $this->addEntityAttributeType($setup, $entityTypeTableName, static::ATTRIBUTE_TYPE_INT);
-        $this->addEntityAttributeType($setup, $entityTypeTableName, static::ATTRIBUTE_TYPE_TEXT);
-        $this->addEntityAttributeType($setup, $entityTypeTableName, static::ATTRIBUTE_TYPE_VARCHAR);
+        $this->addEntityAttributeType(
+            $setup,
+            $entityTypeTableName,
+            static::ATTRIBUTE_TYPE_DATETIME
+        );
+        $this->addEntityAttributeType(
+            $setup,
+            $entityTypeTableName,
+            static::ATTRIBUTE_TYPE_DECIMAL
+        );
+        $this->addEntityAttributeType(
+            $setup,
+            $entityTypeTableName,
+            static::ATTRIBUTE_TYPE_INT
+        );
+        $this->addEntityAttributeType(
+            $setup,
+            $entityTypeTableName,
+            static::ATTRIBUTE_TYPE_TEXT
+        );
+        $this->addEntityAttributeType(
+            $setup,
+            $entityTypeTableName,
+            static::ATTRIBUTE_TYPE_VARCHAR
+        );
     }
 
     /**
      * @throws Zend_Db_Exception
      */
-    protected function addEntityAttributeType(SetupInterface $setup, string $entityTypeTableName, string $attributeType): void
-    {
+    protected function addEntityAttributeType(
+        SetupInterface $setup,
+        string $entityTypeTableName,
+        string $attributeType
+    ): void {
         $connection = $setup->getConnection();
 
         $eavAttributeTableName = $setup->getTable('eav_attribute');
         $magentoStoreTableName = $setup->getTable('store');
         $entityTypeTableName = $setup->getTable($entityTypeTableName);
-        $entityAttributeTypeTableName = $setup->getTable(sprintf('%s_%s', $entityTypeTableName, $attributeType));
+        $entityAttributeTypeTableName = $setup->getTable(
+            sprintf(
+                '%s_%s',
+                $entityTypeTableName,
+                $attributeType
+            )
+        );
 
-        if (!$connection->isTableExists($entityAttributeTypeTableName)) {
+        if (! $connection->isTableExists($entityAttributeTypeTableName)) {
             $entityAttributeTypeTable = $connection->newTable($entityAttributeTypeTableName);
 
-            $entityAttributeTypeTable->addColumn('value_id', Table::TYPE_INTEGER, null, ['identity' => true,
-                'nullable' => false,
-                'primary' => true,], 'Value Id');
-            $entityAttributeTypeTable->addColumn('entity_type_id', Table::TYPE_SMALLINT, null, ['unsigned' => true,
-                'nullable' => false,
-                'default' => '0',], 'Entity Type Id');
-            $entityAttributeTypeTable->addColumn('entity_id', Table::TYPE_INTEGER, null, ['unsigned' => true,
-                'nullable' => false,
-                'default' => '0',], 'Entity Id');
-            $entityAttributeTypeTable->addColumn('attribute_id', Table::TYPE_SMALLINT, null, ['unsigned' => true,
-                'nullable' => false,
-                'default' => '0',], 'Attribute Id');
-            $entityAttributeTypeTable->addColumn('store_id', Table::TYPE_SMALLINT, null, ['unsigned' => true,
-                'nullable' => false,
-                'default' => '0',], 'Store ID');
+            $entityAttributeTypeTable->addColumn(
+                'value_id',
+                Table::TYPE_INTEGER,
+                null,
+                [
+                    'identity' => true,
+                    'nullable' => false,
+                    'primary'  => true,
+                ],
+                'Value Id'
+            );
+            $entityAttributeTypeTable->addColumn(
+                'entity_type_id',
+                Table::TYPE_SMALLINT,
+                null,
+                [
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default'  => '0',
+                ],
+                'Entity Type Id'
+            );
+            $entityAttributeTypeTable->addColumn(
+                'entity_id',
+                Table::TYPE_INTEGER,
+                null,
+                [
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default'  => '0',
+                ],
+                'Entity Id'
+            );
+            $entityAttributeTypeTable->addColumn(
+                'attribute_id',
+                Table::TYPE_SMALLINT,
+                null,
+                [
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default'  => '0',
+                ],
+                'Attribute Id'
+            );
+            $entityAttributeTypeTable->addColumn(
+                'store_id',
+                Table::TYPE_SMALLINT,
+                null,
+                [
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default'  => '0',
+                ],
+                'Store ID'
+            );
 
             if ($attributeType == static::ATTRIBUTE_TYPE_DATETIME) {
                 $entityAttributeTypeTable->addColumn(
@@ -147,9 +245,21 @@ class Setup
                     'Value'
                 );
             } elseif ($attributeType == static::ATTRIBUTE_TYPE_TEXT) {
-                $entityAttributeTypeTable->addColumn('value', Table::TYPE_TEXT, null, ['nullable' => true], 'Value');
+                $entityAttributeTypeTable->addColumn(
+                    'value',
+                    Table::TYPE_TEXT,
+                    null,
+                    ['nullable' => true],
+                    'Value'
+                );
             } elseif ($attributeType == static::ATTRIBUTE_TYPE_VARCHAR) {
-                $entityAttributeTypeTable->addColumn('value', Table::TYPE_TEXT, 255, ['nullable' => true], 'Value');
+                $entityAttributeTypeTable->addColumn(
+                    'value',
+                    Table::TYPE_TEXT,
+                    255,
+                    ['nullable' => true],
+                    'Value'
+                );
             }
 
             if ($setup instanceof SchemaSetupInterface) {
@@ -163,15 +273,24 @@ class Setup
                     ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
                 );
                 $entityAttributeTypeTable->addIndex(
-                    $setup->getIdxName($entityAttributeTypeTableName, ['entity_id']),
+                    $setup->getIdxName(
+                        $entityAttributeTypeTableName,
+                        ['entity_id']
+                    ),
                     ['entity_id']
                 );
                 $entityAttributeTypeTable->addIndex(
-                    $setup->getIdxName($entityAttributeTypeTableName, ['attribute_id']),
+                    $setup->getIdxName(
+                        $entityAttributeTypeTableName,
+                        ['attribute_id']
+                    ),
                     ['attribute_id']
                 );
                 $entityAttributeTypeTable->addIndex(
-                    $setup->getIdxName($entityAttributeTypeTableName, ['store_id']),
+                    $setup->getIdxName(
+                        $entityAttributeTypeTableName,
+                        ['store_id']
+                    ),
                     ['store_id']
                 );
 
@@ -245,13 +364,22 @@ class Setup
         /** @var array $entityTypeData */
         $entityTypeData = $setup->getEntityType($entityType);
 
-        $entityTypeId = (int)$this->arrays->getValue($entityTypeData, 'entity_type_id');
+        $entityTypeId = (int)$this->arrays->getValue(
+            $entityTypeData,
+            'entity_type_id'
+        );
 
         /** @var array $attributeData */
-        $attributeData = $setup->getAttribute($entityTypeId, $attributeCode);
+        $attributeData = $setup->getAttribute(
+            $entityTypeId,
+            $attributeCode
+        );
 
         if (is_array($attributeData)) {
-            $attributeId = (int)$this->arrays->getValue($attributeData, 'attribute_id');
+            $attributeId = (int)$this->arrays->getValue(
+                $attributeData,
+                'attribute_id'
+            );
 
             if ($attributeId) {
                 $this->addAttributeIdToSetAndGroup(
@@ -277,17 +405,30 @@ class Setup
         ?int $attributeSortOrder = null
     ): bool {
         /** @var array $attributeSetData */
-        $attributeSetData = $setup->getAttributeSet($entityTypeId, $attributeSetName);
+        $attributeSetData = $setup->getAttributeSet(
+            $entityTypeId,
+            $attributeSetName
+        );
 
         if (is_array($attributeSetData)) {
-            $attributeSetId = $this->arrays->getValue($attributeSetData, 'attribute_set_id');
+            $attributeSetId = $this->arrays->getValue(
+                $attributeSetData,
+                'attribute_set_id'
+            );
 
             if ($attributeSetId) {
                 /** @var array $attributeGroupData */
-                $attributeGroupData = $setup->getAttributeGroup($entityTypeId, $attributeSetId, $attributeGroupName);
+                $attributeGroupData = $setup->getAttributeGroup(
+                    $entityTypeId,
+                    $attributeSetId,
+                    $attributeGroupName
+                );
 
                 if (is_array($attributeGroupData)) {
-                    $attributeGroupId = $this->arrays->getValue($attributeGroupData, 'attribute_group_id');
+                    $attributeGroupId = $this->arrays->getValue(
+                        $attributeGroupData,
+                        'attribute_group_id'
+                    );
 
                     if ($attributeGroupId) {
                         $setup->addAttributeToGroup(
@@ -333,22 +474,28 @@ class Setup
         string $backendModel = null,
         string $sourceModel = null
     ): void {
-        $setup->addAttribute($entityTypeId, $attributeCode, ['label' => $label,
-            'global' => $scope,
-            'type' => $type,
-            'input' => $input,
-            'sort_order' => $sortOrder,
-            'default' => $default,
-            'user_defined' => $userDefined,
-            'required' => $required,
-            'used_in_product_listing' => $usedInProductListing,
-            'searchable' => $searchable,
-            'filterable' => $filterable,
-            'comparable' => $comparable,
-            'visible' => $visible,
-            'visible_on_front' => $visibleOnFront,
-            'unique' => $unique,
-            'backend' => $backendModel,
-            'source' => $sourceModel]);
+        $setup->addAttribute(
+            $entityTypeId,
+            $attributeCode,
+            [
+                'label'                   => $label,
+                'global'                  => $scope,
+                'type'                    => $type,
+                'input'                   => $input,
+                'sort_order'              => $sortOrder,
+                'default'                 => $default,
+                'user_defined'            => $userDefined,
+                'required'                => $required,
+                'used_in_product_listing' => $usedInProductListing,
+                'searchable'              => $searchable,
+                'filterable'              => $filterable,
+                'comparable'              => $comparable,
+                'visible'                 => $visible,
+                'visible_on_front'        => $visibleOnFront,
+                'unique'                  => $unique,
+                'backend'                 => $backendModel,
+                'source'                  => $sourceModel
+            ]
+        );
     }
 }
