@@ -41,9 +41,9 @@ class Setup
         $this->eavSetupFactory = $eavSetupFactory;
     }
 
-    public function getEavSetup(SetupInterface $setup)
+    public function getEavSetup(SetupInterface $setup): EavSetup
     {
-        $this->eavSetupFactory->create(['setup' => $setup]);
+        return $this->eavSetupFactory->create(['setup' => $setup]);
     }
 
     public function addEntityType(
