@@ -477,25 +477,120 @@ class Setup
         $setup->addAttribute(
             $entityTypeId,
             $attributeCode,
-            [
-                'label'                   => $label,
-                'global'                  => $scope,
-                'type'                    => $type,
-                'input'                   => $input,
-                'sort_order'              => $sortOrder,
-                'default'                 => $default,
-                'user_defined'            => $userDefined,
-                'required'                => $required,
-                'used_in_product_listing' => $usedInProductListing,
-                'searchable'              => $searchable,
-                'filterable'              => $filterable,
-                'comparable'              => $comparable,
-                'visible'                 => $visible,
-                'visible_on_front'        => $visibleOnFront,
-                'unique'                  => $unique,
-                'backend'                 => $backendModel,
-                'source'                  => $sourceModel
-            ]
+            $this->getAttributeData(
+                $label,
+                $scope,
+                $type,
+                $input,
+                $sortOrder,
+                $default,
+                $userDefined,
+                $required,
+                $usedInProductListing,
+                $searchable,
+                $filterable,
+                $comparable,
+                $visible,
+                $visibleOnFront,
+                $unique,
+                $backendModel,
+                $sourceModel
+            )
+        );
+    }
+
+    protected function getAttributeData(
+        string $label,
+        int $scope,
+        string $type,
+        string $input,
+        int $sortOrder,
+        ?string $default = null,
+        bool $userDefined = false,
+        bool $required = false,
+        bool $usedInProductListing = false,
+        bool $searchable = false,
+        bool $filterable = false,
+        bool $comparable = false,
+        bool $visible = true,
+        bool $visibleOnFront = false,
+        bool $unique = false,
+        string $backendModel = null,
+        string $sourceModel = null
+    ): array {
+        return [
+            'label'                   => $label,
+            'global'                  => $scope,
+            'type'                    => $type,
+            'input'                   => $input,
+            'sort_order'              => $sortOrder,
+            'default'                 => $default,
+            'user_defined'            => $userDefined,
+            'required'                => $required,
+            'used_in_product_listing' => $usedInProductListing,
+            'searchable'              => $searchable,
+            'filterable'              => $filterable,
+            'comparable'              => $comparable,
+            'visible'                 => $visible,
+            'visible_on_front'        => $visibleOnFront,
+            'unique'                  => $unique,
+            'backend'                 => $backendModel,
+            'source'                  => $sourceModel
+        ];
+    }
+
+    /**
+     * @throws LocalizedException
+     * @throws ValidateException
+     */
+    public function addProductAttribute(
+        EavSetup $setup,
+        string $attributeCode,
+        string $label,
+        int $scope,
+        string $type,
+        string $input,
+        int $sortOrder,
+        ?string $default = null,
+        bool $userDefined = false,
+        bool $required = false,
+        bool $usedInProductListing = false,
+        bool $searchable = false,
+        bool $filterable = false,
+        bool $comparable = false,
+        bool $visible = true,
+        bool $visibleOnFront = false,
+        bool $unique = false,
+        string $backendModel = null,
+        string $sourceModel = null,
+        string $applyTo = null
+    ): void {
+        $attributeData = $this->getAttributeData(
+            $label,
+            $scope,
+            $type,
+            $input,
+            $sortOrder,
+            $default,
+            $userDefined,
+            $required,
+            $usedInProductListing,
+            $searchable,
+            $filterable,
+            $comparable,
+            $visible,
+            $visibleOnFront,
+            $unique,
+            $backendModel,
+            $sourceModel
+        );
+
+        $attributeData[ 'apply_to' ] = $applyTo;
+
+        $setup->addAttribute(
+            Product::ENTITY,
+            $attributeCode,
+            $attributeData
         );
     }
 }
