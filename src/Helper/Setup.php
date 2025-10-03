@@ -18,7 +18,7 @@ use Zend_Db_Exception;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Setup
@@ -471,8 +471,8 @@ class Setup
         bool $visible = true,
         bool $visibleOnFront = false,
         bool $unique = false,
-        string $backendModel = null,
-        string $sourceModel = null
+        ?string $backendModel = null,
+        ?string $sourceModel = null
     ): void {
         $setup->addAttribute(
             $entityTypeId,
@@ -515,8 +515,8 @@ class Setup
         bool $visible = true,
         bool $visibleOnFront = false,
         bool $unique = false,
-        string $backendModel = null,
-        string $sourceModel = null
+        ?string $backendModel = null,
+        ?string $sourceModel = null
     ): array {
         return [
             'label'                   => $label,
@@ -561,9 +561,9 @@ class Setup
         bool $visible = true,
         bool $visibleOnFront = false,
         bool $unique = false,
-        string $backendModel = null,
-        string $sourceModel = null,
-        string $applyTo = null
+        ?string $backendModel = null,
+        ?string $sourceModel = null,
+        ?string $applyTo = null
     ): void {
         $attributeData = $this->getAttributeData(
             $label,

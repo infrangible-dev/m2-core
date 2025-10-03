@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Cache
@@ -56,7 +56,7 @@ class Cache
     {
         $this->logging->info('Cleaning config cache');
 
-        // only clean config cache to load the current configuration, leave all other caches as they are
+        // only clean the config cache to load the current configuration, leave all other caches as they are
         $this->typeList->cleanType('config');
 
         // to be sure that the current configuration is loaded
@@ -116,7 +116,7 @@ class Cache
         return $value === false ? null : $this->variables->stringValue($value);
     }
 
-    public function saveCache(string $data, string $id, array $tags = [], int $lifeTime = null): void
+    public function saveCache(string $data, string $id, array $tags = [], ?int $lifeTime = null): void
     {
         $this->cache->save(
             $data,

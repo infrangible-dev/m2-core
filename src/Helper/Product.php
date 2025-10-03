@@ -29,7 +29,7 @@ use Zend_Db_Select;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2025 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Product
@@ -139,7 +139,7 @@ class Product
         return $this->productFactory->create();
     }
 
-    public function loadProduct(int $productId, int $storeId = null): \Magento\Catalog\Model\Product
+    public function loadProduct(int $productId, ?int $storeId = null): \Magento\Catalog\Model\Product
     {
         $product = $this->newProduct();
 
@@ -155,7 +155,7 @@ class Product
         return $product;
     }
 
-    public function loadProductBySku(string $productSku, int $storeId = null): \Magento\Catalog\Model\Product
+    public function loadProductBySku(string $productSku, ?int $storeId = null): \Magento\Catalog\Model\Product
     {
         $product = $this->newProduct();
 
@@ -205,7 +205,7 @@ class Product
         bool $maintainAssociation = false,
         bool $useSuperLink = true,
         bool $includeParents = false,
-        int $storeId = null
+        ?int $storeId = null
     ): array {
         $this->logging->debug(
             sprintf(
@@ -300,7 +300,7 @@ class Product
         bool $excludeInactive = false,
         bool $useSuperLink = true,
         bool $includeParents = false,
-        int $storeId = null
+        ?int $storeId = null
     ): Select {
         $tableName = $this->databaseHelper->getTableName(
             $useSuperLink ? 'catalog_product_super_link' : 'catalog_product_relation'
@@ -470,7 +470,7 @@ class Product
         bool $excludeInactive = false,
         bool $excludeOutOfStock = false,
         bool $maintainAssociation = false,
-        int $storeId = null
+        ?int $storeId = null
     ): array {
         $this->logging->debug(
             sprintf(
@@ -558,7 +558,7 @@ class Product
         AdapterInterface $dbAdapter,
         array $parentIds,
         bool $excludeInactive = false,
-        int $storeId = null
+        ?int $storeId = null
     ): Select {
         $tableName = $this->databaseHelper->getTableName('catalog_product_bundle_selection');
 
@@ -710,7 +710,7 @@ class Product
         bool $excludeOutOfStock = false,
         bool $maintainAssociation = false,
         bool $includeParents = false,
-        int $storeId = null
+        ?int $storeId = null
     ): array {
         return $this->getChildIds(
             $dbAdapter,
@@ -1278,7 +1278,10 @@ class Product
     {
         $skus = [];
 
-        foreach ($this->getUsedProducts($product, $onlyEnabled) as $product) {
+        foreach ($this->getUsedProducts(
+            $product,
+            $onlyEnabled
+        ) as $product) {
             $skus[ $product->getId() ] = $product->getSku();
         }
 

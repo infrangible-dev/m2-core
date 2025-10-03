@@ -19,7 +19,7 @@ use SimpleXMLElement;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Cms
@@ -96,20 +96,29 @@ class Cms
     {
         $cmsPage = $this->newCmsPage();
 
-        $this->cmsPageResourceFactory->create()->load($cmsPage, $cmsPageId);
+        $this->cmsPageResourceFactory->create()->load(
+            $cmsPage,
+            $cmsPageId
+        );
 
         return $cmsPage;
     }
 
-    public function loadCmsPageByIdentifier(string $identifier, int $storeId = null): Page
+    public function loadCmsPageByIdentifier(string $identifier, ?int $storeId = null): Page
     {
         $cmsPage = $this->newCmsPage();
 
-        if (!$this->variables->isEmpty($storeId)) {
-            $cmsPage->setData('store_id', $storeId);
+        if (! $this->variables->isEmpty($storeId)) {
+            $cmsPage->setData(
+                'store_id',
+                $storeId
+            );
         }
 
-        $cmsPage->load($identifier, 'identifier');
+        $cmsPage->load(
+            $identifier,
+            'identifier'
+        );
 
         return $cmsPage;
     }
@@ -136,20 +145,30 @@ class Cms
     {
         $cmsBlock = $this->newCmsBlock();
 
-        $this->cmsBlockResourceFactory->create()->load($cmsBlock, $cmsBlockId);
+        $this->cmsBlockResourceFactory->create()->load(
+            $cmsBlock,
+            $cmsBlockId
+        );
 
         return $cmsBlock;
     }
 
-    public function loadCmsBlockByIdentifier(string $identifier, int $storeId = null): Block
+    public function loadCmsBlockByIdentifier(string $identifier, ?int $storeId = null): Block
     {
         $cmsBlock = $this->newCmsBlock();
 
-        if (!$this->variables->isEmpty($storeId)) {
-            $cmsBlock->setData('store_id', $storeId);
+        if (! $this->variables->isEmpty($storeId)) {
+            $cmsBlock->setData(
+                'store_id',
+                $storeId
+            );
         }
 
-        $this->cmsBlockResourceFactory->create()->load($cmsBlock, $identifier, 'identifier');
+        $this->cmsBlockResourceFactory->create()->load(
+            $cmsBlock,
+            $identifier,
+            'identifier'
+        );
 
         return $cmsBlock;
     }
@@ -177,7 +196,10 @@ class Cms
 
         $xmlElement = $this->simpleXml->simpleXmlLoadFile($fileName);
 
-        return $this->importPagesFromXml($xmlElement, $overwriteExisting);
+        return $this->importPagesFromXml(
+            $xmlElement,
+            $overwriteExisting
+        );
     }
 
     /**
@@ -190,9 +212,12 @@ class Cms
 
         // <root><pages><cms_block/><cms_block/></pages></root>
         foreach ($xml->children()->children() as $pageXml) {
-            $imported = $this->importPageFromXml($pageXml, $overwriteExisting);
+            $imported = $this->importPageFromXml(
+                $pageXml,
+                $overwriteExisting
+            );
 
-            if (!$imported) {
+            if (! $imported) {
                 $notImported[] = $pageXml->{static::STRING_IDENTIFIER};
             }
         }
@@ -207,14 +232,24 @@ class Cms
     {
         $pageData = $this->simpleXml->xmlToArray($pageXml);
 
-        return $this->importPage($pageData, $overwriteExisting);
+        return $this->importPage(
+            $pageData,
+            $overwriteExisting
+        );
     }
 
     public function importPage(array $pageData, bool $overwriteExisting = false): bool
     {
-        $pageIdentifier = $this->arrays->getValue($pageData, static::STRING_IDENTIFIER);
+        $pageIdentifier = $this->arrays->getValue(
+            $pageData,
+            static::STRING_IDENTIFIER
+        );
 
-        $stores = $this->arrays->getValue($pageData, 'stores:item', []);
+        $stores = $this->arrays->getValue(
+            $pageData,
+            'stores:item',
+            []
+        );
 
         if ($this->variables->isEmpty($stores)) {
             $storeIds = [0];
@@ -224,14 +259,22 @@ class Cms
 
         $oldPages = $this->cmsPageCollectionFactory->create();
 
-        $oldPages->addFieldToFilter(static::STRING_IDENTIFIER, $pageIdentifier);
+        $oldPages->addFieldToFilter(
+            static::STRING_IDENTIFIER,
+            $pageIdentifier
+        );
         $oldPages->addStoreFilter($storeIds);
 
         $oldPages->load();
 
-        if (count($oldPages) > 0 && !$overwriteExisting) {
+        if (count($oldPages) > 0 && ! $overwriteExisting) {
             // page already exists and we are not allowed to overwrite
-            $this->logging->info(sprintf('Skipping existing pages with identifier: %s', $pageIdentifier));
+            $this->logging->info(
+                sprintf(
+                    'Skipping existing pages with identifier: %s',
+                    $pageIdentifier
+                )
+            );
 
             return false;
         }
@@ -246,7 +289,10 @@ class Cms
                         'Removing pages(s) with identifier: %s and title: %s for stores: %s',
                         $oldPage->getIdentifier(),
                         $oldPage->getTitle(),
-                        implode(', ', $storeIds)
+                        implode(
+                            ', ',
+                            $storeIds
+                        )
                     )
                 );
             } catch (Exception $exception) {
@@ -254,19 +300,35 @@ class Cms
             }
         }
 
-        $layoutUpdateXml = $this->arrays->getValue($pageData, 'layout_update_xml');
+        $layoutUpdateXml = $this->arrays->getValue(
+            $pageData,
+            'layout_update_xml'
+        );
 
         if ($this->variables->isEmpty($layoutUpdateXml)) {
             $layoutUpdateXml = null;
         }
 
         $pageModelData = [
-            'title'             => (string) $this->arrays->getValue($pageData, 'title'),
+            'title'             => (string)$this->arrays->getValue(
+                $pageData,
+                'title'
+            ),
             'identifier'        => $pageIdentifier,
-            'content'           => (string) $this->arrays->getValue($pageData, 'content'),
-            'is_active'         => (int) $this->arrays->getValue($pageData, 'is_active', true),
+            'content'           => (string)$this->arrays->getValue(
+                $pageData,
+                'content'
+            ),
+            'is_active'         => (int)$this->arrays->getValue(
+                $pageData,
+                'is_active',
+                true
+            ),
             'stores'            => $storeIds,
-            'page_layout'       => (string) $this->arrays->getValue($pageData, 'page_layout'),
+            'page_layout'       => (string)$this->arrays->getValue(
+                $pageData,
+                'page_layout'
+            ),
             'layout_update_xml' => $layoutUpdateXml
         ];
 
@@ -279,7 +341,10 @@ class Cms
                     'Saving page with identifier: %s and title: %s for stores: %s',
                     $newPage->getIdentifier(),
                     $newPage->getTitle(),
-                    implode(', ', $storeIds)
+                    implode(
+                        ', ',
+                        $storeIds
+                    )
                 )
             );
 
@@ -310,7 +375,10 @@ class Cms
 
         $xmlElement = $this->simpleXml->simpleXmlLoadFile($fileName);
 
-        return $this->importBlocksFromXml($xmlElement, $overwriteExisting);
+        return $this->importBlocksFromXml(
+            $xmlElement,
+            $overwriteExisting
+        );
     }
 
     /**
@@ -323,9 +391,12 @@ class Cms
 
         // <root><blocks><cms_block/><cms_block/></blocks></root>
         foreach ($xml->children()->children() as $blockXml) {
-            $imported = $this->importBlockFromXml($blockXml, $overwriteExisting);
+            $imported = $this->importBlockFromXml(
+                $blockXml,
+                $overwriteExisting
+            );
 
-            if (!$imported) {
+            if (! $imported) {
                 $notImported[] = $blockXml->{static::STRING_IDENTIFIER};
             }
         }
@@ -340,14 +411,24 @@ class Cms
     {
         $blockData = $this->simpleXml->xmlToArray($blockXml);
 
-        return $this->importBlock($blockData, $overwriteExisting);
+        return $this->importBlock(
+            $blockData,
+            $overwriteExisting
+        );
     }
 
     public function importBlock(array $blockData, bool $overwriteExisting = false): bool
     {
-        $blockIdentifier = $this->arrays->getValue($blockData, static::STRING_IDENTIFIER);
+        $blockIdentifier = $this->arrays->getValue(
+            $blockData,
+            static::STRING_IDENTIFIER
+        );
 
-        $stores = $this->arrays->getValue($blockData, 'stores:item', []);
+        $stores = $this->arrays->getValue(
+            $blockData,
+            'stores:item',
+            []
+        );
 
         if ($this->variables->isEmpty($stores)) {
             $storeIds = [0];
@@ -357,14 +438,22 @@ class Cms
 
         $oldBlocks = $this->cmsBlockCollectionFactory->create();
 
-        $oldBlocks->addFieldToFilter(static::STRING_IDENTIFIER, $blockIdentifier);
+        $oldBlocks->addFieldToFilter(
+            static::STRING_IDENTIFIER,
+            $blockIdentifier
+        );
         $oldBlocks->addStoreFilter($storeIds);
 
         $oldBlocks->load();
 
-        if (count($oldBlocks) > 0 && !$overwriteExisting) {
+        if (count($oldBlocks) > 0 && ! $overwriteExisting) {
             // block already exists and we are not allowed to overwrite
-            $this->logging->info(sprintf('Skipping existing block with identifier: %s', $blockIdentifier));
+            $this->logging->info(
+                sprintf(
+                    'Skipping existing block with identifier: %s',
+                    $blockIdentifier
+                )
+            );
 
             return false;
         }
@@ -379,7 +468,10 @@ class Cms
                         'Removing block(s) with identifier: %s and title: %s for stores: %s',
                         $oldBlock->getIdentifier(),
                         $oldBlock->getTitle(),
-                        implode(', ', $storeIds)
+                        implode(
+                            ', ',
+                            $storeIds
+                        )
                     )
                 );
             } catch (Exception $exception) {
@@ -388,10 +480,20 @@ class Cms
         }
 
         $blockModelData = [
-            'title'      => (string) $this->arrays->getValue($blockData, 'title'),
+            'title'      => (string)$this->arrays->getValue(
+                $blockData,
+                'title'
+            ),
             'identifier' => $blockIdentifier,
-            'content'    => (string) $this->arrays->getValue($blockData, 'content'),
-            'is_active'  => (int) $this->arrays->getValue($blockData, 'is_active', true),
+            'content'    => (string)$this->arrays->getValue(
+                $blockData,
+                'content'
+            ),
+            'is_active'  => (int)$this->arrays->getValue(
+                $blockData,
+                'is_active',
+                true
+            ),
             'stores'     => $storeIds
         ];
 
@@ -404,7 +506,10 @@ class Cms
                     'Saving block with identifier: %s and title: %s for stores: %s',
                     $newBlock->getIdentifier(),
                     $newBlock->getTitle(),
-                    implode(', ', $storeIds)
+                    implode(
+                        ', ',
+                        $storeIds
+                    )
                 )
             );
 

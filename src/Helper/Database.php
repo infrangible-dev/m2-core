@@ -18,7 +18,7 @@ use Zend_Db_Statement_Interface;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Database extends AbstractHelper
@@ -57,7 +57,7 @@ class Database extends AbstractHelper
         return $this->resourceConnection->getConnection($resourceName);
     }
 
-    public function fetchAll(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
+    public function fetchAll(Select $select, ?AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
@@ -90,7 +90,7 @@ class Database extends AbstractHelper
 
     public function fetchAssoc(
         Select $select,
-        AdapterInterface $specialAdapter = null,
+        ?AdapterInterface $specialAdapter = null,
         bool $allowLogging = true
     ): array {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -124,7 +124,7 @@ class Database extends AbstractHelper
 
     public function fetchPairs(
         Select $select,
-        AdapterInterface $specialAdapter = null,
+        ?AdapterInterface $specialAdapter = null,
         bool $allowLogging = true
     ): array {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -158,7 +158,7 @@ class Database extends AbstractHelper
 
     public function fetchOne(
         Select $select,
-        AdapterInterface $specialAdapter = null,
+        ?AdapterInterface $specialAdapter = null,
         bool $allowLogging = true
     ): ?string {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -194,7 +194,7 @@ class Database extends AbstractHelper
         return $result;
     }
 
-    public function fetchRow(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): ?array
+    public function fetchRow(Select $select, ?AdapterInterface $specialAdapter = null, bool $allowLogging = true): ?array
     {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
@@ -229,7 +229,7 @@ class Database extends AbstractHelper
         return $result;
     }
 
-    public function fetchCol(Select $select, AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
+    public function fetchCol(Select $select, ?AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
@@ -732,7 +732,7 @@ class Database extends AbstractHelper
     {
         $dbAdapter = $this->getDefaultConnection();
 
-        // keep-alive for database
+        // keep-alive for the database
         $select = $dbAdapter->select()->from('admin_user_session')->where('1');
 
         $dbAdapter->fetchOne($select);
@@ -764,7 +764,7 @@ class Database extends AbstractHelper
         return $dbAdapter->query($select);
     }
 
-    public function select($name, $cols = '*', string $schema = null): Select
+    public function select($name, $cols = '*', ?string $schema = null): Select
     {
         return $this->getDefaultConnection()->select()->from(
             $name,

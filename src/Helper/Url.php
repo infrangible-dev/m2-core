@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Url extends AbstractHelper
@@ -60,25 +60,31 @@ class Url extends AbstractHelper
 
     protected function getUrlModel(int $storeId): \Magento\Framework\Url
     {
-        if (!array_key_exists($storeId, $this->urls)) {
+        if (! array_key_exists(
+            $storeId,
+            $this->urls
+        )) {
             /** @var \Magento\Framework\Url $url */
             $url = $this->universalFactory->create(\Magento\Framework\Url::class);
 
             $url->setScope($storeId);
 
-            $this->urls[$storeId] = $url;
+            $this->urls[ $storeId ] = $url;
         }
 
-        return $this->urls[$storeId];
+        return $this->urls[ $storeId ];
     }
 
-    public function getUrl(string $route = '', bool $isSecure = null, array $params = [], int $storeId = null): string
+    public function getUrl(string $route = '', ?bool $isSecure = null, array $params = [], ?int $storeId = null): string
     {
-        if (!array_key_exists('_secure', $params)) {
+        if (! array_key_exists(
+            '_secure',
+            $params
+        )) {
             try {
                 $store = $this->storeHelper->getStore();
 
-                $params['_secure'] = $isSecure === null ? $store->isFrontUrlSecure() && $store->isCurrentlySecure() :
+                $params[ '_secure' ] = $isSecure === null ? $store->isFrontUrlSecure() && $store->isCurrentlySecure() :
                     $isSecure !== false;
             } catch (Exception $exception) {
                 $this->logging->error($exception);
@@ -87,16 +93,22 @@ class Url extends AbstractHelper
 
         $url = $storeId === null ? $this->url : $this->getUrlModel($storeId);
 
-        return $url->getUrl($route, $params);
+        return $url->getUrl(
+            $route,
+            $params
+        );
     }
 
     public function getBackendUrl(string $route = '', array $params = []): string
     {
-        return $this->backendUrl->getUrl($route, $params);
+        return $this->backendUrl->getUrl(
+            $route,
+            $params
+        );
     }
 
     /**
-     * @param null   $storeId
+     * @param null $storeId
      */
     public function getDirectUrl(string $url, array $params = [], $storeId = null): string
     {
@@ -106,7 +118,10 @@ class Url extends AbstractHelper
             $urlModel = $this->getUrlModel($storeId);
         }
 
-        return $urlModel->getDirectUrl($url, $params);
+        return $urlModel->getDirectUrl(
+            $url,
+            $params
+        );
     }
 
     /**

@@ -12,7 +12,7 @@ use SodiumException;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Encryptor implements EncryptorInterface
@@ -28,18 +28,22 @@ class Encryptor implements EncryptorInterface
         }
 
         if ($text) {
-            $parts = explode(':', $text, 4);
+            $parts = explode(
+                ':',
+                $text,
+                4
+            );
             $partsCount = count($parts);
 
             $initVector = null;
             // specified key, specified crypt, specified iv
             if (4 === $partsCount) {
-                [$keyVersion, $cryptVersion, $iv, $text] = $parts;
-                $initVector = $iv ?: null;
+                [, , $iv, $text] = $parts;
+                $initVector = $iv ? : null;
                 $cryptVersion = \Magento\Framework\Encryption\Encryptor::CIPHER_RIJNDAEL_256;
                 // specified key, specified crypt
             } elseif (3 === $partsCount) {
-                [$keyVersion, $cryptVersion, $text] = $parts;
+                [, $cryptVersion, $text] = $parts;
                 $cryptVersion = (int)$cryptVersion;
                 // no key version = oldest key, specified crypt
             } elseif (2 === $partsCount) {
@@ -53,7 +57,11 @@ class Encryptor implements EncryptorInterface
                 return '';
             }
 
-            $crypt = $this->getCrypt($key, $cryptVersion, $initVector);
+            $crypt = $this->getCrypt(
+                $key,
+                $cryptVersion,
+                $initVector
+            );
 
             if (null === $crypt) {
                 return '';
@@ -70,8 +78,8 @@ class Encryptor implements EncryptorInterface
      */
     private function getCrypt(
         string $key,
-        int $cipherVersion = null,
-        string $initVector = null
+        ?int $cipherVersion = null,
+        ?string $initVector = null
     ): ?EncryptionAdapterInterface {
         if (! $key) {
             return null;
@@ -96,7 +104,12 @@ class Encryptor implements EncryptorInterface
             $mode = MCRYPT_MODE_ECB;
         }
 
-        return new Mcrypt($key, $cipher, $mode, $initVector);
+        return new Mcrypt(
+            $key,
+            $cipher,
+            $mode,
+            $initVector
+        );
     }
 
     /**

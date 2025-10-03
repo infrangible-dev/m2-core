@@ -10,7 +10,7 @@ use Magento\Sales\Model\Order\CreditmemoFactory;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Creditmemo
@@ -33,28 +33,31 @@ class Creditmemo
     public function prepareCreditmemo(
         Order $order,
         array $qtys = [],
-        float $shippingAmount = null,
-        float $adjustmentPositive = null,
-        float $adjustmentNegative = null
+        ?float $shippingAmount = null,
+        ?float $adjustmentPositive = null,
+        ?float $adjustmentNegative = null
     ): Order\Creditmemo {
         $creditMemoData = [];
 
-        if (!$this->variables->isEmpty($qtys)) {
-            $creditMemoData['qtys'] = $qtys;
+        if (! $this->variables->isEmpty($qtys)) {
+            $creditMemoData[ 'qtys' ] = $qtys;
         }
 
-        if (!$this->variables->isEmpty($shippingAmount)) {
-            $creditMemoData['shipping_amount'] = $shippingAmount;
+        if (! $this->variables->isEmpty($shippingAmount)) {
+            $creditMemoData[ 'shipping_amount' ] = $shippingAmount;
         }
 
-        if (!$this->variables->isEmpty($adjustmentPositive)) {
-            $creditMemoData['adjustment_positive'] = $adjustmentPositive;
+        if (! $this->variables->isEmpty($adjustmentPositive)) {
+            $creditMemoData[ 'adjustment_positive' ] = $adjustmentPositive;
         }
 
-        if (!$this->variables->isEmpty($adjustmentNegative)) {
-            $creditMemoData['adjustment_negative'] = $adjustmentNegative;
+        if (! $this->variables->isEmpty($adjustmentNegative)) {
+            $creditMemoData[ 'adjustment_negative' ] = $adjustmentNegative;
         }
 
-        return $this->creditMemoFactory->createByOrder($order, $creditMemoData);
+        return $this->creditMemoFactory->createByOrder(
+            $order,
+            $creditMemoData
+        );
     }
 }

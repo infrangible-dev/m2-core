@@ -31,7 +31,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 class Stores extends AbstractHelper
@@ -534,7 +534,7 @@ class Stores extends AbstractHelper
     /**
      * @throws LocalizedException
      */
-    public function getDefaultStore(int $websiteId = null): Store
+    public function getDefaultStore(?int $websiteId = null): Store
     {
         $website = $this->getWebsite($websiteId);
 
@@ -804,7 +804,8 @@ class Stores extends AbstractHelper
     {
         return round(
             $price,
-            2
+            2,
+            PHP_ROUND_HALF_UP
         );
     }
 
