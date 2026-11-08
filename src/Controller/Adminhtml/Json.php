@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Infrangible\Core\Controller\Adminhtml;
 
 use FeWeDev\Base\Arrays;
+use Magento\Backend\Model\Auth\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Response\HttpInterface;
 use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\Exception\NotFoundException;
 use Psr\Log\LoggerInterface;
 
@@ -57,6 +60,10 @@ abstract class Json extends Action
         /** @var Http $request */
         $request = $this->getRequest();
 
+        if (! $this->isAdminAllowed()) {
+            return $this->denyAccess($request);
+        }
+
         if ($request->isAjax()) {
             try {
                 parent::dispatch($request);
@@ -68,6 +75,48 @@ abstract class Json extends Action
         } else {
             return parent::dispatch($request);
         }
+    }
+
+    /**
+     * Checks that an admin user is logged in and allowed to use the ACL resource in the constant ADMIN_RESOURCE of the
+     * controller (default: Magento_Backend::admin). This class extends the frontend action, for which Magento does not
+     * check this, so the check is done here. The dependencies are taken from the object manager to keep the
+     * constructor of the controllers that extend this class unchanged.
+     */
+    protected function isAdminAllowed(): bool
+    {
+        $objectManager = ObjectManager::getInstance();
+
+        /** @var Session $authSession */
+        $authSession = $objectManager->get(Session::class);
+
+        if (! $authSession->isLoggedIn()) {
+            return false;
+        }
+
+        $resource = defined('static::ADMIN_RESOURCE') ? constant('static::ADMIN_RESOURCE') : 'Magento_Backend::admin';
+
+        /** @var AuthorizationInterface $authorization */
+        $authorization = $objectManager->get(AuthorizationInterface::class);
+
+        return $authorization->isAllowed($resource);
+    }
+
+    protected function denyAccess(Http $request): ResponseInterface
+    {
+        /** @var \Magento\Framework\App\Response\Http $response */
+        $response = $this->getResponse();
+
+        $response->setHttpResponseCode(403);
+
+        if ($request->isAjax()) {
+            $response->setHeader('Content-type', 'application/json', true);
+            $response->setBody($this->json->encode(['success' => false, 'message' => 'Access denied']));
+        } else {
+            $response->setBody('Access denied');
+        }
+
+        return $response;
     }
 
     protected function handleException(\Exception $exception): void
