@@ -13,6 +13,7 @@ namespace Infrangible\Core\Test\Unit\Helper;
 use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Carrier;
 use Infrangible\Core\Helper\Stores;
+use Infrangible\Core\Test\Unit\CreatesValueStubs;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\OfflineShipping\Model\Carrier\Flatrate;
 use Magento\Shipping\Model\CarrierFactory;
@@ -25,6 +26,8 @@ use PHPUnit\Framework\TestCase;
  */
 class CarrierTest extends TestCase
 {
+    use CreatesValueStubs;
+
     /**
      * Returns the helper for two stores: store 1 has the carriers flatrate (active) and tablerate (inactive), store 2
      * the carriers flatrate (inactive) and freeshipping (active). The carrier "broken" has no model.
@@ -76,7 +79,7 @@ class CarrierTest extends TestCase
     public function testGetAllCarriers(): void
     {
         $storeHelper = $this->createStub(Stores::class);
-        $storeHelper->method('getStore')->willReturn($this->createConfiguredStub(Store::class, ['getId' => '1']));
+        $storeHelper->method('getStore')->willReturn($this->createValueStub(Store::class, ['getId' => '1']));
 
         $carriers = $this->createCarrier($storeHelper)->getAllCarriers();
 
@@ -94,8 +97,8 @@ class CarrierTest extends TestCase
     {
         $storeHelper = $this->createStub(Stores::class);
         $storeHelper->method('getStores')->willReturn([
-            $this->createConfiguredStub(Store::class, ['getId' => '1']),
-            $this->createConfiguredStub(Store::class, ['getId' => '2'])
+            $this->createValueStub(Store::class, ['getId' => '1']),
+            $this->createValueStub(Store::class, ['getId' => '2'])
         ]);
 
         $carriers = $this->createCarrier($storeHelper)->getActiveCarriers(true);

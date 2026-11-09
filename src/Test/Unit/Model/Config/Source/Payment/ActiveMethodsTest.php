@@ -14,6 +14,7 @@ use FeWeDev\Base\Arrays;
 use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Payment;
 use Infrangible\Core\Model\Config\Source\Payment\ActiveMethods;
+use Infrangible\Core\Test\Unit\CreatesValueStubs;
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\MethodInterface;
 use PHPUnit\Framework\TestCase;
@@ -23,6 +24,8 @@ use PHPUnit\Framework\TestCase;
  */
 class ActiveMethodsTest extends TestCase
 {
+    use CreatesValueStubs;
+
     /**
      * Returns the source with the methods checkmo (no group), and paypal_express, paypal_billing_agreement and
      * braintree in the groups "PayPal" and "Braintree"; checkmo, paypal_express and braintree are active.
@@ -51,7 +54,7 @@ class ActiveMethodsTest extends TestCase
         $activeMethods = [];
 
         foreach (['checkmo', 'paypal_express', 'braintree'] as $code) {
-            $activeMethods[] = $this->createConfiguredStub(MethodInterface::class, ['getCode' => $code]);
+            $activeMethods[] = $this->createValueStub(MethodInterface::class, ['getCode' => $code]);
         }
 
         $paymentHelper = $this->createStub(Payment::class);

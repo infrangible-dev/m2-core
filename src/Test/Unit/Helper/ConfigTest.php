@@ -15,6 +15,7 @@ use FeWeDev\Base\Json;
 use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Config;
 use Infrangible\Core\Helper\Stores;
+use Infrangible\Core\Test\Unit\CreatesValueStubs;
 use InvalidArgumentException;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Store\Model\Store;
@@ -30,6 +31,8 @@ use PHPUnit\Framework\TestCase;
 #[AllowMockObjectsWithoutExpectations]
 class ConfigTest extends TestCase
 {
+    use CreatesValueStubs;
+
     /** @var Stores&MockObject */
     private MockObject $storeHelper;
 
@@ -60,9 +63,9 @@ class ConfigTest extends TestCase
      */
     public function testGetScopeConfig(): void
     {
-        $store1 = $this->createConfiguredStub(Store::class, ['getId' => '1']);
-        $store2 = $this->createConfiguredStub(Store::class, ['getId' => '2']);
-        $website = $this->createConfiguredStub(Website::class, ['getId' => '1', 'getStores' => [$store1, $store2]]);
+        $store1 = $this->createValueStub(Store::class, ['getId' => '1']);
+        $store2 = $this->createValueStub(Store::class, ['getId' => '2']);
+        $website = $this->createValueStub(Website::class, ['getId' => '1', 'getStores' => [$store1, $store2]]);
 
         $this->storeHelper->method('getWebsites')->willReturn([$website]);
         $this->storeHelper->method('getWebsiteConfig')->willReturn(['code' => 'de_DE', 'firstday' => '1']);

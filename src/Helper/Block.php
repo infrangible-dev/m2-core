@@ -49,6 +49,7 @@ class Block extends AbstractHelper
      * @param string $name
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockData
      * @phpstan-param array<string, mixed> $blockArguments
      *
@@ -78,6 +79,7 @@ class Block extends AbstractHelper
      * @param string $name
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockData
      * @phpstan-param array<string, mixed> $blockArguments
      *
@@ -117,6 +119,7 @@ class Block extends AbstractHelper
      * @param string $name
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockData
      * @phpstan-param array<string, mixed> $blockArguments
      *
@@ -146,6 +149,7 @@ class Block extends AbstractHelper
      * @param array $blockData
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockData
      * @phpstan-param array<string, mixed> $blockArguments
      *
@@ -172,6 +176,7 @@ class Block extends AbstractHelper
      * @param array $blockData
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockData
      * @phpstan-param array<string, mixed> $blockArguments
      *
@@ -202,6 +207,7 @@ class Block extends AbstractHelper
      * @param array $blockData
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockData
      * @phpstan-param array<string, mixed> $blockArguments
      *
@@ -292,6 +298,7 @@ class Block extends AbstractHelper
      * @param array $templateData
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockArguments
      * @phpstan-param array<string, mixed> $templateData
      *
@@ -323,6 +330,7 @@ class Block extends AbstractHelper
      * @param array $templateData
      * @param array $blockArguments
      *
+     * @phpstan-param class-string<BlockInterface> $blockClassName
      * @phpstan-param array<string, mixed> $blockArguments
      * @phpstan-param array<string, mixed> $templateData
      *
@@ -353,6 +361,7 @@ class Block extends AbstractHelper
      * @param string $childBlockClassName
      * @param array $blockData
      *
+     * @phpstan-param class-string<BlockInterface> $childBlockClassName
      * @phpstan-param array<string, mixed> $blockData
      *
      * @return AbstractBlock

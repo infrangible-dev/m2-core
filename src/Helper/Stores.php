@@ -906,7 +906,8 @@ class Stores extends AbstractHelper
 
         $formattedValue = $formatter->format($value);
 
-        return $formattedValue === false ? (string)$value : $formattedValue;
+        // older PHP stubs declare string|bool instead of string|false
+        return is_string($formattedValue) ? $formattedValue : (string)$value;
     }
 
     /**
