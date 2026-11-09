@@ -2,40 +2,54 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Seo
 {
     /** @var Stores */
-    protected $storeHelper;
+    protected Stores $storeHelper;
 
-    /** @var string */
-    private $seoSuffix;
+    /** @var string|null */
+    private ?string $seoSuffix = null;
 
+    /**
+     * @param Stores $storeHelper
+     */
     public function __construct(Stores $storeHelper)
     {
         $this->storeHelper = $storeHelper;
     }
 
+    /**
+     * Returns the URL suffix of categories configured for the current store.
+     *
+     * @return string
+     */
     public function getSeoSuffix(): string
     {
         if ($this->seoSuffix === null) {
-            $this->seoSuffix =
-                $this->storeHelper->getStoreConfig(CategoryUrlPathGenerator::XML_PATH_CATEGORY_URL_SUFFIX);
+            $seoSuffix = $this->storeHelper->getStoreConfig(CategoryUrlPathGenerator::XML_PATH_CATEGORY_URL_SUFFIX);
+
+            $this->seoSuffix = is_scalar($seoSuffix) ? (string)$seoSuffix : '';
         }
 
         return $this->seoSuffix;
     }
 
     /**
-     * replace seo category suffix
+     * Adds the URL suffix of categories to the path, if it does not end with it already.
+     *
+     * @param string $catPath
+     *
+     * @return string
      */
     public function addSeoSuffix(string $catPath): string
     {
@@ -57,7 +71,12 @@ class Seo
     }
 
     /**
-     * replace seo category suffix
+     * Replaces the URL suffix of categories at the end of the path.
+     *
+     * @param string $catPath
+     * @param string $replacement
+     *
+     * @return string
      */
     public function replaceSeoSuffix(string $catPath, string $replacement = ''): string
     {

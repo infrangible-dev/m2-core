@@ -1,10 +1,12 @@
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 
-//noinspection LessUnresolvedVariable
+@iframe-button-modal__border-color: #ccc;
+
+//  noinspection LessUnresolvedVariable
 & when (@media-common = true) {
     .iframe-button-modal {
         .modal-inner-wrap {
@@ -19,9 +21,9 @@
                 margin-top: 20px;
 
                 iframe {
-                    width: 100%;
+                    border: 1px solid @iframe-button-modal__border-color;
                     height: 100%;
-                    border: 1px solid #ccc;
+                    width: 100%;
                 }
             }
         }

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use FeWeDev\Base\Variables;
@@ -11,31 +17,34 @@ use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\PageCache\Model\Config;
 use Psr\Log\LoggerInterface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Cache
 {
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var TypeListInterface */
-    protected $typeList;
+    protected TypeListInterface $typeList;
 
     /** @var ReinitableConfigInterface */
-    protected $reinitableConfig;
+    protected ReinitableConfigInterface $reinitableConfig;
 
     /** @var CacheInterface */
-    protected $cache;
+    protected CacheInterface $cache;
 
     /** @var Config */
-    protected $pageCacheConfig;
+    protected Config $pageCacheConfig;
 
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
+    /**
+     * @param LoggerInterface $logging
+     * @param TypeListInterface $typeList
+     * @param ReinitableConfigInterface $reinitableConfig
+     * @param CacheInterface $cache
+     * @param Config $pageCacheConfig
+     * @param Variables $variables
+     */
     public function __construct(
         LoggerInterface $logging,
         TypeListInterface $typeList,
@@ -52,6 +61,11 @@ class Cache
         $this->variables = $variables;
     }
 
+    /**
+     * Cleans the config cache and reloads the config.
+     *
+     * @return void
+     */
     public function cleanConfigCache(): void
     {
         $this->logging->info('Cleaning config cache');
@@ -63,11 +77,21 @@ class Cache
         $this->reinitableConfig->reinit();
     }
 
+    /**
+     * Marks the config cache as invalid, so that it has to be refreshed in the admin.
+     *
+     * @return void
+     */
     public function invalidateConfigCache(): void
     {
         $this->typeList->invalidate('config');
     }
 
+    /**
+     * Cleans the block HTML cache.
+     *
+     * @return void
+     */
     public function cleanBlockCache(): void
     {
         $this->logging->info('Cleaning block cache');
@@ -75,11 +99,21 @@ class Cache
         $this->typeList->cleanType('block_html');
     }
 
+    /**
+     * Marks the block HTML cache as invalid, so that it has to be refreshed in the admin.
+     *
+     * @return void
+     */
     public function invalidateBlockCache(): void
     {
         $this->typeList->invalidate('block_html');
     }
 
+    /**
+     * Cleans the full page cache, if it is enabled.
+     *
+     * @return void
+     */
     public function cleanFullPageCache(): void
     {
         if ($this->pageCacheConfig->isEnabled()) {
@@ -89,6 +123,11 @@ class Cache
         }
     }
 
+    /**
+     * Marks the full page cache as invalid, if it is enabled, so that it has to be refreshed in the admin.
+     *
+     * @return void
+     */
     public function invalidateFullPageCache(): void
     {
         if ($this->pageCacheConfig->isEnabled()) {
@@ -96,6 +135,11 @@ class Cache
         }
     }
 
+    /**
+     * Cleans the layout cache.
+     *
+     * @return void
+     */
     public function cleanLayoutCache(): void
     {
         $this->logging->info('Cleaning layout cache');
@@ -103,11 +147,23 @@ class Cache
         $this->typeList->cleanType('layout');
     }
 
+    /**
+     * Marks the layout cache as invalid, so that it has to be refreshed in the admin.
+     *
+     * @return void
+     */
     public function invalidateLayoutCache(): void
     {
         $this->typeList->invalidate('layout');
     }
 
+    /**
+     * Loads a value from the cache.
+     *
+     * @param string $id
+     *
+     * @return string|null
+     */
     public function loadCache(string $id): ?string
     {
         /** @var string|false $value */
@@ -116,6 +172,18 @@ class Cache
         return $value === false ? null : $this->variables->stringValue($value);
     }
 
+    /**
+     * Saves a value in the cache.
+     *
+     * @param string $data
+     * @param string $id
+     * @param array $tags
+     * @param int|null $lifeTime
+     *
+     * @phpstan-param string[] $tags
+     *
+     * @return void
+     */
     public function saveCache(string $data, string $id, array $tags = [], ?int $lifeTime = null): void
     {
         $this->cache->save(
@@ -126,6 +194,13 @@ class Cache
         );
     }
 
+    /**
+     * Removes a value from the cache.
+     *
+     * @param string $id
+     *
+     * @return void
+     */
     public function removeCache(string $id): void
     {
         $this->cache->remove($id);

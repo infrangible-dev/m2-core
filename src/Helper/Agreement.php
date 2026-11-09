@@ -2,63 +2,97 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
-use Magento\CheckoutAgreements\Model\AgreementFactory;
 use Magento\CheckoutAgreements\Model\ResourceModel\Agreement\Collection;
-use Magento\CheckoutAgreements\Model\ResourceModel\Agreement\CollectionFactory;
+use RuntimeException;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Checkout agreements (terms and conditions). Requires the optional module Magento_CheckoutAgreements, which is only
+ * loaded when a method is called.
  */
 class Agreement
 {
-    /** @var AgreementFactory */
-    protected $agreementFactory;
+    /** @var Instances */
+    protected Instances $instanceHelper;
 
-    /** @var \Magento\CheckoutAgreements\Model\ResourceModel\AgreementFactory */
-    protected $agreementResourceFactory;
-
-    /** @var CollectionFactory */
-    protected $agreementCollectionFactory;
-
-    public function __construct(
-        AgreementFactory $agreementFactory,
-        \Magento\CheckoutAgreements\Model\ResourceModel\AgreementFactory $agreementResourceFactory,
-        CollectionFactory $agreementCollectionFactory
-    ) {
-        $this->agreementFactory = $agreementFactory;
-        $this->agreementResourceFactory = $agreementResourceFactory;
-        $this->agreementCollectionFactory = $agreementCollectionFactory;
+    /**
+     * @param Instances $instanceHelper
+     */
+    public function __construct(Instances $instanceHelper)
+    {
+        $this->instanceHelper = $instanceHelper;
     }
 
+    /**
+     * Creates a new agreement.
+     *
+     * @return \Magento\CheckoutAgreements\Model\Agreement
+     * @throws RuntimeException if Magento_CheckoutAgreements is not installed
+     */
     public function newAgreement(): \Magento\CheckoutAgreements\Model\Agreement
     {
-        return $this->agreementFactory->create();
+        return $this->instanceHelper->createInstance(\Magento\CheckoutAgreements\Model\Agreement::class);
     }
 
+    /**
+     * Loads the agreement.
+     *
+     * @param int $agreementId
+     *
+     * @return \Magento\CheckoutAgreements\Model\Agreement
+     * @throws RuntimeException if Magento_CheckoutAgreements is not installed
+     */
     public function loadAgreement(int $agreementId): \Magento\CheckoutAgreements\Model\Agreement
     {
         $agreement = $this->newAgreement();
 
-        $this->agreementResourceFactory->create()->load($agreement, $agreementId);
+        $this->getAgreementResource()->load($agreement, $agreementId);
 
         return $agreement;
     }
 
     /**
+     * Saves the agreement.
+     *
+     * @param \Magento\CheckoutAgreements\Model\Agreement $agreement
+     *
+     * @return void
      * @throws Exception
      */
     public function saveAgreement(\Magento\CheckoutAgreements\Model\Agreement $agreement): void
     {
-        $this->agreementResourceFactory->create()->save($agreement);
+        $this->getAgreementResource()->save($agreement);
     }
 
+    /**
+     * Returns the agreement collection.
+     *
+     * @return Collection
+     * @throws RuntimeException if Magento_CheckoutAgreements is not installed
+     */
     public function getAgreementCollection(): Collection
     {
-        return $this->agreementCollectionFactory->create();
+        return $this->instanceHelper->createInstance(Collection::class);
+    }
+
+    /**
+     * Returns the agreement resource.
+     *
+     * @return \Magento\CheckoutAgreements\Model\ResourceModel\Agreement
+     * @throws RuntimeException if Magento_CheckoutAgreements is not installed
+     */
+    private function getAgreementResource(): \Magento\CheckoutAgreements\Model\ResourceModel\Agreement
+    {
+        return $this->instanceHelper->getSharedInstance(
+            \Magento\CheckoutAgreements\Model\ResourceModel\Agreement::class
+        );
     }
 }

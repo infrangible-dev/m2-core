@@ -2,11 +2,18 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
 use FeWeDev\Base\Arrays;
 use FeWeDev\Base\Variables;
+use InvalidArgumentException;
 use Magento\Bundle\Model\Product\Price;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
@@ -21,69 +28,79 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Tax\Helper\Data;
 use Psr\Log\LoggerInterface;
-use Zend_Db_Select;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Export
 {
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
 
     /** @var Database */
-    protected $databaseHelper;
+    protected Database $databaseHelper;
 
     /** @var Stores */
-    protected $storeHelper;
+    protected Stores $storeHelper;
 
     /** @var \Infrangible\Core\Helper\Attribute */
-    protected $attributeHelper;
+    protected \Infrangible\Core\Helper\Attribute $attributeHelper;
 
     /** @var Product */
-    protected $productHelper;
+    protected Product $productHelper;
 
     /** @var Category */
-    protected $categoryHelper;
+    protected Category $categoryHelper;
 
     /** @var Customer */
-    protected $customerHelper;
+    protected Customer $customerHelper;
 
     /** @var Address */
-    protected $addressHelper;
+    protected Address $addressHelper;
 
     /** @var Data */
-    protected $taxHelper;
+    protected Data $taxHelper;
 
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var Visibility */
-    protected $productVisible;
+    protected Visibility $productVisible;
 
     /** @var Status */
-    protected $productStatus;
+    protected Status $productStatus;
 
     /** @var Config */
-    protected $eavConfig;
+    protected Config $eavConfig;
 
-    /** @var array */
-    private $searchableAttributes = [];
+    /** @var array<string, array<int|string, \Magento\Catalog\Model\ResourceModel\Eav\Attribute>> */
+    private array $searchableAttributes = [];
 
-    /** @var array */
-    private $searchableAttributesByType = [];
+    /** @var array<string, array<int|string, \Magento\Catalog\Model\ResourceModel\Eav\Attribute>> */
+    private array $searchableAttributesByType = [];
 
-    /** @var array */
-    private $exportableAttributes = [];
+    /** @var array<string, array<string, Attribute>> */
+    private array $exportableAttributes = [];
 
-    /** @var int */
-    private $maxBestsellerRating;
+    /** @var array<int, int> maximum bestseller rating (plus one) by store id */
+    private array $maxBestsellerRatings = [];
 
+    /**
+     * @param Variables $variables
+     * @param Arrays $arrays
+     * @param Database $databaseHelper
+     * @param Stores $storeHelper
+     * @param \Infrangible\Core\Helper\Attribute $attributeHelper
+     * @param Product $productHelper
+     * @param Category $categoryHelper
+     * @param Customer $customerHelper
+     * @param Address $addressHelper
+     * @param Data $taxHelper
+     * @param LoggerInterface $logging
+     * @param Visibility $productVisible
+     * @param Status $productStatus
+     * @param Config $eavConfig
+     */
     public function __construct(
         Variables $variables,
         Arrays $arrays,
@@ -118,8 +135,19 @@ class Export
     }
 
     /**
-     * @return int[]
+     * Returns the ids of the products that are enabled and visible in the store, optionally only with stock.
      *
+     * The ids are returned in batches: up to the limit, starting after the last product id.
+     *
+     * @param int $storeId
+     * @param bool $onlyWithStock
+     * @param array $productIds limit the result to these products
+     * @param int $lastProductId
+     * @param int $limit
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return int[]
      * @throws Exception
      */
     public function getExportableProductIds(
@@ -159,10 +187,24 @@ class Export
             );
         }
 
-        return array_keys($queryResult);
+        return array_map(
+            fn($productId) => $this->variables->intValue($productId),
+            array_keys($queryResult)
+        );
     }
 
     /**
+     * Returns the query for getExportableProductIds().
+     *
+     * @param int $storeId
+     * @param bool $onlyWithStock
+     * @param array $productIds
+     * @param int $lastProductId
+     * @param int $limit
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return Select
      * @throws Exception
      */
     protected function getExportableProductsSelect(
@@ -182,7 +224,7 @@ class Export
             'status'
         );
 
-        $configManageStock = (int)$this->storeHelper->getStoreConfig(
+        $configManageStock = (bool)$this->storeHelper->getStoreConfig(
             Configuration::XML_PATH_MANAGE_STOCK,
             false,
             true
@@ -244,13 +286,14 @@ class Export
                 sprintf(
                     '%s AND %s',
                     $adapter->quoteInto(
-                        'simple_stock_item.product_id = super_link.product_id AND stock_item.stock_id = ?',
+                        'simple_stock_item.product_id = super_link.product_id AND simple_stock_item.stock_id = ?',
                         $this->getStockId(
                             $storeId
                         )
                     ),
                     $adapter->quoteInto(
-                        '((simple_stock_item.use_config_manage_stock = 1 and simple_stock_item.is_in_stock = 1) OR simple_stock_item.use_config_manage_stock = 0 OR ? = 0)',
+                        '((simple_stock_item.use_config_manage_stock = 1 and simple_stock_item.is_in_stock = 1)' .
+                        ' OR simple_stock_item.use_config_manage_stock = 0 OR ? = 0)',
                         $configManageStock ? 1 : 0
                     )
                 ),
@@ -286,7 +329,8 @@ class Export
         $select->joinLeft(
             ['visibility_admin' => $visibility->getBackendTable()],
             $adapter->quoteInto(
-                'visibility_admin.entity_id = e.entity_id AND visibility_admin.attribute_id = ? AND visibility_admin.store_id = 0',
+                'visibility_admin.entity_id = e.entity_id AND visibility_admin.attribute_id = ?' .
+                ' AND visibility_admin.store_id = 0',
                 $visibility->getAttributeId()
             ),
             []
@@ -323,7 +367,9 @@ class Export
         if ($onlyWithStock) {
             $select->where(
                 $adapter->quoteInto(
-                    '(`e`.`type_id` <> "configurable" AND ((stock_item.is_in_stock = 1 AND stock_item.use_config_manage_stock = 1) OR stock_item.use_config_manage_stock = 0 or ? = 0)) OR (`e`.`type_id` = "configurable")',
+                    '(`e`.`type_id` <> "configurable" AND ((stock_item.is_in_stock = 1' .
+                    ' AND stock_item.use_config_manage_stock = 1) OR stock_item.use_config_manage_stock = 0' .
+                    ' or ? = 0)) OR (`e`.`type_id` = "configurable")',
                     $configManageStock ? 1 : 0
                 )
             );
@@ -343,13 +389,15 @@ class Export
 
         if ($storeId > 0) {
             $select->having(
-                '`e`.`type_id` <> "configurable" OR (`e`.`type_id` = "configurable" AND count(simple_website.product_id) > 0)'
+                '`e`.`type_id` <> "configurable"' .
+                ' OR (`e`.`type_id` = "configurable" AND count(simple_website.product_id) > 0)'
             );
         }
 
         if ($onlyWithStock) {
             $select->having(
-                '`e`.`type_id` <> "configurable" OR (`e`.`type_id` = "configurable" AND count(simple_stock_item.product_id) > 0)'
+                '`e`.`type_id` <> "configurable"' .
+                ' OR (`e`.`type_id` = "configurable" AND count(simple_stock_item.product_id) > 0)'
             );
         }
 
@@ -361,6 +409,11 @@ class Export
     }
 
     /**
+     * Returns the id of the stock used for the store (always the default stock).
+     *
+     * @param int $storeId
+     *
+     * @return int
      * @throws NoSuchEntityException
      */
     protected function getStockId(int $storeId): int
@@ -371,7 +424,19 @@ class Export
     }
 
     /**
+     * Returns the product attributes that are searchable, used in product listing or for sorting.
+     *
+     * With a backend type, only the attributes of this type are returned.
+     *
+     * @param string|null $backendType
+     * @param array $excludeAttributeCodes
+     * @param array $attributeConditions additional conditions on catalog_eav_attribute, combined with OR
+     *
+     * @phpstan-param array<int, string> $excludeAttributeCodes
+     * @phpstan-param array<int, string> $attributeConditions
+     *
      * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
+     * @phpstan-return array<int|string, \Magento\Catalog\Model\ResourceModel\Eav\Attribute>
      * @throws LocalizedException
      */
     public function getSearchableAttributes(
@@ -391,12 +456,19 @@ class Export
     }
 
     /**
+     * Loads the searchable product attributes (cached by conditions).
+     *
+     * @param array $attributeConditions
+     *
+     * @phpstan-param array<int, string> $attributeConditions
+     *
      * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
+     * @phpstan-return array<int|string, \Magento\Catalog\Model\ResourceModel\Eav\Attribute>
      * @throws LocalizedException
      */
     private function collectSearchableAttributes(array $attributeConditions = []): array
     {
-        $key = md5(json_encode($attributeConditions));
+        $key = hash('sha256', (string)json_encode($attributeConditions));
 
         if (! array_key_exists(
             $key,
@@ -436,12 +508,12 @@ class Export
                 )
             );
 
+            /** @var array<int|string, \Magento\Catalog\Model\ResourceModel\Eav\Attribute> $attributes */
             $attributes = $productAttributeCollection->getItems();
 
             /** @var AbstractEntity $entity */
             $entity = $this->eavConfig->getEntityType(\Magento\Catalog\Model\Product::ENTITY)->getEntity();
 
-            /** @var Attribute $attribute */
             foreach ($attributes as $attribute) {
                 $attribute->setEntity($entity);
             }
@@ -453,7 +525,17 @@ class Export
     }
 
     /**
+     * Returns the searchable product attributes of the backend type (cached by arguments).
+     *
+     * @param string|null $backendType
+     * @param array $excludeAttributeCodes
+     * @param array $attributeConditions
+     *
+     * @phpstan-param array<int, string> $excludeAttributeCodes
+     * @phpstan-param array<int, string> $attributeConditions
+     *
      * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
+     * @phpstan-return array<int|string, \Magento\Catalog\Model\ResourceModel\Eav\Attribute>
      * @throws LocalizedException
      */
     private function collectSearchableAttributesByType(
@@ -461,7 +543,7 @@ class Export
         array $excludeAttributeCodes = [],
         array $attributeConditions = []
     ): array {
-        $key = md5(json_encode([$backendType, $excludeAttributeCodes, $attributeConditions]));
+        $key = hash('sha256', (string)json_encode([$backendType, $excludeAttributeCodes, $attributeConditions]));
 
         if (! array_key_exists(
             $key,
@@ -490,6 +572,17 @@ class Export
     }
 
     /**
+     * Returns the searchable product attributes (or only their ids) grouped by backend type.
+     *
+     * @param bool $onlyAttributeIds
+     * @param array $excludeAttributeCodes
+     * @param array $attributeConditions
+     *
+     * @phpstan-param array<int, string> $excludeAttributeCodes
+     * @phpstan-param array<int, string> $attributeConditions
+     *
+     * @return array backend type => attributes or attribute ids
+     * @phpstan-return array<string, array<int|string, int|string|\Magento\Catalog\Model\ResourceModel\Eav\Attribute>>
      * @throws LocalizedException
      */
     public function getSearchableAttributesByTypes(
@@ -512,7 +605,18 @@ class Export
     }
 
     /**
+     * Returns the searchable product attributes (or only their ids) of the backend type.
+     *
+     * @param string $useBackendType
+     * @param bool $onlyAttributeIds
+     * @param array $excludeAttributeCodes
+     * @param array $attributeConditions
+     *
+     * @phpstan-param array<int, string> $excludeAttributeCodes
+     * @phpstan-param array<int, string> $attributeConditions
+     *
      * @return array|\Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
+     * @phpstan-return array<int|string, int|string|\Magento\Catalog\Model\ResourceModel\Eav\Attribute>
      * @throws LocalizedException
      */
     private function getSearchableAttributesByType(
@@ -531,8 +635,17 @@ class Export
     }
 
     /**
-     * @param int[] $categoryIds
+     * Returns the attribute values (option values with id and label) and URL rewrites of the categories in the store.
      *
+     * @param AdapterInterface $dbAdapter
+     * @param int[] $categoryIds
+     * @param int $storeId
+     * @param array $requiredEavAttributeCodes
+     *
+     * @phpstan-param array<int, string> $requiredEavAttributeCodes
+     *
+     * @return array category id => data
+     * @phpstan-return array<int|string, array<string, mixed>>
      * @throws Exception
      */
     public function getCategoriesData(
@@ -580,7 +693,7 @@ class Export
                                     \Magento\Catalog\Model\Category::ENTITY,
                                     $attributeCode,
                                     $storeId,
-                                    $attributeValue
+                                    $this->variables->stringValue($attributeValue)
                                 )
                             ];
                         }
@@ -601,8 +714,24 @@ class Export
     }
 
     /**
-     * @param int[] $productIds
+     * Returns the export data of the products in the store.
      *
+     * The data contains the attribute values, bestseller rating, category paths, URL rewrites, gallery images, indexed
+     * prices, stock item and review summary, and the data of the children of configurable, bundle and grouped
+     * products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int[] $productIds
+     * @param int $storeId
+     * @param array $attributeConditions
+     * @param array $requiredEavAttributeCodes
+     * @param bool $limitActiveCategoriesToStore
+     *
+     * @phpstan-param array<int, string> $attributeConditions
+     * @phpstan-param array<int, string> $requiredEavAttributeCodes
+     *
+     * @return array product id => data
+     * @phpstan-return array<int|string, array<string, mixed>>
      * @throws Exception
      */
     public function getProductsData(
@@ -686,7 +815,7 @@ class Export
                                 \Magento\Catalog\Model\Product::ENTITY,
                                 $attributeCode,
                                 $storeId,
-                                $attributeValue
+                                $this->variables->stringValue($attributeValue)
                             )
                         ];
                     }
@@ -785,8 +914,16 @@ class Export
                     $limitActiveCategoriesToStore
                 );
 
+                $parentsData = [];
+
                 foreach ($childIds as $childId => $parentId) {
-                    $productsData[ $parentId ][ 'children' ][] = $childProductsData[ $childId ];
+                    if (array_key_exists($childId, $childProductsData)) {
+                        $parentsData[ $parentId ][] = $childProductsData[ $childId ];
+                    }
+                }
+
+                foreach ($parentsData as $parentId => $parentData) {
+                    $productsData[ $parentId ][ 'children' ] = $parentData;
                 }
             }
         }
@@ -818,8 +955,16 @@ class Export
                     $limitActiveCategoriesToStore
                 );
 
+                $parentsData = [];
+
                 foreach ($bundledIds as $bundledId => $parentId) {
-                    $productsData[ $parentId ][ 'bundled' ][] = $bundledProductsData[ $bundledId ];
+                    if (array_key_exists($bundledId, $bundledProductsData)) {
+                        $parentsData[ $parentId ][] = $bundledProductsData[ $bundledId ];
+                    }
+                }
+
+                foreach ($parentsData as $parentId => $parentData) {
+                    $productsData[ $parentId ][ 'bundled' ] = $parentData;
                 }
             }
         }
@@ -852,8 +997,16 @@ class Export
                     $limitActiveCategoriesToStore
                 );
 
+                $parentsData = [];
+
                 foreach ($groupedIds as $groupedId => $parentId) {
-                    $productsData[ $parentId ][ 'grouped' ][] = $groupedProductsData[ $groupedId ];
+                    if (array_key_exists($groupedId, $groupedProductsData)) {
+                        $parentsData[ $parentId ][] = $groupedProductsData[ $groupedId ];
+                    }
+                }
+
+                foreach ($parentsData as $parentId => $parentData) {
+                    $productsData[ $parentId ][ 'grouped' ] = $parentData;
                 }
             }
         }
@@ -862,14 +1015,23 @@ class Export
     }
 
     /**
-     * @return \Magento\Catalog\Model\ResourceModel\Eav\Attribute[]
+     * Returns the searchable product attributes, updated_at and the required attributes by attribute code.
+     *
+     * @param array $attributeConditions
+     * @param array $requiredEavAttributeCodes
+     *
+     * @phpstan-param array<int, string> $attributeConditions
+     * @phpstan-param array<int, string> $requiredEavAttributeCodes
+     *
+     * @return Attribute[]
+     * @phpstan-return array<string, Attribute>
      * @throws Exception
      */
     public function getExportableAttributes(
         array $attributeConditions = [],
         array $requiredEavAttributeCodes = []
     ): array {
-        $key = md5(json_encode([$attributeConditions, $requiredEavAttributeCodes]));
+        $key = hash('sha256', (string)json_encode([$attributeConditions, $requiredEavAttributeCodes]));
 
         if (! array_key_exists(
             $key,
@@ -901,6 +1063,20 @@ class Export
         return $this->exportableAttributes[ $key ];
     }
 
+    /**
+     * Returns the bestseller rating of the products in the current month.
+     *
+     * Products without rating get the highest rating of the month plus one.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productIds
+     * @param int $storeId
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return array product id => rating position
+     * @phpstan-return array<int|string, mixed>
+     */
     public function getBestsellerRatings(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
     {
         $bestseller = $dbAdapter->select()->from(
@@ -953,18 +1129,27 @@ class Export
                 $this->variables->stringValue($productId)
             );
 
-            $queryResult[ $productId ] = ! empty($bestseller) ? (int)$bestseller : $this->getMaxBestsellerRating(
-                $dbAdapter,
-                $storeId
-            );
+            $queryResult[ $productId ] = ! empty($bestseller) ? $this->variables->intValue($bestseller) :
+                $this->getMaxBestsellerRating(
+                    $dbAdapter,
+                    $storeId
+                );
         }
 
         return $queryResult;
     }
 
+    /**
+     * Returns the highest bestseller rating position of the current month in the store plus one.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int $storeId
+     *
+     * @return int
+     */
     protected function getMaxBestsellerRating(AdapterInterface $dbAdapter, int $storeId): int
     {
-        if (empty($this->maxBestsellerRating)) {
+        if (! array_key_exists($storeId, $this->maxBestsellerRatings)) {
             $tableName = $this->databaseHelper->getTableName('sales_bestsellers_aggregated_monthly');
             $tableLabel = 'bestsellers_aggregated_monthly';
 
@@ -1001,13 +1186,25 @@ class Export
                 $dbAdapter
             );
 
-            $this->maxBestsellerRating = empty($bestseller) ? 1 : (((int)$bestseller) + 1);
+            $this->maxBestsellerRatings[ $storeId ] =
+                empty($bestseller) ? 1 : ($this->variables->intValue($bestseller) + 1);
         }
 
-        return $this->maxBestsellerRating;
+        return $this->maxBestsellerRatings[ $storeId ];
     }
 
     /**
+     * Returns name, URL path and parent id of the active categories of the products in the store.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productIds
+     * @param int $storeId
+     * @param bool $limitActiveCategoriesToStore
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return array product id => category id => category data
+     * @phpstan-return array<int|string, array<int|string, array<string, mixed>>>
      * @throws Exception
      */
     public function getCategoriesPaths(
@@ -1016,13 +1213,15 @@ class Export
         int $storeId,
         bool $limitActiveCategoriesToStore = true
     ): array {
-        $storeCategoryIds = $this->categoryHelper->getActiveCategoryIds(
+        /** @var array<int, int|string> $activeCategoryIds */
+        $activeCategoryIds = $this->categoryHelper->getActiveCategoryIds(
             $dbAdapter,
             $storeId,
             $limitActiveCategoriesToStore
         );
-        $storeCategoryIds = array_flip($storeCategoryIds);
+        $storeCategoryIds = array_flip($activeCategoryIds);
 
+        /** @var array<int|string, array<int, int|string>> $categoryIds */
         $categoryIds = $this->categoryHelper->getEntityIds(
             $dbAdapter,
             $productIds,
@@ -1051,7 +1250,7 @@ class Export
                 if ($this->variables->isEmpty($categoryName)) {
                     $categoryName = $this->categoryHelper->getCategoryName(
                         $dbAdapter,
-                        $productCategoryId,
+                        $this->variables->intValue($productCategoryId),
                         0
                     );
                 }
@@ -1077,12 +1276,27 @@ class Export
         return $categoryPaths;
     }
 
+    /**
+     * Returns the request paths of the generated URL rewrites of the entities in the store.
+     *
+     * For products, the paths are returned by category id (0 for the path without category).
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $entityIds
+     * @param int $storeId
+     * @param string $entityType
+     *
+     * @phpstan-param array<int, int|string> $entityIds
+     *
+     * @return array entity id => (category id =>) request path
+     * @phpstan-return array<int|string, array<int, mixed>>
+     */
     public function getUrlRewrites(
         AdapterInterface $dbAdapter,
         array $entityIds,
         int $storeId,
         string $entityType = 'product'
-    ): ?array {
+    ): array {
         $urlRewriteQuery = $dbAdapter->select()->from(
             $this->databaseHelper->getTableName('url_rewrite'),
             [
@@ -1134,9 +1348,12 @@ class Export
                     $queryRow,
                     'entity_id'
                 );
-                $categoryId = (int)$this->arrays->getValue(
-                    $queryRow,
-                    'category_id'
+                $categoryId = $this->variables->intValue(
+                    $this->arrays->getValue(
+                        $queryRow,
+                        'category_id',
+                        0
+                    )
                 );
 
                 $result[ $productId ][ $categoryId ] = $requestPath;
@@ -1154,6 +1371,17 @@ class Export
     }
 
     /**
+     * Returns the media gallery images of the products with the store values (falling back to the default values).
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productIds
+     * @param int $storeId
+     * @param bool $includeDisabled
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return array product id => value id => image data
+     * @phpstan-return array<int|string, array<int|string, array<string, mixed>>>
      * @throws Exception
      */
     public function getGalleryImages(
@@ -1211,7 +1439,7 @@ class Export
                 '%s = %s AND %s = %d',
                 $dbAdapter->quoteIdentifier('gallery_value.value_id'),
                 $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
-                $dbAdapter->quoteIdentifier('gallery_value_store.value_id'),
+                $dbAdapter->quoteIdentifier('gallery_value_store.store_id'),
                 $storeId
             ),
             []
@@ -1283,6 +1511,18 @@ class Export
     }
 
     /**
+     * Returns the prices of the products from the price index (NOT LOGGED IN group, website of the store).
+     *
+     * Products missing in the index are loaded to calculate the prices.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productIds
+     * @param int $storeId
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return array product id => prices
+     * @phpstan-return array<int|string, array<string, mixed>>
      * @throws NoSuchEntityException
      */
     public function getIndexedPrices(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
@@ -1321,7 +1561,7 @@ class Export
         $categoryQuery->where(
             $dbAdapter->prepareSqlCondition(
                 'website_id',
-                ['eq' => $store->getWebsite()->getId()]
+                ['eq' => $store->getWebsiteId()]
             ),
             null,
             Select::TYPE_CONDITION
@@ -1335,7 +1575,7 @@ class Export
                 $queryResult
             )) {
                 $product = $this->productHelper->loadProduct(
-                    $productId,
+                    $this->variables->intValue($productId),
                     $storeId
                 );
 
@@ -1343,21 +1583,16 @@ class Export
                     /** @var Price $priceModel */
                     $priceModel = $product->getPriceModel();
 
-                    if ($this->taxHelper->displayPriceIncludingTax()) {
-                        [$minimalPrice, $maximalPrice] = $priceModel->getTotalPrices(
-                            $product,
-                            null,
-                            true,
-                            false
-                        );
-                    } else {
-                        [$minimalPrice, $maximalPrice] = $priceModel->getTotalPrices(
-                            $product,
-                            null,
-                            null,
-                            false
-                        );
-                    }
+                    $totalPrices = $priceModel->getTotalPrices(
+                        $product,
+                        null,
+                        $this->taxHelper->displayPriceIncludingTax() ? true : null,
+                        false
+                    );
+
+                    // without a "which" argument, the minimal and maximal price are returned
+                    [$minimalPrice, $maximalPrice] = is_array($totalPrices) ? $totalPrices :
+                        [$totalPrices, $totalPrices];
 
                     $queryResult[ $productId ] = [
                         'price'       => $product->getPrice(),
@@ -1380,6 +1615,16 @@ class Export
     }
 
     /**
+     * Returns stock status and stock item fields of the products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productIds
+     * @param int $storeId
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return array product id => stock data
+     * @phpstan-return array<int|string, array<string, mixed>>
      * @throws NoSuchEntityException
      */
     public function getStockItems(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
@@ -1432,11 +1677,29 @@ class Export
         return $this->databaseHelper->fetchAssoc($select);
     }
 
+    /**
+     * Returns the fields of the stock item that getStockItems() returns.
+     *
+     * @return array
+     * @phpstan-return array<int, string>
+     */
     protected function getStockItemFields(): array
     {
         return ['qty', 'is_in_stock', 'manage_stock'];
     }
 
+    /**
+     * Returns reviews count and rating summary of the products in the store.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productIds
+     * @param int $storeId
+     *
+     * @phpstan-param array<int, int|string> $productIds
+     *
+     * @return array product id => review summary
+     * @phpstan-return array<int|string, array<string, mixed>>
+     */
     public function getReviewSummary(AdapterInterface $dbAdapter, array $productIds, int $storeId): array
     {
         $entityIdSelect = $dbAdapter->select()->from(
@@ -1449,7 +1712,7 @@ class Export
             'product'
         );
 
-        $entityId = (int)$this->databaseHelper->fetchOne($entityIdSelect);
+        $entityId = $this->variables->intValue($this->databaseHelper->fetchOne($entityIdSelect) ?? 0);
 
         $select = $dbAdapter->select()->from(
             $this->databaseHelper->getTableName('review_entity_summary'),
@@ -1473,6 +1736,22 @@ class Export
     }
 
     /**
+     * Loads the values of the attributes of the entities in the store, in chunks of 25 attributes.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param string $entityTypeCode product, category, customer or customer address
+     * @param int $storeId
+     * @param array $attributeCodes
+     * @param array $entityIds
+     * @param array $specialAttributes attribute code => true for static attributes, which are joined with inner join
+     * @param AbstractCollection|null $collection
+     *
+     * @phpstan-param array<int|string, int|string> $attributeCodes
+     * @phpstan-param array<int, int|string> $entityIds
+     * @phpstan-param array<string, bool> $specialAttributes
+     *
+     * @return array entity id => attribute code => value
+     * @phpstan-return array<int|string, array<string, mixed>>
      * @throws Exception
      */
     public function getCurrentAttributeValues(
@@ -1508,7 +1787,7 @@ class Export
             } elseif ($entityTypeCode == 'customer_address') {
                 $collection = $this->addressHelper->getAddressCollection();
             } else {
-                throw new Exception(
+                throw new InvalidArgumentException(
                     sprintf(
                         'Entity type: %s not implemented yet',
                         $entityTypeCode
@@ -1545,10 +1824,11 @@ class Export
                 );
             }
 
-            $columns = $chunkCollection->getSelect()->getPart(Zend_Db_Select::COLUMNS);
+            $columns = $chunkCollection->getSelect()->getPart(Select::COLUMNS);
+            $columns = is_array($columns) ? $columns : [];
 
             foreach ($columns as $key => $column) {
-                if (array_key_exists(
+                if (is_array($column) && array_key_exists(
                     1,
                     $column
                 )) {
@@ -1564,7 +1844,7 @@ class Export
             );
 
             $chunkCollection->getSelect()->setPart(
-                Zend_Db_Select::COLUMNS,
+                Select::COLUMNS,
                 $columns
             );
 
@@ -1577,10 +1857,7 @@ class Export
                 $currentValues[ $key ] = array_key_exists(
                     $key,
                     $currentValues
-                ) ? array_merge(
-                    $currentValues[ $key ],
-                    $row
-                ) : $row;
+                ) ? $row + $currentValues[ $key ] : $row;
             }
         }
 

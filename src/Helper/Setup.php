@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use FeWeDev\Base\Arrays;
@@ -16,11 +22,6 @@ use Magento\Framework\Setup\SetupInterface;
 use Magento\Framework\Validator\ValidateException;
 use Zend_Db_Exception;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Setup
 {
     public const ATTRIBUTE_TYPE_DATETIME = 'datetime';
@@ -30,22 +31,45 @@ class Setup
     public const ATTRIBUTE_TYPE_VARCHAR = 'varchar';
 
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
 
     /** @var EavSetupFactory */
-    protected $eavSetupFactory;
+    protected EavSetupFactory $eavSetupFactory;
 
+    /**
+     * @param Arrays $arrayHelper
+     * @param EavSetupFactory $eavSetupFactory
+     */
     public function __construct(Arrays $arrayHelper, EavSetupFactory $eavSetupFactory)
     {
         $this->arrays = $arrayHelper;
         $this->eavSetupFactory = $eavSetupFactory;
     }
 
+    /**
+     * Creates an EAV setup for the setup.
+     *
+     * @param SetupInterface $setup
+     *
+     * @return EavSetup
+     */
     public function getEavSetup(SetupInterface $setup): EavSetup
     {
         return $this->eavSetupFactory->create(['setup' => $setup]);
     }
 
+    /**
+     * Adds the EAV entity type, if it does not exist.
+     *
+     * @param EavSetup $setup
+     * @param string $entityTypeName
+     * @param string $entityTypeModel
+     * @param string|null $attributeModel
+     * @param string|null $attributeCollectionModel
+     * @param string $entityTypeTableName
+     *
+     * @return void
+     */
     public function addEntityType(
         EavSetup $setup,
         string $entityTypeName,
@@ -70,6 +94,12 @@ class Setup
     }
 
     /**
+     * Creates an EAV entity table, if it does not exist, and its value tables.
+     *
+     * @param SetupInterface $setup
+     * @param string $entityTypeTableName
+     *
+     * @return void
      * @throws Zend_Db_Exception
      */
     public function addEntityTypeTables(
@@ -141,6 +171,13 @@ class Setup
     }
 
     /**
+     * Creates the value table of an EAV entity table for the attribute type.
+     *
+     * @param SetupInterface $setup
+     * @param string $entityTypeTableName
+     * @param string $attributeType
+     *
+     * @return void
      * @throws Zend_Db_Exception
      */
     protected function addEntityAttributeType(
@@ -336,6 +373,17 @@ class Setup
         }
     }
 
+    /**
+     * Adds the product attribute with the code to the group of the attribute set.
+     *
+     * @param EavSetup $setup
+     * @param string $attributeCode
+     * @param string $attributeSetName
+     * @param string $attributeGroupName
+     * @param int|null $attributeSortOrder
+     *
+     * @return bool
+     */
     public function addProductAttributeToSetAndGroup(
         EavSetup $setup,
         string $attributeCode,
@@ -353,6 +401,18 @@ class Setup
         );
     }
 
+    /**
+     * Adds the attribute with the code to the group of the attribute set.
+     *
+     * @param EavSetup $setup
+     * @param string $entityType
+     * @param string $attributeCode
+     * @param string $attributeSetName
+     * @param string $attributeGroupName
+     * @param int|null $attributeSortOrder
+     *
+     * @return bool
+     */
     public function addAttributeToSetAndGroup(
         EavSetup $setup,
         string $entityType,
@@ -361,28 +421,20 @@ class Setup
         string $attributeGroupName,
         ?int $attributeSortOrder = null
     ): bool {
-        /** @var array $entityTypeData */
         $entityTypeData = $setup->getEntityType($entityType);
 
-        $entityTypeId = (int)$this->arrays->getValue(
-            $entityTypeData,
-            'entity_type_id'
-        );
+        $entityTypeId = is_array($entityTypeData) ? $this->idValue($entityTypeData, 'entity_type_id') : 0;
 
-        /** @var array $attributeData */
         $attributeData = $setup->getAttribute(
             $entityTypeId,
             $attributeCode
         );
 
         if (is_array($attributeData)) {
-            $attributeId = (int)$this->arrays->getValue(
-                $attributeData,
-                'attribute_id'
-            );
+            $attributeId = $this->idValue($attributeData, 'attribute_id');
 
             if ($attributeId) {
-                $this->addAttributeIdToSetAndGroup(
+                return $this->addAttributeIdToSetAndGroup(
                     $setup,
                     $entityTypeId,
                     $attributeId,
@@ -396,6 +448,18 @@ class Setup
         return false;
     }
 
+    /**
+     * Adds the attribute with the id to the group of the attribute set.
+     *
+     * @param EavSetup $setup
+     * @param int $entityTypeId
+     * @param int $attributeId
+     * @param string $attributeSetName
+     * @param string $attributeGroupName
+     * @param int|null $attributeSortOrder
+     *
+     * @return bool
+     */
     public function addAttributeIdToSetAndGroup(
         EavSetup $setup,
         int $entityTypeId,
@@ -404,20 +468,15 @@ class Setup
         string $attributeGroupName,
         ?int $attributeSortOrder = null
     ): bool {
-        /** @var array $attributeSetData */
         $attributeSetData = $setup->getAttributeSet(
             $entityTypeId,
             $attributeSetName
         );
 
         if (is_array($attributeSetData)) {
-            $attributeSetId = $this->arrays->getValue(
-                $attributeSetData,
-                'attribute_set_id'
-            );
+            $attributeSetId = $this->idValue($attributeSetData, 'attribute_set_id');
 
             if ($attributeSetId) {
-                /** @var array $attributeGroupData */
                 $attributeGroupData = $setup->getAttributeGroup(
                     $entityTypeId,
                     $attributeSetId,
@@ -425,10 +484,7 @@ class Setup
                 );
 
                 if (is_array($attributeGroupData)) {
-                    $attributeGroupId = $this->arrays->getValue(
-                        $attributeGroupData,
-                        'attribute_group_id'
-                    );
+                    $attributeGroupId = $this->idValue($attributeGroupData, 'attribute_group_id');
 
                     if ($attributeGroupId) {
                         $setup->addAttributeToGroup(
@@ -449,6 +505,47 @@ class Setup
     }
 
     /**
+     * Returns the id in the field of the data, or 0 if there is none.
+     *
+     * @param array  $data
+     * @param string $field
+     *
+     * @phpstan-param array<int|string, mixed> $data
+     *
+     * @return int
+     */
+    private function idValue(array $data, string $field): int
+    {
+        $value = $this->arrays->getValue($data, $field);
+
+        return is_numeric($value) ? (int)$value : 0;
+    }
+
+    /**
+     * Adds an attribute to the EAV entity type.
+     *
+     * @param EavSetup $setup
+     * @param string $entityTypeId
+     * @param string $attributeCode
+     * @param string $label
+     * @param int $scope
+     * @param string $type
+     * @param string $input
+     * @param int $sortOrder
+     * @param string|null $default
+     * @param bool $userDefined
+     * @param bool $required
+     * @param bool $usedInProductListing
+     * @param bool $searchable
+     * @param bool $filterable
+     * @param bool $comparable
+     * @param bool $visible
+     * @param bool $visibleOnFront
+     * @param bool $unique
+     * @param string|null $backendModel
+     * @param string|null $sourceModel
+     *
+     * @return void
      * @throws LocalizedException
      * @throws ValidateException
      */
@@ -499,6 +596,30 @@ class Setup
         );
     }
 
+    /**
+     * Returns the attribute configuration that EavSetup::addAttribute() expects.
+     *
+     * @param string $label
+     * @param int $scope
+     * @param string $type
+     * @param string $input
+     * @param int $sortOrder
+     * @param string|null $default
+     * @param bool $userDefined
+     * @param bool $required
+     * @param bool $usedInProductListing
+     * @param bool $searchable
+     * @param bool $filterable
+     * @param bool $comparable
+     * @param bool $visible
+     * @param bool $visibleOnFront
+     * @param bool $unique
+     * @param string|null $backendModel
+     * @param string|null $sourceModel
+     *
+     * @return array
+     * @phpstan-return array<string, mixed>
+     */
     protected function getAttributeData(
         string $label,
         int $scope,
@@ -540,6 +661,30 @@ class Setup
     }
 
     /**
+     * Adds an attribute to products.
+     *
+     * @param EavSetup $setup
+     * @param string $attributeCode
+     * @param string $label
+     * @param int $scope
+     * @param string $type
+     * @param string $input
+     * @param int $sortOrder
+     * @param string|null $default
+     * @param bool $userDefined
+     * @param bool $required
+     * @param bool $usedInProductListing
+     * @param bool $searchable
+     * @param bool $filterable
+     * @param bool $comparable
+     * @param bool $visible
+     * @param bool $visibleOnFront
+     * @param bool $unique
+     * @param string|null $backendModel
+     * @param string|null $sourceModel
+     * @param string|null $applyTo
+     *
+     * @return void
      * @throws LocalizedException
      * @throws ValidateException
      */

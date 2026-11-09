@@ -2,65 +2,40 @@
 
 declare(strict_types=1);
 
-namespace Infrangible\Core\Model\Config\Source;
-
-use Magento\Cms\Model\Block;
-use Magento\Cms\Model\ResourceModel\Block\CollectionFactory;
-use Magento\Framework\Data\Collection;
-use Magento\Framework\Data\OptionSourceInterface;
-
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class CmsBlock implements OptionSourceInterface
+
+namespace Infrangible\Core\Model\Config\Source;
+
+use Magento\Cms\Model\ResourceModel\Block\CollectionFactory;
+use Magento\Framework\Data\Collection\AbstractDb;
+
+/**
+ * Options of the CMS blocks.
+ */
+class CmsBlock extends AbstractCms
 {
     /** @var CollectionFactory */
-    protected $collectionFactory;
+    protected CollectionFactory $collectionFactory;
 
+    /**
+     * @param CollectionFactory $collectionFactory
+     */
     public function __construct(CollectionFactory $collectionFactory)
     {
         $this->collectionFactory = $collectionFactory;
     }
 
-    public function getAllOptions(): array
+    /**
+     * Returns a new collection of the CMS blocks.
+     *
+     * @return AbstractDb
+     */
+    protected function createCollection(): AbstractDb
     {
-        return $this->toOptionArray();
-    }
-
-    public function toOptionArray(): array
-    {
-        $cmsBlockCollection = $this->collectionFactory->create();
-
-        $cmsBlockCollection->addOrder('title', Collection::SORT_ORDER_ASC);
-
-        $options = [['value' => '', 'label' => __('--Please Select--')]];
-
-        /** @var Block $cmsBlock */
-        foreach ($cmsBlockCollection as $cmsBlock) {
-            $options[] = [
-                'value' => $cmsBlock->getId(),
-                'label' => $cmsBlock->getTitle()
-            ];
-        }
-
-        return $options;
-    }
-
-    public function toOptions(): array
-    {
-        $cmsBlockCollection = $this->collectionFactory->create();
-
-        $cmsBlockCollection->addOrder('title', Collection::SORT_ORDER_ASC);
-
-        $options = [];
-
-        /** @var Block $cmsBlock */
-        foreach ($cmsBlockCollection as $cmsBlock) {
-            $options[ $cmsBlock->getId() ] = $cmsBlock->getTitle();
-        }
-
-        return $options;
+        return $this->collectionFactory->create();
     }
 }

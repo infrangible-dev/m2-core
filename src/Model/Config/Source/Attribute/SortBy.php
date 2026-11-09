@@ -2,30 +2,38 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source\Attribute;
 
 use Magento\Catalog\Model\Config;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the product attributes that can be used for sorting in the catalog.
  */
 class SortBy implements OptionSourceInterface
 {
     /** @var Config */
-    protected $catalogConfig;
+    protected Config $catalogConfig;
 
+    /**
+     * @param Config $catalogConfig
+     */
     public function __construct(Config $catalogConfig)
     {
         $this->catalogConfig = $catalogConfig;
     }
 
     /**
-     * Return array of options as value-label pairs
+     * Returns the options for a select field.
      *
-     * @return array Format: array(array('value' => '<value>', 'label' => '<label>'), ...)
+     * @return array
+     * @phpstan-return array<int, array{value: int|string, label: mixed}>
      */
     public function toOptionArray(): array
     {
@@ -39,16 +47,13 @@ class SortBy implements OptionSourceInterface
     }
 
     /**
-     * Return array of options as value-label pairs
+     * Returns the options as attribute code => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
      */
     public function toOptions(): array
     {
-        $attributeOrder = [];
-
-        foreach ($this->catalogConfig->getAttributeUsedForSortByArray() as $attributeCode => $attributeLabel) {
-            $attributeOrder[ $attributeCode ] = $attributeLabel;
-        }
-
-        return $attributeOrder;
+        return $this->catalogConfig->getAttributeUsedForSortByArray();
     }
 }

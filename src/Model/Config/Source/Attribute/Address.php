@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source\Attribute;
 
 use Magento\Customer\Model\ResourceModel\Address\Attribute\CollectionFactory;
@@ -10,20 +16,27 @@ use Magento\Framework\Data\Collection;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the customer address attributes with their id as value.
  */
 class Address implements OptionSourceInterface
 {
     /** @var CollectionFactory */
-    protected $addressAttributeCollectionFactory;
+    protected CollectionFactory $addressAttributeCollectionFactory;
 
+    /**
+     * @param CollectionFactory $addressAttributeCollectionFactory
+     */
     public function __construct(CollectionFactory $addressAttributeCollectionFactory)
     {
         $this->addressAttributeCollectionFactory = $addressAttributeCollectionFactory;
     }
 
+    /**
+     * Returns the options for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptionArray(): array
     {
         $options = [['value' => '', 'label' => __('--Please Select--')]];
@@ -34,7 +47,7 @@ class Address implements OptionSourceInterface
 
         /** @var Attribute $customerAttribute */
         foreach ($addressAttributeCollection as $customerAttribute) {
-            $frontendLabel = $customerAttribute->getData('frontend_label');
+            $frontendLabel = $customerAttribute->getDefaultFrontendLabel();
 
             if (! empty($frontendLabel)) {
                 $options[] = [
@@ -47,6 +60,12 @@ class Address implements OptionSourceInterface
         return $options;
     }
 
+    /**
+     * Returns the options as value => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptions(): array
     {
         $options = [];
@@ -57,7 +76,7 @@ class Address implements OptionSourceInterface
 
         /** @var Attribute $customerAttribute */
         foreach ($customerAttributeCollection as $customerAttribute) {
-            $frontendLabel = $customerAttribute->getData('frontend_label');
+            $frontendLabel = $customerAttribute->getDefaultFrontendLabel();
 
             if (! empty($frontendLabel)) {
                 $options[ $this->getAttributeValue($customerAttribute) ] =
@@ -68,8 +87,15 @@ class Address implements OptionSourceInterface
         return $options;
     }
 
+    /**
+     * Returns the value of the attribute in the options: its id.
+     *
+     * @param Attribute $customerAttribute
+     *
+     * @return string
+     */
     protected function getAttributeValue(Attribute $customerAttribute): string
     {
-        return $customerAttribute->getAttributeId();
+        return (string)$customerAttribute->getAttributeId();
     }
 }

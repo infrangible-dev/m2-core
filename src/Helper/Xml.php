@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
@@ -13,25 +19,26 @@ use FeWeDev\Xml\SimpleXml;
 use FeWeDev\Xml\Writer;
 use Magento\Framework\Filesystem\DirectoryList;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Xml
 {
     /** @var Files */
-    protected $files;
+    protected Files $files;
 
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
 
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
     /** @var DirectoryList */
-    protected $directoryList;
+    protected DirectoryList $directoryList;
 
+    /**
+     * @param Files $files
+     * @param Arrays $arrays
+     * @param Variables $variables
+     * @param DirectoryList $directoryList
+     */
     public function __construct(
         Files $files,
         Arrays $arrays,
@@ -46,6 +53,16 @@ class Xml
     }
 
     /**
+     * Reads the XML file into an array, retrying if it cannot be read (pause in milliseconds).
+     *
+     * @param string $basePath
+     * @param string $fileName
+     * @param bool $removeEmptyElements
+     * @param int $retries
+     * @param int $retryPause
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
      * @throws Exception
      */
     public function read(
@@ -66,6 +83,22 @@ class Xml
     }
 
     /**
+     * Writes the data as XML file (relative to the Magento root directory, or absolute).
+     *
+     * @param string $fileName
+     * @param string $rootElement
+     * @param array $rootElementAttributes
+     * @param array $data
+     * @param bool $append
+     * @param array $characterDataElements names of the elements whose values are written as CDATA
+     * @param string $version
+     * @param string $encoding
+     *
+     * @phpstan-param array<string, mixed> $rootElementAttributes
+     * @phpstan-param array<string, mixed> $data
+     * @phpstan-param array<int, string> $characterDataElements
+     *
+     * @return void
      * @throws Exception
      */
     public function write(
@@ -91,6 +124,20 @@ class Xml
     }
 
     /**
+     * Returns the data as XML string.
+     *
+     * @param string $rootElement
+     * @param array $rootElementAttributes
+     * @param array $data
+     * @param array $characterDataElements names of the elements whose values are written as CDATA
+     * @param string $version
+     * @param string $encoding
+     *
+     * @phpstan-param array<string, mixed> $rootElementAttributes
+     * @phpstan-param array<string, mixed> $data
+     * @phpstan-param array<int, string> $characterDataElements
+     *
+     * @return string
      * @throws Exception
      */
     public function output(

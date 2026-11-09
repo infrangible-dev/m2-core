@@ -2,27 +2,33 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\UrlInterface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Strings
 {
     /** @var \FeWeDev\Base\Strings */
-    protected $strings;
+    protected \FeWeDev\Base\Strings $strings;
 
     /** @var UrlInterface */
-    protected $urlInterface;
+    protected UrlInterface $urlInterface;
 
     /** @var EncryptorInterface */
-    protected $encryptor;
+    protected EncryptorInterface $encryptor;
 
+    /**
+     * @param \FeWeDev\Base\Strings $strings
+     * @param UrlInterface $urlInterface
+     * @param EncryptorInterface $encryptor
+     */
     public function __construct(
         \FeWeDev\Base\Strings $strings,
         UrlInterface $urlInterface,
@@ -47,7 +53,11 @@ class Strings
     }
 
     /**
-     * Encrypt a string
+     * Encrypts the string with the encryption key of the installation.
+     *
+     * @param string $data
+     *
+     * @return string
      */
     public function encrypt(string $data): string
     {
@@ -55,7 +65,11 @@ class Strings
     }
 
     /**
-     * Decrypt a string
+     * Decrypts the string with the encryption key of the installation.
+     *
+     * @param string $data
+     *
+     * @return string
      */
     public function decrypt(string $data): string
     {

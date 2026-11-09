@@ -2,25 +2,30 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use FeWeDev\Base\Variables;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Creditmemo
 {
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
     /** @var CreditmemoFactory */
-    protected $creditMemoFactory;
+    protected CreditmemoFactory $creditMemoFactory;
 
+    /**
+     * @param Variables $variables
+     * @param CreditmemoFactory $creditMemoFactory
+     */
     public function __construct(Variables $variables, CreditmemoFactory $creditMemoFactory)
     {
         $this->variables = $variables;
@@ -28,7 +33,17 @@ class Creditmemo
     }
 
     /**
-     * Prepare order creditmemo based on order items and requested params
+     * Prepares a credit memo of the order for the item quantities and amounts, without saving it.
+     *
+     * @param Order $order
+     * @param array $qtys
+     * @param float|null $shippingAmount
+     * @param float|null $adjustmentPositive
+     * @param float|null $adjustmentNegative
+     *
+     * @phpstan-param array<int|string, float|int|string> $qtys order item ID => quantity
+     *
+     * @return Order\Creditmemo
      */
     public function prepareCreditmemo(
         Order $order,

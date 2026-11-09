@@ -2,124 +2,142 @@
 
 declare(strict_types=1);
 
-namespace Infrangible\Core\Helper;
-
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
+namespace Infrangible\Core\Helper;
+
+use Exception;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Inventory\Model\ResourceModel\SourceItem\Collection;
+use Magento\Inventory\Model\SourceItem;
+use Magento\InventoryCatalogApi\Api\DefaultSourceProviderInterface;
+use RuntimeException;
+
+/**
+ * Source items of the multi source inventory. Requires the optional module Magento_Inventory (and
+ * Magento_InventoryCatalogApi for the default source), which is only loaded when a method is called. Without it, the
+ * methods return null or do nothing.
  */
 class Source
 {
     /** @var Product */
-    protected $productHelper;
+    protected Product $productHelper;
 
     /** @var Instances */
-    protected $instanceHelper;
+    protected Instances $instanceHelper;
 
     /** @var bool */
-    protected $inventoryAvailable = false;
+    protected bool $inventoryAvailable = false;
 
-    private $sourceItemFactory;
+    /** @var array<string, SourceItem|null> */
+    private array $sourceItemsBySku = [];
 
-    private $sourceItemResourceFactory;
+    /** @var array<string, SourceItem|null> */
+    private array $sourceItemsById = [];
 
-    private $sourceItemCollectionFactory;
-
-    private $defaultSourceProvider;
-
-    /** @var array */
-    private $sourceItemsBySku = [];
-
-    /** @var array */
-    private $sourceItemsById = [];
-
+    /**
+     * @param Product $productHelper
+     * @param Instances $instanceHelper
+     */
     public function __construct(Product $productHelper, Instances $instanceHelper)
     {
         $this->productHelper = $productHelper;
         $this->instanceHelper = $instanceHelper;
 
-        $this->inventoryAvailable = class_exists('Magento\Inventory\Model\SourceItem');
+        $this->inventoryAvailable = class_exists(SourceItem::class);
     }
 
-    public function getSourceItemFactory()
+    /**
+     * Returns the provider of the default source, or null if Magento_InventoryCatalogApi is not installed.
+     *
+     * @return DefaultSourceProviderInterface|null
+     */
+    public function getDefaultSourceProvider(): ?DefaultSourceProviderInterface
     {
-        if ($this->sourceItemFactory === null && $this->inventoryAvailable) {
-            $this->sourceItemFactory = $this->instanceHelper->getSingleton('Magento\Inventory\Model\SourceItemFactory');
+        if (! interface_exists(DefaultSourceProviderInterface::class)) {
+            return null;
         }
 
-        return $this->sourceItemFactory;
+        return $this->instanceHelper->getSharedInstance(DefaultSourceProviderInterface::class);
     }
 
-    public function getSourceItemResourceFactory()
+    /**
+     * Creates a new source item, or returns null if Magento_Inventory is not installed.
+     *
+     * @return SourceItem|null
+     */
+    public function newSourceItem(): ?SourceItem
     {
-        if ($this->sourceItemResourceFactory === null && $this->inventoryAvailable) {
-            $this->sourceItemResourceFactory =
-                $this->instanceHelper->getSingleton('Magento\Inventory\Model\ResourceModel\SourceItemFactory');
-        }
-
-        return $this->sourceItemResourceFactory;
+        return $this->inventoryAvailable ? $this->instanceHelper->createInstance(SourceItem::class) : null;
     }
 
-    public function getSourceItemCollectionFactory()
+    /**
+     * Creates a new source item of the product in the default source.
+     *
+     * Returns null if Magento_Inventory is not installed.
+     *
+     * @param int $productId
+     *
+     * @return SourceItem|null
+     * @throws LocalizedException
+     */
+    public function newProductSourceItem(int $productId): ?SourceItem
     {
-        if ($this->sourceItemCollectionFactory === null && $this->inventoryAvailable) {
-            $this->sourceItemCollectionFactory =
-                $this->instanceHelper->getSingleton('Magento\Inventory\Model\ResourceModel\SourceItem\CollectionFactory');
-        }
-
-        return $this->sourceItemCollectionFactory;
-    }
-
-    public function getDefaultSourceProvider()
-    {
-        if ($this->defaultSourceProvider === null && $this->inventoryAvailable) {
-            $this->defaultSourceProvider =
-                $this->instanceHelper->getSingleton('Magento\InventoryCatalogApi\Api\DefaultSourceProviderInterface');
-        }
-
-        return $this->defaultSourceProvider;
-    }
-
-    public function newSourceItem()
-    {
-        $sourceItemFactory = $this->getSourceItemFactory();
-
-        return $sourceItemFactory ? $this->getSourceItemFactory()->create() : null;
-    }
-
-    public function newProductSourceItem(int $productId)
-    {
-        $skus = $this->productHelper->determineSKUs([$productId]);
-
-        $sku = reset($skus);
-
         $sourceItem = $this->newSourceItem();
 
-        $sourceItem->setData('sku', $sku);
-        $sourceItem->setData('source_code', $this->getDefaultSourceProvider()->getCode());
+        if ($sourceItem === null) {
+            return null;
+        }
+
+        $skus = $this->productHelper->determineSKUs([$productId]);
+
+        $sourceItem->setData('sku', reset($skus));
+        $sourceItem->setData('source_code', $this->getDefaultSourceProviderCode());
 
         return $sourceItem;
     }
 
-    public function loadSourceItem(int $sourceItemId)
+    /**
+     * Loads the source item with the id, or returns null if Magento_Inventory is not installed.
+     *
+     * @param int $sourceItemId
+     *
+     * @return SourceItem|null
+     */
+    public function loadSourceItem(int $sourceItemId): ?SourceItem
     {
         $sourceItem = $this->newSourceItem();
 
-        $sourceItemResourceFactory = $this->getSourceItemResourceFactory();
-
-        if ($sourceItemResourceFactory) {
-            $sourceItemResourceFactory->create()->load($sourceItem, $sourceItemId);
+        if ($sourceItem !== null) {
+            $this->getSourceItemResource()->load($sourceItem, $sourceItemId);
         }
 
         return $sourceItem;
     }
 
     /**
+     * Loads the source items of the products into the cache.
+     *
+     * The cache is used by loadSourceItemByProductId() and loadSourceItemByProductSku().
+     *
      * @param int[]       $productIds
+     * @param string|null $sourceCode the default source if null
+     *
+     * @return void
+     * @throws LocalizedException
      */
     public function loadSourceItemsByProductId(array $productIds, ?string $sourceCode = null): void
     {
+        $sourceItemCollection = $this->getSourceItemCollection();
+
+        if ($sourceItemCollection === null) {
+            return;
+        }
+
         if ($sourceCode === null) {
             $sourceCode = $this->getDefaultSourceProviderCode();
         }
@@ -127,31 +145,32 @@ class Source
         $skus = $this->productHelper->determineSKUs($productIds, true);
         $entityIds = array_flip($skus);
 
-        $sourceItemCollection = $this->getSourceItemCollection();
-
         $sourceItemCollection->addFieldToFilter('sku', ['in' => $skus]);
         $sourceItemCollection->addFieldToFilter('source_code', ['eq' => $sourceCode]);
 
-        $sourceItems = $sourceItemCollection->getItems();
+        /** @var SourceItem $sourceItem */
+        foreach ($sourceItemCollection->getItems() as $sourceItem) {
+            $sku = (string)$sourceItem->getSku();
+            $itemSourceCode = (string)$sourceItem->getSourceCode();
 
-        if (is_array($sourceItems)) {
-            foreach ($sourceItems as $sourceItem) {
-                $sku = $sourceItem->getData('sku');
+            $this->sourceItemsBySku[ sprintf('%s_%s', $sku, $itemSourceCode) ] = $sourceItem;
 
-                $key = sprintf('%s_%s', $sku, $sourceItem->getData('source_code'));
-
-                $this->sourceItemsBySku[ $key ] = $sourceItem;
-
-                if (array_key_exists($sku, $entityIds)) {
-                    $key = sprintf('%s_%s', $entityIds[ $sku ], $sourceItem->getData('source_code'));
-
-                    $this->sourceItemsById[ $key ] = $sourceItem;
-                }
+            if (array_key_exists($sku, $entityIds)) {
+                $this->sourceItemsById[ sprintf('%s_%s', $entityIds[ $sku ], $itemSourceCode) ] = $sourceItem;
             }
         }
     }
 
-    public function loadSourceItemByProductId(int $productId, ?string $sourceCode = null)
+    /**
+     * Loads the source item of the product.
+     *
+     * @param int         $productId
+     * @param string|null $sourceCode the default source if null
+     *
+     * @return SourceItem|null null if the product has no source item or Magento_Inventory is not installed
+     * @throws LocalizedException
+     */
+    public function loadSourceItemByProductId(int $productId, ?string $sourceCode = null): ?SourceItem
     {
         if ($sourceCode === null) {
             $sourceCode = $this->getDefaultSourceProviderCode();
@@ -171,14 +190,23 @@ class Source
             return null;
         }
 
-        $sourceItem = $this->loadSourceItemByProductSku(strval($productId), $sourceCode);
+        $sourceItem = $this->loadSourceItemByProductSku($sku, $sourceCode);
 
         $this->sourceItemsById[ $key ] = $sourceItem;
 
         return $sourceItem;
     }
 
-    public function loadSourceItemByProductSku(string $sku, ?string $sourceCode = null)
+    /**
+     * Loads the source item of the product with the SKU.
+     *
+     * @param string      $sku
+     * @param string|null $sourceCode the default source if null
+     *
+     * @return SourceItem|null null if the product has no source item or Magento_Inventory is not installed
+     * @throws LocalizedException
+     */
+    public function loadSourceItemByProductSku(string $sku, ?string $sourceCode = null): ?SourceItem
     {
         if ($sourceCode === null) {
             $sourceCode = $this->getDefaultSourceProviderCode();
@@ -192,36 +220,62 @@ class Source
 
         $sourceItemCollection = $this->getSourceItemCollection();
 
+        if ($sourceItemCollection === null) {
+            return null;
+        }
+
         $sourceItemCollection->addFieldToFilter('sku', ['eq' => $sku]);
         $sourceItemCollection->addFieldToFilter('source_code', ['eq' => $sourceCode]);
 
         $sourceItem = $sourceItemCollection->getFirstItem();
 
-        $this->sourceItemsBySku[ $key ] = $sourceItem && $sourceItem->getId() ? $sourceItem : null;
+        $this->sourceItemsBySku[ $key ] =
+            $sourceItem instanceof SourceItem && $sourceItem->getId() ? $sourceItem : null;
 
         return $this->sourceItemsBySku[ $key ];
     }
 
-    public function saveSourceItem($sourceItem): void
+    /**
+     * Saves the source item.
+     *
+     * @param SourceItem $sourceItem
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function saveSourceItem(SourceItem $sourceItem): void
     {
-        $sourceItemResourceFactory = $this->getSourceItemResourceFactory();
-
-        if ($sourceItemResourceFactory) {
-            $sourceItemResourceFactory->create()->save($sourceItem);
-        }
+        $this->getSourceItemResource()->save($sourceItem);
     }
 
-    public function getSourceItemCollection()
+    /**
+     * Returns a new collection of source items, or null if Magento_Inventory is not installed.
+     *
+     * @return Collection|null
+     */
+    public function getSourceItemCollection(): ?Collection
     {
-        $sourceItemCollectionFactory = $this->getSourceItemCollectionFactory();
-
-        return $sourceItemCollectionFactory ? $this->getSourceItemCollectionFactory()->create() : null;
+        return $this->inventoryAvailable ? $this->instanceHelper->createInstance(Collection::class) : null;
     }
 
+    /**
+     * Returns the code of the default source, or null if Magento_InventoryCatalogApi is not installed.
+     *
+     * @return string|null
+     */
     public function getDefaultSourceProviderCode(): ?string
     {
-        $defaultSourceProvider = $this->getDefaultSourceProvider();
+        return $this->getDefaultSourceProvider()?->getCode();
+    }
 
-        return $defaultSourceProvider ? $this->getDefaultSourceProvider()->getCode() : null;
+    /**
+     * Returns the resource model of source items.
+     *
+     * @return \Magento\Inventory\Model\ResourceModel\SourceItem
+     * @throws RuntimeException if Magento_Inventory is not installed
+     */
+    private function getSourceItemResource(): \Magento\Inventory\Model\ResourceModel\SourceItem
+    {
+        return $this->instanceHelper->getSharedInstance(\Magento\Inventory\Model\ResourceModel\SourceItem::class);
     }
 }

@@ -2,11 +2,18 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
 use FeWeDev\Base\Arrays;
 use FeWeDev\Base\Variables;
+use InvalidArgumentException;
 use Magento\Config\Model\Config\Backend\Image\Logo;
 use Magento\Config\Model\ResourceModel\ConfigFactory;
 use Magento\Directory\Helper\Data;
@@ -15,6 +22,8 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem;
@@ -29,52 +38,62 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\Website;
 use Psr\Log\LoggerInterface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Stores extends AbstractHelper
 {
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
 
     /** @var Database */
-    protected $databaseHelper;
+    protected Database $databaseHelper;
 
     /** @var Instances */
-    protected $instanceHelper;
+    protected Instances $instanceHelper;
 
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var StoreManagerInterface */
-    protected $storeManager;
+    protected StoreManagerInterface $storeManager;
 
     /** @var ConfigFactory */
-    protected $configFactory;
+    protected ConfigFactory $configFactory;
 
     /** @var Filesystem */
-    protected $filesystem;
+    protected Filesystem $filesystem;
 
     /** @var Repository */
-    protected $assetRepository;
+    protected Repository $assetRepository;
 
     /** @var RequestInterface */
-    protected $request;
+    protected RequestInterface $request;
 
     /** @var PriceCurrencyInterface */
-    protected $priceCurrency;
+    protected PriceCurrencyInterface $priceCurrency;
 
-    /** @var ResolverInterface */
-    protected $localeResolver;
+    /** @var ResolverInterface|null */
+    protected ?ResolverInterface $localeResolver = null;
 
     /** @var TimezoneInterface */
-    protected $timezoneInterface;
+    protected TimezoneInterface $timezoneInterface;
 
+    /**
+     * @param Context $context
+     * @param Variables $variables
+     * @param Arrays $arrayHelper
+     * @param Database $databaseHelper
+     * @param Instances $instanceHelper
+     * @param LoggerInterface $logging
+     * @param StoreManagerInterface $storeManager
+     * @param ConfigFactory $configFactory
+     * @param Filesystem $filesystem
+     * @param Repository $assetRepository
+     * @param RequestInterface $request
+     * @param PriceCurrencyInterface $priceCurrency
+     * @param TimezoneInterface $timezoneInterface
+     */
     public function __construct(
         Context $context,
         Variables $variables,
@@ -106,8 +125,22 @@ class Stores extends AbstractHelper
         $this->timezoneInterface = $timezoneInterface;
     }
 
-    public function getStoreConfig(string $path, $defaultValue = null, bool $isFlag = false, ?int $storeId = null)
-    {
+    /**
+     * Returns a config value of the store, or the default value if it is not set.
+     *
+     * @param string $path
+     * @param mixed $defaultValue
+     * @param bool $isFlag
+     * @param int|null $storeId
+     *
+     * @return mixed
+     */
+    public function getStoreConfig(
+        string $path,
+        mixed $defaultValue = null,
+        bool $isFlag = false,
+        ?int $storeId = null
+    ): mixed {
         try {
             $store = $this->getStore($storeId);
 
@@ -117,7 +150,7 @@ class Stores extends AbstractHelper
                 $store->getCode()
             );
 
-            if ($isFlag === true && ! is_null($value)) {
+            if ($isFlag === true && $value !== null) {
                 $value = $this->scopeConfig->isSetFlag(
                     $path,
                     ScopeInterface::SCOPE_STORE,
@@ -125,27 +158,45 @@ class Stores extends AbstractHelper
                 );
             }
 
-            if (is_null($value)) {
+            if ($value === null) {
                 $value = $defaultValue;
             }
 
             return $value;
-        } catch (NoSuchEntityException $exception) {
+        } catch (NoSuchEntityException) {
             return $defaultValue;
         }
     }
 
-    public function getStoreConfigFlag(string $path, bool $defaultValue = false, ?int $storeId = null)
+    /**
+     * Returns a config flag of the store.
+     *
+     * @param string $path
+     * @param bool $defaultValue
+     * @param int|null $storeId
+     *
+     * @return bool
+     */
+    public function getStoreConfigFlag(string $path, bool $defaultValue = false, ?int $storeId = null): bool
     {
         return $this->getStoreConfig(
             $path,
             $defaultValue,
             true,
             $storeId
-        );
+        ) === true;
     }
 
-    public function getStoreConfigValue(string $path, $defaultValue = null, ?int $storeId = null)
+    /**
+     * Returns a config value of the store.
+     *
+     * @param string $path
+     * @param mixed $defaultValue
+     * @param int|null $storeId
+     *
+     * @return mixed
+     */
+    public function getStoreConfigValue(string $path, mixed $defaultValue = null, ?int $storeId = null): mixed
     {
         return $this->getStoreConfig(
             $path,
@@ -155,46 +206,79 @@ class Stores extends AbstractHelper
         );
     }
 
-    public function getWebsiteConfig(string $path, $defaultValue = null, bool $isFlag = false, ?int $websiteId = null)
-    {
+    /**
+     * Returns a config value of the website, or the default value if it is not set.
+     *
+     * @param string $path
+     * @param mixed $defaultValue
+     * @param bool $isFlag
+     * @param int|null $websiteId
+     *
+     * @return mixed
+     */
+    public function getWebsiteConfig(
+        string $path,
+        mixed $defaultValue = null,
+        bool $isFlag = false,
+        ?int $websiteId = null
+    ): mixed {
         try {
-            $website = $this->getWebsite($websiteId);
+            $websiteCode = $this->getWebsite($websiteId)->getCode();
+            $websiteCode = is_string($websiteCode) ? $websiteCode : null;
 
             $value = $this->scopeConfig->getValue(
                 $path,
                 ScopeInterface::SCOPE_WEBSITE,
-                $website->getCode()
+                $websiteCode
             );
 
-            if ($isFlag === true && ! is_null($value)) {
+            if ($isFlag === true && $value !== null) {
                 $value = $this->scopeConfig->isSetFlag(
                     $path,
                     ScopeInterface::SCOPE_WEBSITE,
-                    $website->getCode()
+                    $websiteCode
                 );
             }
 
-            if (is_null($value)) {
+            if ($value === null) {
                 $value = $defaultValue;
             }
 
             return $value;
-        } catch (LocalizedException $exception) {
+        } catch (LocalizedException) {
             return $defaultValue;
         }
     }
 
-    public function getWebsiteConfigFlag(string $path, bool $defaultValue = false, ?int $websiteId = null)
+    /**
+     * Returns a config flag of the website.
+     *
+     * @param string $path
+     * @param bool $defaultValue
+     * @param int|null $websiteId
+     *
+     * @return bool
+     */
+    public function getWebsiteConfigFlag(string $path, bool $defaultValue = false, ?int $websiteId = null): bool
     {
         return $this->getWebsiteConfig(
             $path,
             $defaultValue,
             true,
             $websiteId
-        );
+        ) === true;
     }
 
-    public function getWebsiteConfigValue(string $path, $defaultValue = null, ?int $websiteId = null)
+    /**
+     * Returns a config value of the website.
+     *
+     * @param string $path
+     * @param mixed $defaultValue
+     * @param int|null $websiteId
+     *
+     * @return mixed
+     */
+    public function getWebsiteConfigValue(string $path, mixed $defaultValue = null, ?int $websiteId = null): mixed
     {
         return $this->getWebsiteConfig(
             $path,
@@ -204,37 +288,62 @@ class Stores extends AbstractHelper
         );
     }
 
-    public function getDefaultConfig(string $path, $defaultValue = null, bool $isFlag = false)
+    /**
+     * Returns a config value of the default scope, or the default value if it is not set.
+     *
+     * @param string $path
+     * @param mixed $defaultValue
+     * @param bool $isFlag
+     *
+     * @return mixed
+     */
+    public function getDefaultConfig(string $path, mixed $defaultValue = null, bool $isFlag = false): mixed
     {
         $value = $this->scopeConfig->getValue(
             $path,
             ScopeConfigInterface::SCOPE_TYPE_DEFAULT
         );
 
-        if ($isFlag === true && ! is_null($value)) {
+        if ($isFlag === true && $value !== null) {
             $value = $this->scopeConfig->isSetFlag(
                 $path,
                 ScopeConfigInterface::SCOPE_TYPE_DEFAULT
             );
         }
 
-        if (is_null($value)) {
+        if ($value === null) {
             $value = $defaultValue;
         }
 
         return $value;
     }
 
-    public function getDefaultConfigFlag(string $path, bool $defaultValue = false)
+    /**
+     * Returns a config flag of the default scope.
+     *
+     * @param string $path
+     * @param bool $defaultValue
+     *
+     * @return bool
+     */
+    public function getDefaultConfigFlag(string $path, bool $defaultValue = false): bool
     {
         return $this->getDefaultConfig(
             $path,
             $defaultValue,
             true
-        );
+        ) === true;
     }
 
-    public function getDefaultConfigValue(string $path, $defaultValue = null)
+    /**
+     * Returns a config value of the default scope.
+     *
+     * @param string $path
+     * @param mixed $defaultValue
+     *
+     * @return mixed
+     */
+    public function getDefaultConfigValue(string $path, mixed $defaultValue = null): mixed
     {
         return $this->getDefaultConfig(
             $path,
@@ -242,6 +351,19 @@ class Stores extends AbstractHelper
         );
     }
 
+    /**
+     * Returns the store config value split into its trimmed parts.
+     *
+     * The value is split at the delimiter, or at line breaks if it does not contain the delimiter.
+     *
+     * @param string $configPath
+     * @param string $delimiter
+     * @param int|null $storeId
+     *
+     * @phpstan-param non-empty-string $delimiter
+     *
+     * @return string[]
+     */
     public function getExplodedConfigValues(string $configPath, string $delimiter = ',', ?int $storeId = null): array
     {
         $valueString = $this->getStoreConfig(
@@ -252,6 +374,8 @@ class Stores extends AbstractHelper
         );
 
         if (! $this->variables->isEmpty($valueString)) {
+            $valueString = $this->variables->stringValue($valueString);
+
             $delimiterPosition = strpos(
                 $valueString,
                 $delimiter
@@ -288,6 +412,16 @@ class Stores extends AbstractHelper
         return [];
     }
 
+    /**
+     * Moves the config values of a path to another path, in every scope.
+     *
+     * Values that already exist at the new path are overwritten.
+     *
+     * @param string $oldPath
+     * @param string $newPath
+     *
+     * @return void
+     */
     public function moveConfigValue(string $oldPath, string $newPath): void
     {
         $writeAdapter = $this->databaseHelper->getDefaultConnection();
@@ -301,80 +435,26 @@ class Stores extends AbstractHelper
             $oldPath
         );
 
-        $oldQueryResult = $writeAdapter->fetchAssoc($oldQuery);
-
-        if (! $this->variables->isEmpty($oldQueryResult)) {
-            foreach ($oldQueryResult as $oldData) {
-                $newQuery = $writeAdapter->select()->from($tableName);
-
-                $newQuery->where(
-                    'path = ?',
-                    $newPath
-                );
-                $newQuery->where(
-                    'scope = ?',
-                    $this->arrays->getValue(
-                        $oldData,
-                        'scope'
-                    )
-                );
-                $newQuery->where(
-                    'scope_id = ?',
-                    $this->arrays->getValue(
-                        $oldData,
-                        'scope_id'
-                    )
-                );
-
-                $newQueryResult = $writeAdapter->fetchAssoc($newQuery);
-
-                if (! $this->variables->isEmpty($newQueryResult)) {
-                    $newData = reset($newQueryResult);
-
-                    $writeAdapter->update(
-                        $tableName,
-                        [
-                            'value' => $this->arrays->getValue(
-                                $oldData,
-                                'value'
-                            )
-                        ],
-                        sprintf(
-                            'config_id = %d',
-                            $this->arrays->getValue(
-                                $newData,
-                                'config_id'
-                            )
-                        )
-                    );
-
-                    $writeAdapter->delete(
-                        $tableName,
-                        sprintf(
-                            'config_id = %d',
-                            $this->arrays->getValue(
-                                $oldData,
-                                'config_id'
-                            )
-                        )
-                    );
-                } else {
-                    $writeAdapter->update(
-                        $tableName,
-                        ['path' => $newPath],
-                        sprintf(
-                            'config_id = %d',
-                            $this->arrays->getValue(
-                                $oldData,
-                                'config_id'
-                            )
-                        )
-                    );
-                }
-            }
-        } // else no old data to move
+        foreach ($writeAdapter->fetchAll($oldQuery) as $oldData) {
+            $this->moveConfigRow(
+                $writeAdapter,
+                $tableName,
+                $oldData,
+                $newPath
+            );
+        }
     }
 
+    /**
+     * Moves all config values of a module (the first part of the path) to another module, in every scope.
+     *
+     * Values that already exist at the new path are overwritten.
+     *
+     * @param string $oldModuleId
+     * @param string $newModuleId
+     *
+     * @return void
+     */
     public function moveModuleConfigValues(string $oldModuleId, string $newModuleId): void
     {
         $writeAdapter = $this->databaseHelper->getDefaultConnection();
@@ -391,125 +471,136 @@ class Stores extends AbstractHelper
             )
         );
 
-        $oldQueryResult = $writeAdapter->fetchAssoc($oldQuery);
+        foreach ($writeAdapter->fetchAll($oldQuery) as $oldData) {
+            $path = substr(
+                $this->variables->stringValue($oldData[ 'path' ] ?? ''),
+                strlen($oldModuleId) + 1
+            );
 
-        if (! $this->variables->isEmpty($oldQueryResult)) {
-            foreach ($oldQueryResult as $oldData) {
-                $path = substr(
-                    $oldData[ 'path' ],
-                    strlen($oldModuleId) + 1
-                );
-
-                $newQuery = $writeAdapter->select()->from($tableName);
-
-                $newQuery->where(
-                    'path = ?',
-                    sprintf(
-                        '%s/%s',
-                        $newModuleId,
-                        $path
-                    )
-                );
-                $newQuery->where(
-                    'scope = ?',
-                    $this->arrays->getValue(
-                        $oldData,
-                        'scope'
-                    )
-                );
-                $newQuery->where(
-                    'scope_id = ?',
-                    $this->arrays->getValue(
-                        $oldData,
-                        'scope_id'
-                    )
-                );
-
-                $newQueryResult = $writeAdapter->fetchAssoc($newQuery);
-
-                if (! $this->variables->isEmpty($newQueryResult)) {
-                    $newData = reset($newQueryResult);
-
-                    $writeAdapter->update(
-                        $tableName,
-                        [
-                            'value' => $this->arrays->getValue(
-                                $oldData,
-                                'value'
-                            )
-                        ],
-                        sprintf(
-                            'config_id = %d',
-                            $this->arrays->getValue(
-                                $newData,
-                                'config_id'
-                            )
-                        )
-                    );
-
-                    $writeAdapter->delete(
-                        $tableName,
-                        sprintf(
-                            'config_id = %d',
-                            $this->arrays->getValue(
-                                $oldData,
-                                'config_id'
-                            )
-                        )
-                    );
-                } else {
-                    $writeAdapter->update(
-                        $tableName,
-                        [
-                            'path' => sprintf(
-                                '%s/%s',
-                                $newModuleId,
-                                $path
-                            )
-                        ],
-                        sprintf(
-                            'config_id = %d',
-                            $this->arrays->getValue(
-                                $oldData,
-                                'config_id'
-                            )
-                        )
-                    );
-                }
-            }
-        } // else no old data to move
+            $this->moveConfigRow(
+                $writeAdapter,
+                $tableName,
+                $oldData,
+                sprintf(
+                    '%s/%s',
+                    $newModuleId,
+                    $path
+                )
+            );
+        }
     }
 
-    public function insertConfigValue(string $path, $value, string $scope = 'default', int $scopeId = 0): void
+    /**
+     * Moves a row of the table core_config_data to a new path, or overwrites the value of the row with the new path.
+     *
+     * @param AdapterInterface $writeAdapter
+     * @param string $tableName
+     * @param array $oldData
+     * @param string $newPath
+     *
+     * @phpstan-param array<string, mixed> $oldData
+     *
+     * @return void
+     */
+    private function moveConfigRow(
+        AdapterInterface $writeAdapter,
+        string $tableName,
+        array $oldData,
+        string $newPath
+    ): void {
+        $oldConfigId = $this->variables->intValue($oldData[ 'config_id' ] ?? null);
+
+        $newQuery = $writeAdapter->select()->from($tableName);
+
+        $newQuery->where(
+            'path = ?',
+            $newPath
+        );
+        $newQuery->where(
+            'scope = ?',
+            $this->variables->stringValue($oldData[ 'scope' ] ?? '')
+        );
+        $newQuery->where(
+            'scope_id = ?',
+            $this->variables->intValue($oldData[ 'scope_id' ] ?? null)
+        );
+
+        $newData = $writeAdapter->fetchRow($newQuery);
+
+        if (is_array($newData) && ! $this->variables->isEmpty($newData)) {
+            $writeAdapter->update(
+                $tableName,
+                ['value' => $oldData[ 'value' ] ?? null],
+                ['config_id = ?' => $this->variables->intValue($newData[ 'config_id' ] ?? null)]
+            );
+
+            $writeAdapter->delete(
+                $tableName,
+                ['config_id = ?' => $oldConfigId]
+            );
+        } else {
+            $writeAdapter->update(
+                $tableName,
+                ['path' => $newPath],
+                ['config_id = ?' => $oldConfigId]
+            );
+        }
+    }
+
+    /**
+     * Saves a config value in the given scope. Array values are saved comma separated.
+     *
+     * @param string $path
+     * @param mixed $value
+     * @param string $scope
+     * @param int $scopeId
+     *
+     * @return void
+     * @throws InvalidArgumentException if the value is neither scalar, array nor null
+     */
+    public function insertConfigValue(string $path, mixed $value, string $scope = 'default', int $scopeId = 0): void
     {
+        if (is_array($value)) {
+            $value = implode(',', $value);
+        } elseif (is_scalar($value)) {
+            $value = (string)$value;
+        } elseif ($value !== null) {
+            throw new InvalidArgumentException(sprintf('Invalid value for config path: %s', $path));
+        }
+
         $this->configFactory->create()->saveConfig(
             $path,
-            is_array($value) ? implode(
-                ',',
-                $value
-            ) : $value,
+            // @phpstan-ignore argument.type (Magento saves null as NULL, which removes the value)
+            $value,
             $scope,
             $scopeId
         );
     }
 
+    /**
+     * Removes the config values of the path in all scopes.
+     *
+     * @param string $path
+     *
+     * @return void
+     */
     public function removeConfigValue(string $path): void
     {
         $this->databaseHelper->getDefaultConnection()->delete(
             $this->databaseHelper->getTableName('core_config_data'),
-            sprintf(
-                'path = "%s"',
-                $path
-            )
+            ['path = ?' => $path]
         );
     }
 
     /**
+     * Returns the store with the ID or code, or the current store.
+     *
      * @param int|string|null $storeId
      *
+     * @return Store
      * @throws NoSuchEntityException
      */
-    public function getStore($storeId = null): Store
+    public function getStore(int|string|null $storeId = null): Store
     {
         /** @var Store $store */
         $store = $this->storeManager->getStore($storeId);
@@ -517,6 +608,11 @@ class Stores extends AbstractHelper
         return $store;
     }
 
+    /**
+     * Returns the ID of the current store, or the ID of the admin store if there is no current store.
+     *
+     * @return int
+     */
     public function getStoreId(): int
     {
         try {
@@ -532,23 +628,31 @@ class Stores extends AbstractHelper
     }
 
     /**
+     * Returns the default store of the website, or of the current website.
+     *
+     * @param int|null $websiteId
+     *
+     * @return Store
      * @throws LocalizedException
      */
     public function getDefaultStore(?int $websiteId = null): Store
     {
         $website = $this->getWebsite($websiteId);
 
-        $group = $this->storeManager->getGroup($website->getDefaultGroupId());
+        $group = $this->storeManager->getGroup($this->variables->stringValue($website->getDefaultGroupId()));
 
         return $this->getStore($group->getDefaultStoreId());
     }
 
     /**
+     * Returns the website with the ID or code, or the current website.
+     *
      * @param int|string|null $websiteId
      *
+     * @return Website
      * @throws LocalizedException
      */
-    public function getWebsite($websiteId = null): Website
+    public function getWebsite(int|string|null $websiteId = null): Website
     {
         /** @var Website $website */
         $website = $this->storeManager->getWebsite($websiteId);
@@ -556,6 +660,11 @@ class Stores extends AbstractHelper
         return $website;
     }
 
+    /**
+     * Returns the ID of the current website, or 0 if there is no current website.
+     *
+     * @return int
+     */
     public function getWebsiteId(): int
     {
         try {
@@ -571,6 +680,11 @@ class Stores extends AbstractHelper
     }
 
     /**
+     * Returns all websites.
+     *
+     * @param bool $withDefault
+     * @param bool $codeKey
+     *
      * @return Website[]
      */
     public function getWebsites(bool $withDefault = false, bool $codeKey = false): array
@@ -585,6 +699,11 @@ class Stores extends AbstractHelper
     }
 
     /**
+     * Returns all store views.
+     *
+     * @param bool $withDefault
+     * @param bool $codeKey
+     *
      * @return Store[]
      */
     public function getStores(bool $withDefault = false, bool $codeKey = false): array
@@ -598,38 +717,55 @@ class Stores extends AbstractHelper
         return $stores;
     }
 
+    /**
+     * Returns the base web URL of the current store, or of the default store if there is no current store.
+     *
+     * @return string
+     */
     public function getWebUrl(): string
     {
         $store = null;
 
         try {
             $store = $this->getStore();
-        } catch (NoSuchEntityException $exception) {
+        } catch (NoSuchEntityException) {
             try {
                 $store = $this->getDefaultStore();
             } catch (LocalizedException $exception) {
+                $this->logging->error($exception->getMessage());
             }
         }
 
         return $store !== null ? $store->getBaseUrl(UrlInterface::URL_TYPE_WEB) : '';
     }
 
+    /**
+     * Returns the base media URL of the current store, or of the default store if there is no current store.
+     *
+     * @return string
+     */
     public function getMediaUrl(): string
     {
         $store = null;
 
         try {
             $store = $this->getStore();
-        } catch (NoSuchEntityException $exception) {
+        } catch (NoSuchEntityException) {
             try {
                 $store = $this->getDefaultStore();
             } catch (LocalizedException $exception) {
+                $this->logging->error($exception->getMessage());
             }
         }
 
         return $store !== null ? $store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) : '';
     }
 
+    /**
+     * Returns the URL of the logo configured for the store, or of the logo of the theme.
+     *
+     * @return string
+     */
     public function getSiteLogo(): string
     {
         $folderName = Logo::UPLOAD_DIR;
@@ -649,17 +785,35 @@ class Stores extends AbstractHelper
             );
     }
 
+    /**
+     * Checks whether the single store mode is active.
+     *
+     * @return bool
+     */
     public function isSingleStoreMode(): bool
     {
         return $this->storeManager->isSingleStoreMode();
     }
 
     /**
-     * @throws Exception
+     * Imports config values of the store (the default scope for the admin store), grouped by section and group.
+     *
+     * The values of the sections in $resetSections are removed before.
+     *
+     * @param Store $store
+     * @param array $data
+     * @param array $resetSections
+     *
+     * @phpstan-param array<string, array<string, array<string, mixed>>> $data
+     * @phpstan-param string[] $resetSections
+     *
+     * @return void
+     * @throws CouldNotDeleteException
      */
     public function import(Store $store, array $data, array $resetSections = []): void
     {
-        $isDefault = $store->getId() == 0;
+        $storeId = $this->variables->intValue($store->getId());
+        $isDefault = $storeId === 0;
 
         foreach ($data as $section => $sectionData) {
             if (in_array(
@@ -689,7 +843,7 @@ class Stores extends AbstractHelper
                         sprintf(
                             'path like "%s/%%" AND scope = "stores" AND scope_id = %d',
                             $section,
-                            $store->getId()
+                            $storeId
                         )
                     );
                 }
@@ -721,13 +875,24 @@ class Stores extends AbstractHelper
                         ),
                         $value,
                         $isDefault ? 'default' : 'stores',
-                        $isDefault ? 0 : $store->getId()
+                        $isDefault ? 0 : $storeId
                     );
                 }
             }
         }
     }
 
+    /**
+     * Exports the config values of the sections for the store.
+     *
+     * @param Store $store
+     * @param array $sections
+     *
+     * @phpstan-param string[] $sections
+     *
+     * @return array
+     * @phpstan-return array<string, mixed>
+     */
     public function export(Store $store, array $sections): array
     {
         $data = [];
@@ -737,7 +902,7 @@ class Stores extends AbstractHelper
                 $section,
                 [],
                 false,
-                $store->getId()
+                $this->variables->intValue($store->getId())
             );
         }
 
@@ -745,13 +910,19 @@ class Stores extends AbstractHelper
     }
 
     /**
-     * @return int|float
+     * Parses a number formatted in the default locale of the store.
+     *
+     * @param string $value
+     *
+     * @return int|float|false false if the value is not a number
      */
-    public function getNumber(string $value)
+    public function getNumber(string $value): int|float|false
     {
-        $locale = $this->getStoreConfig(
-            Data::XML_PATH_DEFAULT_LOCALE,
-            'en_US'
+        $locale = $this->variables->stringValue(
+            $this->getStoreConfig(
+                Data::XML_PATH_DEFAULT_LOCALE,
+                'en_US'
+            )
         );
 
         $formatter = \NumberFormatter::create(
@@ -762,11 +933,21 @@ class Stores extends AbstractHelper
         return $formatter->parse($value);
     }
 
+    /**
+     * Formats a number in the default locale of the store.
+     *
+     * @param float $value
+     * @param int $precision
+     *
+     * @return string
+     */
     public function formatNumber(float $value, int $precision = 2): string
     {
-        $locale = $this->getStoreConfig(
-            Data::XML_PATH_DEFAULT_LOCALE,
-            'en_US'
+        $locale = $this->variables->stringValue(
+            $this->getStoreConfig(
+                Data::XML_PATH_DEFAULT_LOCALE,
+                'en_US'
+            )
         );
 
         $formatter = \NumberFormatter::create(
@@ -778,9 +959,19 @@ class Stores extends AbstractHelper
             $precision
         );
 
-        return $formatter->format($value);
+        $formattedValue = $formatter->format($value);
+
+        return $formattedValue === false ? (string)$value : $formattedValue;
     }
 
+    /**
+     * Formats a price in the currency of the current store.
+     *
+     * @param float $price
+     * @param bool $includeContainer
+     *
+     * @return string
+     */
     public function formatPrice(float $price, bool $includeContainer = true): string
     {
         try {
@@ -794,13 +985,17 @@ class Stores extends AbstractHelper
             $this->logging->error($exception);
         }
 
-        return strval($price);
+        return (string)$price;
     }
 
     /**
+     * Rounds a price to two decimals.
+     *
      * @param int|float $price
+     *
+     * @return float
      */
-    public function roundPrice($price): float
+    public function roundPrice(int|float $price): float
     {
         return round(
             $price,
@@ -810,23 +1005,26 @@ class Stores extends AbstractHelper
     }
 
     /**
+     * Converts a price from the base currency to the current currency of the store, optionally formatted.
+     *
+     * @param float $price
+     * @param bool $format
+     *
      * @return float|string
      */
-    public function convertPrice(float $price, bool $format = false)
+    public function convertPrice(float $price, bool $format = false): float|string
     {
         $value = $price;
 
         try {
             $store = $this->getStore();
 
-            if ($store->getCurrentCurrency() && $store->getBaseCurrency()) {
-                $value = $store->getBaseCurrency()->convert(
-                    $price,
-                    $store->getCurrentCurrency()
-                );
-            }
+            $value = $store->getBaseCurrency()->convert(
+                $price,
+                $store->getCurrentCurrency()
+            );
 
-            if ($store->getCurrentCurrency() && $format) {
+            if ($format) {
                 $value = $this->formatPrice(
                     $value,
                     false
@@ -839,16 +1037,30 @@ class Stores extends AbstractHelper
         return $value;
     }
 
+    /**
+     * Returns the locale of the current request.
+     *
+     * @return string
+     */
     public function getLocale(): string
     {
         if ($this->localeResolver === null) {
-            $this->localeResolver = $this->instanceHelper->getSingleton(ResolverInterface::class);
+            $this->localeResolver = $this->instanceHelper->getSharedInstance(ResolverInterface::class);
         }
 
         return $this->localeResolver->getLocale();
     }
 
-    public function getDate($date = null, $useTimezone = true, $includeTime = true): \DateTime
+    /**
+     * Returns a date in the timezone of the store.
+     *
+     * @param mixed $date
+     * @param bool $useTimezone
+     * @param bool $includeTime
+     *
+     * @return \DateTime
+     */
+    public function getDate(mixed $date = null, bool $useTimezone = true, bool $includeTime = true): \DateTime
     {
         return $this->timezoneInterface->date(
             $date,

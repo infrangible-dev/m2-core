@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
@@ -17,89 +23,102 @@ use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Catalog\Pricing\Price\TierPrice;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\Collection as AttributeCollection;
+use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableResource;
 use Magento\Customer\Model\Address\AbstractAddress;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Locale\Format;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Store\Model\Store;
 use Psr\Log\LoggerInterface;
-use Zend_Db_Select;
+use RuntimeException;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Product
 {
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
 
     /** @var Attribute */
-    protected $attributeHelper;
+    protected Attribute $attributeHelper;
 
     /** @var Database */
-    protected $databaseHelper;
+    protected Database $databaseHelper;
 
     /** @var Data */
-    protected $catalogHelper;
+    protected Data $catalogHelper;
 
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var ProductFactory */
-    protected $productFactory;
+    protected ProductFactory $productFactory;
 
     /** @var \Magento\Catalog\Model\ResourceModel\ProductFactory */
-    protected $productResourceFactory;
+    protected \Magento\Catalog\Model\ResourceModel\ProductFactory $productResourceFactory;
 
     /** @var CollectionFactory */
-    protected $productCollectionFactory;
+    protected CollectionFactory $productCollectionFactory;
 
     /** @var Config */
-    protected $productMediaConfig;
+    protected Config $productMediaConfig;
 
-    /** @var \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\CollectionFactory */
-    protected $configurableAttributeCollectionFactory;
+    /** @var Instances */
+    protected Instances $instanceHelper;
 
     /** @var ConfigInterface */
-    protected $config;
+    protected ConfigInterface $config;
 
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
     /** @var Format */
-    protected $localeFormat;
+    protected Format $localeFormat;
 
     /** @var \Magento\Tax\Helper\Data */
-    protected $taxHelper;
+    protected \Magento\Tax\Helper\Data $taxHelper;
 
     /** @var PriceCurrencyInterface */
-    protected $priceCurrency;
+    protected PriceCurrencyInterface $priceCurrency;
 
-    /** @var array */
-    private $entitySkus = [];
+    /** @var array<int|string, string> SKUs by entity id */
+    private array $entitySkus = [];
 
-    /** @var array */
-    private $websiteIds = [];
+    /** @var array<int, array<int|string>> website ids by product id */
+    private array $websiteIds = [];
 
-    /** @var array */
-    private $types;
+    /** @var array<string, array<string, mixed>>|null */
+    private ?array $types = null;
 
-    /** @var array */
-    private $categoryIds = [];
+    /** @var array<int|string, array<int, mixed>> category ids by product id */
+    private array $categoryIds = [];
 
-    /** @var array */
-    private $usedProducts = [];
+    /** @var array<string, \Magento\Catalog\Model\Product[]> */
+    private array $usedProducts = [];
 
-    /** @var array */
-    private $usedProductAttributeIds = [];
+    /** @var array<int|string, int[]> */
+    private array $usedProductAttributeIds = [];
 
-    /** @var array */
-    private $usedProductAttributes = [];
+    /** @var array<string, array<int, array<int, int>>> */
+    private array $usedProductAttributes = [];
 
+    /**
+     * @param Arrays $arrays
+     * @param Attribute $attributeHelper
+     * @param Database $databaseHelper
+     * @param Data $catalogHelper
+     * @param LoggerInterface $logging
+     * @param ProductFactory $productFactory
+     * @param \Magento\Catalog\Model\ResourceModel\ProductFactory $productResourceFactory
+     * @param CollectionFactory $productCollectionFactory
+     * @param Config $productMediaConfig
+     * @param Instances $instanceHelper
+     * @param ConfigInterface $config
+     * @param Variables $variables
+     * @param Format $localeFormat
+     * @param \Magento\Tax\Helper\Data $taxHelper
+     * @param PriceCurrencyInterface $priceCurrency
+     */
     public function __construct(
         Arrays $arrays,
         Attribute $attributeHelper,
@@ -110,7 +129,7 @@ class Product
         \Magento\Catalog\Model\ResourceModel\ProductFactory $productResourceFactory,
         CollectionFactory $productCollectionFactory,
         Config $productMediaConfig,
-        \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable\Attribute\CollectionFactory $configurableAttributeCollectionFactory,
+        Instances $instanceHelper,
         ConfigInterface $config,
         Variables $variables,
         Format $localeFormat,
@@ -126,7 +145,7 @@ class Product
         $this->productResourceFactory = $productResourceFactory;
         $this->productCollectionFactory = $productCollectionFactory;
         $this->productMediaConfig = $productMediaConfig;
-        $this->configurableAttributeCollectionFactory = $configurableAttributeCollectionFactory;
+        $this->instanceHelper = $instanceHelper;
         $this->config = $config;
         $this->variables = $variables;
         $this->localeFormat = $localeFormat;
@@ -134,11 +153,24 @@ class Product
         $this->priceCurrency = $priceCurrency;
     }
 
+    /**
+     * Creates a new product.
+     *
+     * @return \Magento\Catalog\Model\Product
+     */
     public function newProduct(): \Magento\Catalog\Model\Product
     {
         return $this->productFactory->create();
     }
 
+    /**
+     * Loads the product.
+     *
+     * @param int $productId
+     * @param int|null $storeId
+     *
+     * @return \Magento\Catalog\Model\Product
+     */
     public function loadProduct(int $productId, ?int $storeId = null): \Magento\Catalog\Model\Product
     {
         $product = $this->newProduct();
@@ -155,6 +187,14 @@ class Product
         return $product;
     }
 
+    /**
+     * Loads the product with the SKU.
+     *
+     * @param string $productSku
+     * @param int|null $storeId
+     *
+     * @return \Magento\Catalog\Model\Product
+     */
     public function loadProductBySku(string $productSku, ?int $storeId = null): \Magento\Catalog\Model\Product
     {
         $product = $this->newProduct();
@@ -177,6 +217,11 @@ class Product
     }
 
     /**
+     * Saves the product.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     *
+     * @return void
      * @throws Exception
      */
     public function saveProduct(\Magento\Catalog\Model\Product $product): void
@@ -184,18 +229,43 @@ class Product
         $this->productResourceFactory->create()->save($product);
     }
 
+    /**
+     * Returns a new product collection.
+     *
+     * @return Collection
+     */
     public function getProductCollection(): Collection
     {
         return $this->productCollectionFactory->create();
     }
 
+    /**
+     * Returns the media configuration of products.
+     *
+     * @return Config
+     */
     public function getProductMediaConfig(): Config
     {
         return $this->productMediaConfig;
     }
 
     /**
-     * @throws Exception
+     * Returns the ids of the child products (configurable or all relations) of the products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $parentIds
+     * @param bool $excludeInactive
+     * @param bool $excludeOutOfStock
+     * @param bool $maintainAssociation
+     * @param bool $useSuperLink
+     * @param bool $includeParents
+     * @param int|null $storeId
+     *
+     * @phpstan-param array<int|string> $parentIds
+     *
+     * @return array
+     * @phpstan-return array<int, int> child ids, or parent ids by child id if $maintainAssociation is true
+     * @throws LocalizedException
      */
     public function getChildIds(
         AdapterInterface $dbAdapter,
@@ -267,9 +337,8 @@ class Product
             $childIds = [];
 
             foreach ($queryResult as $childId => $queryRow) {
-                $childIds[ (int)$childId ] = (int)$this->arrays->getValue(
-                    $queryRow,
-                    'parent_id'
+                $childIds[ (int)$childId ] = $this->idValue(
+                    $this->arrays->getValue($queryRow, 'parent_id')
                 );
             }
         } else {
@@ -292,7 +361,19 @@ class Product
     }
 
     /**
-     * @throws Exception
+     * Returns the query for the ids of the child products of the products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $parentIds
+     * @param bool $excludeInactive
+     * @param bool $useSuperLink
+     * @param bool $includeParents
+     * @param int|null $storeId
+     *
+     * @phpstan-param array<int|string> $parentIds
+     *
+     * @return Select
+     * @throws LocalizedException
      */
     public function getChildIdQuery(
         AdapterInterface $dbAdapter,
@@ -462,7 +543,20 @@ class Product
     }
 
     /**
-     * @throws Exception
+     * Returns the ids of the products in the options of the bundle products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $parentIds
+     * @param bool $excludeInactive
+     * @param bool $excludeOutOfStock
+     * @param bool $maintainAssociation
+     * @param int|null $storeId
+     *
+     * @phpstan-param array<int|string> $parentIds
+     *
+     * @return array
+     * @phpstan-return array<int, int> child ids, or parent ids by child id if $maintainAssociation is true
+     * @throws LocalizedException
      */
     public function getBundledIds(
         AdapterInterface $dbAdapter,
@@ -527,9 +621,8 @@ class Product
             $childIds = [];
 
             foreach ($queryResult as $childId => $queryRow) {
-                $childIds[ (int)$childId ] = (int)$this->arrays->getValue(
-                    $queryRow,
-                    'parent_product_id'
+                $childIds[ (int)$childId ] = $this->idValue(
+                    $this->arrays->getValue($queryRow, 'parent_product_id')
                 );
             }
         } else {
@@ -552,7 +645,17 @@ class Product
     }
 
     /**
-     * @throws Exception
+     * Returns the query for the ids of the products in the options of the bundle products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $parentIds
+     * @param bool $excludeInactive
+     * @param int|null $storeId
+     *
+     * @phpstan-param array<int|string> $parentIds
+     *
+     * @return Select
+     * @throws LocalizedException
      */
     public function getBundledIdQuery(
         AdapterInterface $dbAdapter,
@@ -701,7 +804,21 @@ class Product
     }
 
     /**
-     * @throws Exception
+     * Returns the ids of the products of the grouped products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $parentIds
+     * @param bool $excludeInactive
+     * @param bool $excludeOutOfStock
+     * @param bool $maintainAssociation
+     * @param bool $includeParents
+     * @param int|null $storeId
+     *
+     * @phpstan-param array<int|string> $parentIds
+     *
+     * @return array
+     * @phpstan-return array<int, int> child ids, or parent ids by child id if $maintainAssociation is true
+     * @throws LocalizedException
      */
     public function getGroupedIds(
         AdapterInterface $dbAdapter,
@@ -724,11 +841,31 @@ class Product
         );
     }
 
-    public function getConfigurableAttributeCollection(): AttributeCollection
+    /**
+     * Returns a new collection of the configurable attributes of configurable products.
+     *
+     * Requires the optional module Magento_ConfigurableProduct, which is only loaded when this method is called.
+     *
+     * @return ConfigurableResource\Attribute\Collection
+     * @throws RuntimeException if Magento_ConfigurableProduct is not installed
+     */
+    public function getConfigurableAttributeCollection(): ConfigurableResource\Attribute\Collection
     {
-        return $this->configurableAttributeCollectionFactory->create();
+        return $this->instanceHelper->createInstance(ConfigurableResource\Attribute\Collection::class);
     }
 
+    /**
+     * Determines the SKUs of the products with the entity ids, cached.
+     *
+     * @param array $entityIds
+     * @param bool $keepAssociation use the entity ids as keys instead of the keys of $entityIds
+     *
+     * @phpstan-param array<int|string> $entityIds
+     *
+     * @return array
+     * @phpstan-return array<int|string, string>
+     * @throws LocalizedException
+     */
     public function determineSKUs(array $entityIds, bool $keepAssociation = false): array
     {
         $skus = [];
@@ -768,7 +905,7 @@ class Product
             foreach ($entityIdChunks as $entityIdChunk) {
                 $productCollection = $this->getProductCollection();
 
-                $productCollection->getSelect()->reset(Zend_Db_Select::COLUMNS);
+                $productCollection->getSelect()->reset(Select::COLUMNS);
                 $productCollection->getSelect()->columns(
                     [
                         'entity_id',
@@ -788,13 +925,12 @@ class Product
                         $entityId,
                         $productData
                     )) {
-                        if (array_key_exists(
-                            'sku',
-                            $productData[ $entityId ]
-                        )) {
-                            $skus[ $keepAssociation ? $entityId : $elementNumber ] = $productData[ $entityId ][ 'sku' ];
+                        $sku = $productData[ $entityId ][ 'sku' ] ?? null;
 
-                            $this->entitySkus[ $entityId ] = $productData[ $entityId ][ 'sku' ];
+                        if (is_string($sku)) {
+                            $skus[ $keepAssociation ? $entityId : $elementNumber ] = $sku;
+
+                            $this->entitySkus[ $entityId ] = $sku;
                         }
                     }
                 }
@@ -811,6 +947,17 @@ class Product
         return $skus;
     }
 
+    /**
+     * Determines the entity ids of the products with the SKUs, cached.
+     *
+     * @param array $skus
+     *
+     * @phpstan-param array<int|string, string> $skus
+     *
+     * @return array
+     * @phpstan-return array<int|string, int|string> entity ids, with the keys of $skus
+     * @throws LocalizedException
+     */
     public function determineEntityIds(array $skus): array
     {
         $entityIds = [];
@@ -854,7 +1001,7 @@ class Product
             foreach ($skuChunks as $skuChunk) {
                 $productCollection = $this->getProductCollection();
 
-                $productCollection->getSelect()->reset(Zend_Db_Select::COLUMNS);
+                $productCollection->getSelect()->reset(Select::COLUMNS);
                 $productCollection->getSelect()->columns(
                     [
                         'sku',
@@ -874,13 +1021,12 @@ class Product
                         $sku,
                         $productData
                     )) {
-                        if (array_key_exists(
-                            'entity_id',
-                            $productData[ $sku ]
-                        )) {
-                            $entityIds[ $elementNumber ] = $productData[ $sku ][ 'entity_id' ];
+                        $entityId = $productData[ $sku ][ 'entity_id' ] ?? null;
 
-                            $this->entitySkus[ $productData[ $sku ][ 'entity_id' ] ] = $sku;
+                        if (is_int($entityId) || is_string($entityId)) {
+                            $entityIds[ $elementNumber ] = $entityId;
+
+                            $this->entitySkus[ $entityId ] = $sku;
                         }
                     }
                 }
@@ -897,6 +1043,20 @@ class Product
         return $entityIds;
     }
 
+    /**
+     * Returns the ids of the parent products of the products.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $childIds
+     * @param bool $maintainAssociation return the parent ids by child id
+     * @param bool $useSuperLink use the configurable links instead of all product relations
+     * @param bool $includeChildren also search the child ids as parent ids
+     *
+     * @phpstan-param array<int|string> $childIds
+     *
+     * @return array
+     * @phpstan-return array<int, int>
+     */
     public function getParentIds(
         AdapterInterface $dbAdapter,
         array $childIds,
@@ -949,18 +1109,21 @@ class Product
             );
         }
 
-        $queryResult = $this->databaseHelper->fetchAssoc($superLinkQuery);
-
         if ($maintainAssociation) {
-            $parentIds = array_values($queryResult);
-        } else {
-            $parentIds = array_keys($queryResult);
-        }
+            $parentIds = [];
 
-        $parentIds = array_map(
-            'intval',
-            $parentIds
-        );
+            foreach ($this->databaseHelper->fetchAll($superLinkQuery, $dbAdapter) as $row) {
+                if (is_array($row)) {
+                    $parentIds[ $this->idValue($row[ $childColumnName ] ?? null) ] =
+                        $this->idValue($row[ 'parent_id' ] ?? null);
+                }
+            }
+        } else {
+            $parentIds = array_map(
+                'intval',
+                array_keys($this->databaseHelper->fetchAssoc($superLinkQuery, $dbAdapter))
+            );
+        }
 
         $this->logging->debug(
             sprintf(
@@ -972,6 +1135,15 @@ class Product
         return $parentIds;
     }
 
+    /**
+     * Returns the ids of the websites of the product, cached.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int $productId
+     *
+     * @return array
+     * @phpstan-return array<int|string>
+     */
     public function getWebsiteIds(AdapterInterface $dbAdapter, int $productId): array
     {
         if (! array_key_exists(
@@ -994,7 +1166,7 @@ class Product
                 Select::TYPE_CONDITION
             );
 
-            $queryResult = $this->databaseHelper->fetchAssoc($websiteQuery);
+            $queryResult = $this->databaseHelper->fetchAssoc($websiteQuery, $dbAdapter);
 
             $this->websiteIds[ $productId ] = array_keys($queryResult);
         }
@@ -1003,7 +1175,10 @@ class Product
     }
 
     /**
-     * Get product types
+     * Returns the configuration of all product types, with translated labels.
+     *
+     * @return array
+     * @phpstan-return array<string, array<string, mixed>>
      */
     public function getTypes(): array
     {
@@ -1011,7 +1186,9 @@ class Product
             $productTypes = $this->config->getAll();
 
             foreach ($productTypes as $productTypeKey => $productTypeConfig) {
-                $productTypes[ $productTypeKey ][ 'label' ] = __($productTypeConfig[ 'label' ]);
+                $label = $productTypeConfig[ 'label' ] ?? $productTypeKey;
+
+                $productTypes[ $productTypeKey ][ 'label' ] = __(is_scalar($label) ? (string)$label : $productTypeKey);
             }
 
             $this->types = $productTypes;
@@ -1020,6 +1197,17 @@ class Product
         return $this->types;
     }
 
+    /**
+     * Returns the ids of the categories of the products, cached.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productIds
+     *
+     * @phpstan-param array<int|string> $productIds
+     *
+     * @return array
+     * @phpstan-return array<int|string, array<int, mixed>> category ids by product id
+     */
     public function getCategoryIds(AdapterInterface $dbAdapter, array $productIds): array
     {
         $result = [];
@@ -1072,7 +1260,19 @@ class Product
     }
 
     /**
+     * Returns the price of the product including or excluding tax.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @param float $price
+     * @param bool|null $includingTax
+     * @param AbstractAddress|null $shippingAddress
+     * @param AbstractAddress|null $billingAddress
+     * @param int|null $ctc
      * @param null|string|bool|int|Store $store
+     * @param bool|null $priceIncludesTax
+     * @param bool|null $roundPrice
+     *
+     * @return float
      */
     public function getTaxPrice(
         \Magento\Catalog\Model\Product $product,
@@ -1081,7 +1281,7 @@ class Product
         ?AbstractAddress $shippingAddress = null,
         ?AbstractAddress $billingAddress = null,
         ?int $ctc = null,
-        $store = null,
+        Store|int|string|bool|null $store = null,
         ?bool $priceIncludesTax = null,
         ?bool $roundPrice = true
     ): float {
@@ -1094,11 +1294,16 @@ class Product
             $ctc,
             $store,
             $priceIncludesTax,
-            $roundPrice
+            $roundPrice ?? true
         );
     }
 
     /**
+     * Returns the simple products of the configurable product, cached.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @param bool $onlyEnabled
+     *
      * @return \Magento\Catalog\Model\Product[]
      */
     public function getUsedProducts(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
@@ -1146,6 +1351,14 @@ class Product
         return $this->usedProducts[ $cacheKey ];
     }
 
+    /**
+     * Returns the ids of the configurable attributes of the configurable product, cached.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     *
+     * @return int[]
+     * @throws LocalizedException
+     */
     public function getUsedProductAttributeIds(\Magento\Catalog\Model\Product $product): array
     {
         if ($product->getTypeId() !== 'configurable') {
@@ -1156,11 +1369,11 @@ class Product
             $product->getId(),
             $this->usedProductAttributeIds
         )) {
+            $this->usedProductAttributeIds[ $product->getId() ] = [];
+
             $typeInstance = $product->getTypeInstance();
 
             if ($typeInstance instanceof Configurable) {
-                $this->usedProductAttributeIds[ $product->getId() ] = [];
-
                 $attributes = $typeInstance->getConfigurableAttributes($product);
 
                 foreach ($attributes as $attribute) {
@@ -1171,6 +1384,7 @@ class Product
 
                         $this->usedProductAttributeIds[ $product->getId() ][] = $attributeId;
                     } catch (Exception $exception) {
+                        $this->logging->debug($exception->getMessage());
                     }
                 }
             }
@@ -1179,6 +1393,17 @@ class Product
         return $this->usedProductAttributeIds[ $product->getId() ];
     }
 
+    /**
+     * Returns the option ids of the configurable attributes of the simple products of the configurable product.
+     *
+     * Simple products without a value for one of the attributes are left out.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @param bool $onlyEnabled
+     *
+     * @return array
+     * @phpstan-return array<int, array<int, int>> option ids by attribute id by simple product id
+     */
     public function getUsedProductAttributes(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
     {
         if ($product->getTypeId() !== 'configurable') {
@@ -1199,6 +1424,8 @@ class Product
             $cacheKey,
             $this->usedProductAttributes
         )) {
+            $this->usedProductAttributes[ $cacheKey ] = [];
+
             $usedProducts = $this->getUsedProducts(
                 $product,
                 $onlyEnabled
@@ -1223,6 +1450,7 @@ class Product
                                 $this->variables->intValue($usedProduct->getData($attributCode));
                         }
                     } catch (Exception $exception) {
+                        $this->logging->debug($exception->getMessage());
                     }
                 }
             }
@@ -1231,6 +1459,15 @@ class Product
         return $this->usedProductAttributes[ $cacheKey ];
     }
 
+    /**
+     * Returns the prices of the simple products of the configurable product, as the configurable product block does.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @param bool $onlyEnabled
+     *
+     * @return array
+     * @phpstan-return array<int|string, array<string, mixed>> prices by simple product id
+     */
     public function getUsedProductsPrices(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
     {
         $prices = [];
@@ -1262,10 +1499,12 @@ class Product
                         $priceInfo->getPrice('final_price')->getAmount()->getValue()
                     ),
                 ],
-                'tierPrices'   => $this->getTierPricesByProduct($product),
+                'tierPrices'   => $this->getTierPricesByProduct($usedProduct),
                 'msrpPrice'    => [
                     'amount' => $this->localeFormat->getNumber(
-                        $this->priceCurrency->convertAndRound($product->getDataUsingMethod('msrp'))
+                        $this->priceCurrency->convertAndRound(
+                            $this->floatValue($usedProduct->getDataUsingMethod('msrp'))
+                        )
                     ),
                 ],
             ];
@@ -1274,6 +1513,15 @@ class Product
         return $prices;
     }
 
+    /**
+     * Returns the SKUs of the simple products of the configurable product.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @param bool $onlyEnabled
+     *
+     * @return array
+     * @phpstan-return array<int|string, string|null> SKUs by simple product id
+     */
     public function getUsedProductsSkus(\Magento\Catalog\Model\Product $product, bool $onlyEnabled = true): array
     {
         $skus = [];
@@ -1281,14 +1529,19 @@ class Product
         foreach ($this->getUsedProducts(
             $product,
             $onlyEnabled
-        ) as $product) {
-            $skus[ $product->getId() ] = $product->getSku();
+        ) as $usedProduct) {
+            $skus[ $usedProduct->getId() ] = $usedProduct->getSku();
         }
 
         return $skus;
     }
 
     /**
+     * Returns the tier prices of the product for the customer group.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @param int $customerGroupId
+     *
      * @return ProductTierPriceInterface[]
      */
     public function getCustomerGroupTierPrices(\Magento\Catalog\Model\Product $product, int $customerGroupId): array
@@ -1310,6 +1563,14 @@ class Product
         return $customerGroupTierPrices;
     }
 
+    /**
+     * Returns the tier prices of the product, as the configurable product block does.
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     *
+     * @return array
+     * @phpstan-return array<int, array<string, mixed>>
+     */
     public function getTierPricesByProduct(\Magento\Catalog\Model\Product $product): array
     {
         $tierPrices = [];
@@ -1339,5 +1600,29 @@ class Product
         }
 
         return $tierPrices;
+    }
+
+    /**
+     * Converts a numeric value into an id, other values into 0.
+     *
+     * @param mixed $value
+     *
+     * @return int
+     */
+    private function idValue(mixed $value): int
+    {
+        return is_numeric($value) ? (int)$value : 0;
+    }
+
+    /**
+     * Converts a numeric value into a float, other values into 0.
+     *
+     * @param mixed $value
+     *
+     * @return float
+     */
+    private function floatValue(mixed $value): float
+    {
+        return is_numeric($value) ? (float)$value : 0.0;
     }
 }

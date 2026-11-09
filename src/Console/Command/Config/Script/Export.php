@@ -2,40 +2,53 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Console\Command\Config\Script;
 
-use Exception;
 use Infrangible\Core\Console\Command\Script;
 use Infrangible\Core\Helper\Config;
+use Magento\Framework\Exception\FileSystemException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Script of the console command config:export-json.
  */
 class Export extends Script
 {
     /** @var Config */
-    protected $configHelper;
+    protected Config $configHelper;
 
+    /**
+     * @param Config $configHelper
+     */
     public function __construct(Config $configHelper)
     {
         $this->configHelper = $configHelper;
     }
 
     /**
-     * Executes the current command.
+     * Runs the script.
      *
-     * @throws Exception
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     *
+     * @return int
+     * @throws FileSystemException
      */
     public function execute(InputInterface $input, OutputInterface $output): int
     {
         $fileName = $input->getOption('file');
+        $fileName = is_scalar($fileName) ? (string)$fileName : '';
         $path = $input->getOption('path');
+        $path = is_scalar($path) ? (string)$path : '';
 
-        if ($path == '/') {
+        if ($path === '/') {
             $path = '';
         }
 

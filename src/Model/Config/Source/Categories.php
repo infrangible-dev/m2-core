@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source;
 
 use Infrangible\Core\Helper\Category;
@@ -10,24 +16,32 @@ use Magento\Framework\Data\OptionSourceInterface;
 use Magento\Framework\Data\Tree\Node;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of all categories as indented tree.
  */
 class Categories implements OptionSourceInterface
 {
     /** @var Category */
-    protected $categoryHelper;
+    protected Category $categoryHelper;
 
     /** @var TreeFactory */
-    protected $categoryTreeFactory;
+    protected TreeFactory $categoryTreeFactory;
 
+    /**
+     * @param Category $categoryHelper
+     * @param TreeFactory $categoryTreeFactory
+     */
     public function __construct(Category $categoryHelper, TreeFactory $categoryTreeFactory)
     {
         $this->categoryHelper = $categoryHelper;
         $this->categoryTreeFactory = $categoryTreeFactory;
     }
 
+    /**
+     * Returns the categories as indented tree for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptionArray(): array
     {
         $tree = $this->categoryTreeFactory->create();
@@ -44,7 +58,9 @@ class Categories implements OptionSourceInterface
         /** @var Node $node */
         foreach ($nodes as $node) {
             $categoryId = $node->getData('entity_id');
+            $categoryId = is_numeric($categoryId) ? (int)$categoryId : 0;
             $level = $node->getData('level');
+            $level = is_numeric($level) ? (int)$level : 0;
 
             $category = $this->categoryHelper->loadCategory($categoryId);
 
@@ -57,6 +73,12 @@ class Categories implements OptionSourceInterface
         return $options;
     }
 
+    /**
+     * Returns the categories as id => indented name.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptions(): array
     {
         $tree = $this->categoryTreeFactory->create();
@@ -73,7 +95,9 @@ class Categories implements OptionSourceInterface
         /** @var Node $node */
         foreach ($nodes as $node) {
             $categoryId = $node->getData('entity_id');
+            $categoryId = is_numeric($categoryId) ? (int)$categoryId : 0;
             $level = $node->getData('level');
+            $level = is_numeric($level) ? (int)$level : 0;
 
             $category = $this->categoryHelper->loadCategory($categoryId);
 

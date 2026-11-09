@@ -1,5 +1,7 @@
 /.idea/
+/app/code/Magento/
+/app/etc/
 /generated/
-/src/.php-cs-fixer.cache
+/pub/
 /var/
 /vendor/

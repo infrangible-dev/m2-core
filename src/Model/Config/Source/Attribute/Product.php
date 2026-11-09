@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source\Attribute;
 
 use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
@@ -10,26 +16,33 @@ use Magento\Framework\Data\Collection;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the product attributes with their id as value.
  */
 class Product implements OptionSourceInterface
 {
     /** @var CollectionFactory */
-    protected $productAttributeCollectionFactory;
+    protected CollectionFactory $productAttributeCollectionFactory;
 
+    /**
+     * @param CollectionFactory $productAttributeCollectionFactory
+     */
     public function __construct(CollectionFactory $productAttributeCollectionFactory)
     {
         $this->productAttributeCollectionFactory = $productAttributeCollectionFactory;
     }
 
+    /**
+     * Returns the options for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptionArray(): array
     {
         $options = [['value' => '', 'label' => __('--Please Select--')]];
 
         foreach ($this->getList() as $catalogAttribute) {
-            $frontendLabel = $catalogAttribute->getData('frontend_label');
+            $frontendLabel = $catalogAttribute->getDefaultFrontendLabel();
 
             if (! empty($frontendLabel)) {
                 $options[] = [
@@ -46,12 +59,18 @@ class Product implements OptionSourceInterface
         return $options;
     }
 
+    /**
+     * Returns the options as value => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptions(): array
     {
         $options = [];
 
         foreach ($this->getList() as $catalogAttribute) {
-            $frontendLabel = $catalogAttribute->getData('frontend_label');
+            $frontendLabel = $catalogAttribute->getDefaultFrontendLabel();
 
             if (! empty($frontendLabel)) {
                 $options[ $this->getAttributeValue($catalogAttribute) ] = sprintf(
@@ -65,12 +84,21 @@ class Product implements OptionSourceInterface
         return $options;
     }
 
+    /**
+     * Returns the value of the attribute in the options: its id.
+     *
+     * @param Attribute $catalogAttribute
+     *
+     * @return string
+     */
     protected function getAttributeValue(Attribute $catalogAttribute): string
     {
-        return $catalogAttribute->getAttributeId();
+        return (string)$catalogAttribute->getAttributeId();
     }
 
     /**
+     * Returns the attributes listed as options.
+     *
      * @return Attribute[]
      */
     protected function getList(): array
@@ -82,6 +110,9 @@ class Product implements OptionSourceInterface
             Collection::SORT_ORDER_ASC
         );
 
-        return $productAttributeCollection->getItems();
+        return array_filter(
+            $productAttributeCollection->getItems(),
+            static fn ($item): bool => $item instanceof Attribute
+        );
     }
 }

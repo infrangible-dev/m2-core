@@ -2,45 +2,55 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
+use Exception;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\Group;
 use Magento\Customer\Model\GroupFactory;
 use Magento\Customer\Model\ResourceModel\Customer\Collection;
 use Magento\Customer\Model\ResourceModel\Customer\CollectionFactory;
-use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
 use Psr\Log\LoggerInterface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Customer
 {
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var CustomerFactory */
-    protected $customerFactory;
+    protected CustomerFactory $customerFactory;
 
     /** @var \Magento\Customer\Model\ResourceModel\CustomerFactory */
-    protected $customerResourceFactory;
+    protected \Magento\Customer\Model\ResourceModel\CustomerFactory $customerResourceFactory;
 
     /** @var CollectionFactory */
-    protected $customerCollectionFactory;
+    protected CollectionFactory $customerCollectionFactory;
 
     /** @var GroupFactory */
-    protected $customerGroupFactory;
+    protected GroupFactory $customerGroupFactory;
 
     /** @var \Magento\Customer\Model\ResourceModel\GroupFactory */
-    protected $customerGroupResourceFactory;
+    protected \Magento\Customer\Model\ResourceModel\GroupFactory $customerGroupResourceFactory;
 
     /** @var \Magento\Customer\Model\ResourceModel\Group\CollectionFactory */
-    protected $customerGroupCollectionFactory;
+    protected \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory;
 
+    /**
+     * @param LoggerInterface $logging
+     * @param CustomerFactory $customerFactory
+     * @param \Magento\Customer\Model\ResourceModel\CustomerFactory $customerResourceFactory
+     * @param CollectionFactory $customerCollectionFactory
+     * @param GroupFactory $customerGroupFactory
+     * @param \Magento\Customer\Model\ResourceModel\GroupFactory $customerGroupResourceFactory
+     * @param \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
+     */
     public function __construct(
         LoggerInterface $logging,
         CustomerFactory $customerFactory,
@@ -59,11 +69,23 @@ class Customer
         $this->customerGroupCollectionFactory = $customerGroupCollectionFactory;
     }
 
+    /**
+     * Creates a new customer.
+     *
+     * @return \Magento\Customer\Model\Customer
+     */
     public function newCustomer(): \Magento\Customer\Model\Customer
     {
         return $this->customerFactory->create();
     }
 
+    /**
+     * Loads the customer.
+     *
+     * @param int $customerId
+     *
+     * @return \Magento\Customer\Model\Customer
+     */
     public function loadCustomer(int $customerId): \Magento\Customer\Model\Customer
     {
         $customer = $this->newCustomer();
@@ -76,13 +98,20 @@ class Customer
         return $customer;
     }
 
+    /**
+     * Loads the customer by email.
+     *
+     * @param string $customerEmail
+     *
+     * @return \Magento\Customer\Model\Customer
+     */
     public function loadCustomerByEmail(string $customerEmail): \Magento\Customer\Model\Customer
     {
         $customer = $this->customerFactory->create();
 
         try {
             $customer->loadByEmail($customerEmail);
-        } /** @noinspection PhpRedundantCatchClauseInspection,RedundantSuppression */ catch (LocalizedException $exception) {
+        } catch (LocalizedException $exception) {
             $this->logging->error($exception);
         }
 
@@ -90,23 +119,45 @@ class Customer
     }
 
     /**
-     * @throws AlreadyExistsException
+     * Saves the customer.
+     *
+     * @param \Magento\Customer\Model\Customer $customer
+     *
+     * @return void
+     * @throws Exception
      */
     public function saveCustomer(\Magento\Customer\Model\Customer $customer): void
     {
         $this->customerResourceFactory->create()->save($customer);
     }
 
+    /**
+     * Returns the customer collection.
+     *
+     * @return Collection
+     */
     public function getCustomerCollection(): Collection
     {
         return $this->customerCollectionFactory->create();
     }
 
+    /**
+     * Creates a new customer group.
+     *
+     * @return Group
+     */
     public function newCustomerGroup(): Group
     {
         return $this->customerGroupFactory->create();
     }
 
+    /**
+     * Loads the customer group.
+     *
+     * @param int $customerGroupId
+     *
+     * @return Group
+     */
     public function loadCustomerGroup(int $customerGroupId): Group
     {
         $group = $this->newCustomerGroup();
@@ -120,13 +171,23 @@ class Customer
     }
 
     /**
-     * @throws AlreadyExistsException
+     * Saves the customer group.
+     *
+     * @param Group $group
+     *
+     * @return void
+     * @throws Exception
      */
     public function saveCustomerGroup(Group $group): void
     {
         $this->customerGroupResourceFactory->create()->save($group);
     }
 
+    /**
+     * Returns the customer group collection.
+     *
+     * @return \Magento\Customer\Model\ResourceModel\Group\Collection
+     */
     public function getCustomerGroupCollection(): \Magento\Customer\Model\ResourceModel\Group\Collection
     {
         return $this->customerGroupCollectionFactory->create();

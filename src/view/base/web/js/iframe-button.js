@@ -1,8 +1,10 @@
 // noinspection JSUnresolvedFunction,JSCheckFunctionSignatures,JSUnusedGlobalSymbols,JSUnresolvedVariable
 
+/* jshint esversion: 6 */
+
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 
@@ -20,21 +22,21 @@ define([
             title: ''
         },
         _create: function () {
-            var self = this;
+            const self = this;
             $('#' + this.options.buttonId).click(function (event) {
                 event.preventDefault();
                 self._openPopup(self._getData());
             });
         },
         _openPopup: function (data) {
-            var modalContent;
+            let modalContent;
             if (data.srcDoc) {
                 modalContent = $('<iframe srcdoc=\'' + data.srcDoc + '\'></iframe>');
             } else if (data.src) {
                 modalContent = $('<iframe src=\'' + data.src + '\'></iframe>');
             }
             if (modalContent) {
-                var modalOptions = {
+                const modalOptions = {
                     type: 'popup',
                     responsive: true,
                     innerScroll: false,
@@ -49,14 +51,14 @@ define([
             }
         },
         _getData: function () {
-            var data = {};
-            if (this.options.srcDoc && this.options.srcDoc != '') {
+            const data = {};
+            if (this.options.srcDoc) {
                 data['srcDoc'] = this.options.srcDoc;
             }
-            if (this.options.src && this.options.src != '') {
+            if (this.options.src) {
                 data['src'] = this.options.src;
             }
-            if (this.options.title && this.options.title != '') {
+            if (this.options.title) {
                 data['title'] = this.options.title;
             }
             return data;

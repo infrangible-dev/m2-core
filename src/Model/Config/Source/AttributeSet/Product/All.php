@@ -2,17 +2,29 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source\AttributeSet\Product;
 
 use Infrangible\Core\Model\Config\Source\AttributeSet\Product;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the product attribute sets with the option "All" (value "all").
  */
 class All extends Product
 {
+    /**
+     * Returns the options for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     * @throws LocalizedException
+     */
     public function toOptionArray(): array
     {
         $this->setAddAllSelect(true);
@@ -20,6 +32,13 @@ class All extends Product
         return parent::toOptionArray();
     }
 
+    /**
+     * Returns the options as value => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     * @throws LocalizedException
+     */
     public function toOptions(): array
     {
         $this->setAddAllSelect(true);

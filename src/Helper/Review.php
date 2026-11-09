@@ -2,107 +2,161 @@
 
 declare(strict_types=1);
 
-namespace Infrangible\Core\Helper;
-
-use Magento\Framework\Exception\AlreadyExistsException;
-use Magento\Review\Model\ResourceModel\Review\Collection;
-use Magento\Review\Model\ResourceModel\Review\CollectionFactory;
-use Magento\Review\Model\Review\Summary;
-use Magento\Review\Model\Review\SummaryFactory;
-use Magento\Review\Model\ReviewFactory;
-
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
+namespace Infrangible\Core\Helper;
+
+use Exception;
+use Magento\Review\Model\ResourceModel\Review\Collection;
+use Magento\Review\Model\Review\Summary;
+use RuntimeException;
+
+/**
+ * Reviews and review summaries. Requires the optional module Magento_Review, which is only loaded when a method is
+ * called.
  */
 class Review
 {
-    /** @var ReviewFactory */
-    protected $reviewFactory;
+    /** @var Instances */
+    protected Instances $instanceHelper;
 
-    /** @var \Magento\Review\Model\ResourceModel\ReviewFactory */
-    protected $reviewResourceFactory;
-
-    /** @var CollectionFactory */
-    protected $reviewCollectionFactory;
-
-    /** @var SummaryFactory */
-    protected $reviewSummaryFactory;
-
-    /** @var \Magento\Review\Model\ResourceModel\Review\SummaryFactory */
-    protected $reviewSummaryResourceFactory;
-
-    /** @var \Magento\Review\Model\ResourceModel\Review\Summary\CollectionFactory */
-    protected $reviewSummaryCollectionFactory;
-
-    public function __construct(
-        ReviewFactory $reviewFactory,
-        \Magento\Review\Model\ResourceModel\ReviewFactory $reviewResourceFactory,
-        CollectionFactory $reviewCollectionFactory,
-        SummaryFactory $reviewSummaryFactory,
-        \Magento\Review\Model\ResourceModel\Review\SummaryFactory $reviewSummaryResourceFactory,
-        \Magento\Review\Model\ResourceModel\Review\Summary\CollectionFactory $reviewSummaryCollectionFactory
-    ) {
-        $this->reviewFactory = $reviewFactory;
-        $this->reviewResourceFactory = $reviewResourceFactory;
-        $this->reviewCollectionFactory = $reviewCollectionFactory;
-        $this->reviewSummaryFactory = $reviewSummaryFactory;
-        $this->reviewSummaryResourceFactory = $reviewSummaryResourceFactory;
-        $this->reviewSummaryCollectionFactory = $reviewSummaryCollectionFactory;
+    /**
+     * @param Instances $instanceHelper
+     */
+    public function __construct(Instances $instanceHelper)
+    {
+        $this->instanceHelper = $instanceHelper;
     }
 
+    /**
+     * Creates a new review.
+     *
+     * @return \Magento\Review\Model\Review
+     * @throws RuntimeException if Magento_Review is not installed
+     */
     public function newReview(): \Magento\Review\Model\Review
     {
-        return $this->reviewFactory->create();
+        return $this->instanceHelper->createInstance(\Magento\Review\Model\Review::class);
     }
 
+    /**
+     * Loads the review.
+     *
+     * @param int $reviewId
+     *
+     * @return \Magento\Review\Model\Review
+     * @throws RuntimeException if Magento_Review is not installed
+     */
     public function loadReview(int $reviewId): \Magento\Review\Model\Review
     {
         $review = $this->newReview();
 
-        $this->reviewResourceFactory->create()->load($review, $reviewId);
+        $this->getReviewResource()->load($review, $reviewId);
 
         return $review;
     }
 
     /**
-     * @throws AlreadyExistsException
+     * Saves the review.
+     *
+     * @param \Magento\Review\Model\Review $review
+     *
+     * @return void
+     * @throws Exception
      */
     public function saveReview(\Magento\Review\Model\Review $review): void
     {
-        $this->reviewResourceFactory->create()->save($review);
+        $this->getReviewResource()->save($review);
     }
 
+    /**
+     * Returns the review collection.
+     *
+     * @return Collection
+     * @throws RuntimeException if Magento_Review is not installed
+     */
     public function getReviewCollection(): Collection
     {
-        return $this->reviewCollectionFactory->create();
+        return $this->instanceHelper->createInstance(Collection::class);
     }
 
+    /**
+     * Creates a new review summary.
+     *
+     * @return Summary
+     * @throws RuntimeException if Magento_Review is not installed
+     */
     public function newReviewSummary(): Summary
     {
-        return $this->reviewSummaryFactory->create();
+        return $this->instanceHelper->createInstance(Summary::class);
     }
 
+    /**
+     * Loads the review summary.
+     *
+     * @param int $reviewSummaryId
+     *
+     * @return Summary
+     * @throws RuntimeException if Magento_Review is not installed
+     */
     public function loadReviewSummary(int $reviewSummaryId): Summary
     {
         $reviewSummary = $this->newReviewSummary();
 
-        $this->reviewSummaryResourceFactory->create()->load($reviewSummary, $reviewSummaryId);
+        $this->getReviewSummaryResource()->load($reviewSummary, $reviewSummaryId);
 
         return $reviewSummary;
     }
 
     /**
-     * @throws AlreadyExistsException
+     * Saves the review summary.
+     *
+     * @param Summary $reviewSummary
+     *
+     * @return void
+     * @throws Exception
      */
     public function saveReviewSummary(Summary $reviewSummary): void
     {
-        $this->reviewSummaryResourceFactory->create()->save($reviewSummary);
+        $this->getReviewSummaryResource()->save($reviewSummary);
     }
 
+    /**
+     * Returns the review summary collection.
+     *
+     * @return \Magento\Review\Model\ResourceModel\Review\Summary\Collection
+     * @throws RuntimeException if Magento_Review is not installed
+     */
     public function getReviewSummaryCollection(): \Magento\Review\Model\ResourceModel\Review\Summary\Collection
     {
-        return $this->reviewSummaryCollectionFactory->create();
+        return $this->instanceHelper->createInstance(
+            \Magento\Review\Model\ResourceModel\Review\Summary\Collection::class
+        );
+    }
+
+    /**
+     * Returns the review resource.
+     *
+     * @return \Magento\Review\Model\ResourceModel\Review
+     * @throws RuntimeException if Magento_Review is not installed
+     */
+    private function getReviewResource(): \Magento\Review\Model\ResourceModel\Review
+    {
+        return $this->instanceHelper->getSharedInstance(\Magento\Review\Model\ResourceModel\Review::class);
+    }
+
+    /**
+     * Returns the review summary resource.
+     *
+     * @return \Magento\Review\Model\ResourceModel\Review\Summary
+     * @throws RuntimeException if Magento_Review is not installed
+     */
+    private function getReviewSummaryResource(): \Magento\Review\Model\ResourceModel\Review\Summary
+    {
+        return $this->instanceHelper->getSharedInstance(\Magento\Review\Model\ResourceModel\Review\Summary::class);
     }
 }

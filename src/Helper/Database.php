@@ -2,9 +2,17 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
+use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
@@ -16,25 +24,25 @@ use Magento\Framework\Model\AbstractModel;
 use Psr\Log\LoggerInterface;
 use Zend_Db_Statement_Interface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Database extends AbstractHelper
 {
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var ResourceConnection */
-    protected $resourceConnection;
+    protected ResourceConnection $resourceConnection;
 
     /** @var TransactionFactory */
-    protected $transactionFactory;
+    protected TransactionFactory $transactionFactory;
 
-    /** @var bool */
-    private $queryLogging;
+    /** @var bool|null */
+    private ?bool $queryLogging = null;
 
+    /**
+     * @param Context $context
+     * @param ResourceConnection $resourceConnection
+     * @param TransactionFactory $transactionFactory
+     */
     public function __construct(
         Context $context,
         ResourceConnection $resourceConnection,
@@ -47,16 +55,38 @@ class Database extends AbstractHelper
         $this->transactionFactory = $transactionFactory;
     }
 
+    /**
+     * Returns the default database connection.
+     *
+     * @return AdapterInterface
+     */
     public function getDefaultConnection(): AdapterInterface
     {
         return $this->resourceConnection->getConnection();
     }
 
+    /**
+     * Returns the database connection of the resource.
+     *
+     * @param string $resourceName
+     *
+     * @return AdapterInterface
+     */
     public function getConnection(string $resourceName): AdapterInterface
     {
         return $this->resourceConnection->getConnection($resourceName);
     }
 
+    /**
+     * Fetches all rows of the query, with the default connection or the given one.
+     *
+     * @param Select $select
+     * @param AdapterInterface|null $specialAdapter
+     * @param bool $allowLogging
+     *
+     * @return array
+     * @phpstan-return array<int, array<string, mixed>>
+     */
     public function fetchAll(Select $select, ?AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -68,19 +98,14 @@ class Database extends AbstractHelper
             );
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchAll($select) :
+        $result = $specialAdapter !== null ? $specialAdapter->fetchAll($select) :
             $this->getDefaultConnection()->fetchAll($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
                 sprintf(
                     'Query result: %s',
-                    trim(
-                        print_r(
-                            $result,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($result)
                 )
             );
         }
@@ -88,6 +113,16 @@ class Database extends AbstractHelper
         return $result;
     }
 
+    /**
+     * Fetches all rows of the query as array with the value of the first column as key.
+     *
+     * @param Select $select
+     * @param AdapterInterface|null $specialAdapter
+     * @param bool $allowLogging
+     *
+     * @return array
+     * @phpstan-return array<int|string, array<string, mixed>>
+     */
     public function fetchAssoc(
         Select $select,
         ?AdapterInterface $specialAdapter = null,
@@ -102,19 +137,14 @@ class Database extends AbstractHelper
             );
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchAssoc($select) :
+        $result = $specialAdapter !== null ? $specialAdapter->fetchAssoc($select) :
             $this->getDefaultConnection()->fetchAssoc($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
                 sprintf(
                     'Query result: %s',
-                    trim(
-                        print_r(
-                            $result,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($result)
                 )
             );
         }
@@ -122,6 +152,16 @@ class Database extends AbstractHelper
         return $result;
     }
 
+    /**
+     * Fetches the query result as array with the first column as key and the second column as value.
+     *
+     * @param Select $select
+     * @param AdapterInterface|null $specialAdapter
+     * @param bool $allowLogging
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function fetchPairs(
         Select $select,
         ?AdapterInterface $specialAdapter = null,
@@ -136,19 +176,14 @@ class Database extends AbstractHelper
             );
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchPairs($select) :
+        $result = $specialAdapter !== null ? $specialAdapter->fetchPairs($select) :
             $this->getDefaultConnection()->fetchPairs($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
                 sprintf(
                     'Query result: %s',
-                    trim(
-                        print_r(
-                            $result,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($result)
                 )
             );
         }
@@ -156,6 +191,15 @@ class Database extends AbstractHelper
         return $result;
     }
 
+    /**
+     * Fetches the value of the first column of the first row, or null if there is no row.
+     *
+     * @param Select $select
+     * @param AdapterInterface|null $specialAdapter
+     * @param bool $allowLogging
+     *
+     * @return string|null
+     */
     public function fetchOne(
         Select $select,
         ?AdapterInterface $specialAdapter = null,
@@ -170,32 +214,38 @@ class Database extends AbstractHelper
             );
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchOne($select) :
+        /** @var mixed $result */
+        $result = $specialAdapter !== null ? $specialAdapter->fetchOne($select) :
             $this->getDefaultConnection()->fetchOne($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
                 sprintf(
                     'Query result: %s',
-                    trim(
-                        print_r(
-                            $result,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($result)
                 )
             );
         }
 
-        if (is_bool($result)) {
-            $result = null;
-        }
-
-        return $result;
+        // fetchOne() returns false if there is no row
+        return is_scalar($result) && ! is_bool($result) ? (string)$result : null;
     }
 
-    public function fetchRow(Select $select, ?AdapterInterface $specialAdapter = null, bool $allowLogging = true): ?array
-    {
+    /**
+     * Fetches the first row of the query, or null if there is no row.
+     *
+     * @param Select $select
+     * @param AdapterInterface|null $specialAdapter
+     * @param bool $allowLogging
+     *
+     * @return array|null
+     * @phpstan-return array<string, mixed>|null
+     */
+    public function fetchRow(
+        Select $select,
+        ?AdapterInterface $specialAdapter = null,
+        bool $allowLogging = true
+    ): ?array {
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
                 sprintf(
@@ -205,10 +255,10 @@ class Database extends AbstractHelper
             );
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchRow($select) :
+        $result = $specialAdapter !== null ? $specialAdapter->fetchRow($select) :
             $this->getDefaultConnection()->fetchRow($select);
 
-        if (is_bool($result)) {
+        if (! is_array($result)) {
             $result = null;
         }
 
@@ -216,12 +266,7 @@ class Database extends AbstractHelper
             $this->logging->debug(
                 sprintf(
                     'Query result: %s',
-                    trim(
-                        print_r(
-                            $result,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($result)
                 )
             );
         }
@@ -229,6 +274,16 @@ class Database extends AbstractHelper
         return $result;
     }
 
+    /**
+     * Fetches the values of the first column of all rows.
+     *
+     * @param Select $select
+     * @param AdapterInterface|null $specialAdapter
+     * @param bool $allowLogging
+     *
+     * @return array
+     * @phpstan-return array<int, mixed>
+     */
     public function fetchCol(Select $select, ?AdapterInterface $specialAdapter = null, bool $allowLogging = true): array
     {
         if ($allowLogging && $this->isQueryLogging()) {
@@ -240,19 +295,14 @@ class Database extends AbstractHelper
             );
         }
 
-        $result = ! is_null($specialAdapter) ? $specialAdapter->fetchCol($select) :
+        $result = $specialAdapter !== null ? $specialAdapter->fetchCol($select) :
             $this->getDefaultConnection()->fetchCol($select);
 
         if ($allowLogging && $this->isQueryLogging()) {
             $this->logging->debug(
                 sprintf(
                     'Query result: %s',
-                    trim(
-                        print_r(
-                            $result,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($result)
                 )
             );
         }
@@ -260,6 +310,14 @@ class Database extends AbstractHelper
         return $result;
     }
 
+    /**
+     * Returns the name of the table including the table prefix of the installation.
+     *
+     * @param string $modelEntity
+     * @param string $connectionName
+     *
+     * @return string
+     */
     public function getTableName(
         string $modelEntity,
         string $connectionName = ResourceConnection::DEFAULT_CONNECTION
@@ -271,7 +329,20 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @throws Exception
+     * Inserts the rows into their tables and returns the ids of the new rows.
+     *
+     * In test mode, nothing is written and random ids are returned.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $createTableData table name => row key => row data
+     * @param bool $test
+     * @param bool $allowLogging
+     *
+     * @phpstan-param array<string, array<int|string, array<string, mixed>>> $createTableData
+     *
+     * @return array table name => row key => id
+     * @phpstan-return array<string, array<int|string, int|string>>
+     * @throws CouldNotSaveException
      */
     public function saveCreateTableData(
         AdapterInterface $dbAdapter,
@@ -290,12 +361,7 @@ class Database extends AbstractHelper
                         sprintf(
                             'Inserting data into table: %s with values: %s',
                             $tableName,
-                            trim(
-                                print_r(
-                                    $dbEntries,
-                                    true
-                                )
-                            )
+                            $this->formatLogValue($dbEntries)
                         )
                     );
                 }
@@ -315,22 +381,16 @@ class Database extends AbstractHelper
                                 'Could not insert data into table: %s because: %s using values: %s',
                                 $tableName,
                                 $exception->getMessage(),
-                                trim(
-                                    print_r(
-                                        $tableData,
-                                        true
-                                    )
-                                )
+                                $this->formatLogValue($tableData)
                             )
                         );
 
-                        throw new Exception(
-                            sprintf(
-                                'Could not insert data into table: %s because: %s',
+                        throw new CouldNotSaveException(
+                            __(
+                                'Could not insert data into table: %1 because: %2',
                                 $tableName,
                                 $exception->getMessage()
                             ),
-                            0,
                             $exception
                         );
                     }
@@ -360,7 +420,21 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @throws Exception
+     * Writes the rows of single attributes and EAV attribute values with insert on duplicate update.
+     *
+     * For single attributes only the attribute column is updated, for EAV attribute values only the value column.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $singleAttributeTableData table name => attribute name => rows
+     * @param array $eavAttributeTableData table name => rows
+     * @param bool $test
+     * @param bool $allowLogging
+     *
+     * @phpstan-param array<string, array<string, array<int|string, mixed>>> $singleAttributeTableData
+     * @phpstan-param array<string, array<int|string, mixed>> $eavAttributeTableData
+     *
+     * @return void
+     * @throws CouldNotSaveException
      */
     public function saveUpdateTableData(
         AdapterInterface $dbAdapter,
@@ -384,7 +458,17 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @throws Exception
+     * Writes the rows with insert on duplicate update of the attribute column.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $singleAttributeTableData table name => attribute name => rows
+     * @param bool $test
+     * @param bool $allowLogging
+     *
+     * @phpstan-param array<string, array<string, array<int|string, mixed>>> $singleAttributeTableData
+     *
+     * @return void
+     * @throws CouldNotSaveException
      */
     private function saveSingleAttributeTableData(
         AdapterInterface $dbAdapter,
@@ -400,12 +484,7 @@ class Database extends AbstractHelper
                             'Updating single attribute: %s in table: %s with values: %s',
                             $attributeName,
                             $tableName,
-                            trim(
-                                print_r(
-                                    $dbEntries,
-                                    true
-                                )
-                            )
+                            $this->formatLogValue($dbEntries)
                         )
                     );
                 }
@@ -423,22 +502,12 @@ class Database extends AbstractHelper
                                 'Could not update data in table: %s because: %s using values: %s',
                                 $tableName,
                                 $exception->getMessage(),
-                                trim(
-                                    print_r(
-                                        $dbEntries,
-                                        true
-                                    )
-                                )
+                                $this->formatLogValue($dbEntries)
                             )
                         );
 
-                        throw new Exception(
-                            sprintf(
-                                'Could not update data in table: %s because: %s',
-                                $tableName,
-                                $exception->getMessage()
-                            ),
-                            0,
+                        throw new CouldNotSaveException(
+                            __('Could not update data in table: %1 because: %2', $tableName, $exception->getMessage()),
                             $exception
                         );
                     }
@@ -448,7 +517,17 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @throws Exception
+     * Writes the EAV attribute values with insert on duplicate update of the value column.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $eavAttributeTableData table name => rows
+     * @param bool $test
+     * @param bool $allowLogging
+     *
+     * @phpstan-param array<string, array<int|string, mixed>> $eavAttributeTableData
+     *
+     * @return void
+     * @throws CouldNotSaveException
      */
     private function saveEavAttributeTableData(
         AdapterInterface $dbAdapter,
@@ -462,12 +541,7 @@ class Database extends AbstractHelper
                     sprintf(
                         'Updating eav attribute in table: %s with values: %s',
                         $tableName,
-                        trim(
-                            print_r(
-                                $dbEntries,
-                                true
-                            )
-                        )
+                        $this->formatLogValue($dbEntries)
                     )
                 );
             }
@@ -485,22 +559,12 @@ class Database extends AbstractHelper
                             'Could not update data in table: %s because: %s using values: %s',
                             $tableName,
                             $exception->getMessage(),
-                            trim(
-                                print_r(
-                                    $dbEntries,
-                                    true
-                                )
-                            )
+                            $this->formatLogValue($dbEntries)
                         )
                     );
 
-                    throw new Exception(
-                        sprintf(
-                            'Could not update data in table: %s because: %s',
-                            $tableName,
-                            $exception->getMessage()
-                        ),
-                        0,
+                    throw new CouldNotSaveException(
+                        __('Could not update data in table: %1 because: %2', $tableName, $exception->getMessage()),
                         $exception
                     );
                 }
@@ -509,7 +573,21 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @throws Exception
+     * Inserts the row (with check duplicate: insert on duplicate update) and returns the id of the new row.
+     *
+     * In test mode, nothing is written and a random id is returned.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param string $tableName
+     * @param array $tableData
+     * @param bool $checkDuplicate
+     * @param bool $test
+     * @param bool $allowLogging
+     *
+     * @phpstan-param array<string, mixed> $tableData
+     *
+     * @return int
+     * @throws CouldNotSaveException
      */
     public function createTableData(
         AdapterInterface $dbAdapter,
@@ -524,12 +602,7 @@ class Database extends AbstractHelper
                 sprintf(
                     'Inserting data into table: %s with values: %s',
                     $tableName,
-                    trim(
-                        print_r(
-                            $tableData,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($tableData)
                 )
             );
         }
@@ -556,22 +629,12 @@ class Database extends AbstractHelper
                         'Could not insert data into table: %s because: %s using values: %s',
                         $tableName,
                         $exception->getMessage(),
-                        trim(
-                            print_r(
-                                $tableData,
-                                true
-                            )
-                        )
+                        $this->formatLogValue($tableData)
                     )
                 );
 
-                throw new Exception(
-                    sprintf(
-                        'Could not insert data into table: %s because: %s',
-                        $tableName,
-                        $exception->getMessage()
-                    ),
-                    0,
+                throw new CouldNotSaveException(
+                    __('Could not insert data into table: %1 because: %2', $tableName, $exception->getMessage()),
                     $exception
                 );
             }
@@ -584,13 +647,27 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @throws Exception
+     * Updates the rows matching the where condition.
+     *
+     * Without condition, the row is written with insert on duplicate update.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param string $tableName
+     * @param array $tableData
+     * @param mixed $where condition as accepted by AdapterInterface::update()
+     * @param bool $test
+     * @param bool $allowLogging
+     *
+     * @phpstan-param array<string, mixed> $tableData
+     *
+     * @return void
+     * @throws CouldNotSaveException
      */
     public function updateTableData(
         AdapterInterface $dbAdapter,
         string $tableName,
         array $tableData,
-        $where = null,
+        mixed $where = null,
         bool $test = false,
         bool $allowLogging = true
     ): void {
@@ -600,12 +677,7 @@ class Database extends AbstractHelper
                     sprintf(
                         'Updating data in table: %s with values: %s',
                         $tableName,
-                        trim(
-                            print_r(
-                                $tableData,
-                                true
-                            )
-                        )
+                        $this->formatLogValue($tableData)
                     )
                 );
             } else {
@@ -613,18 +685,8 @@ class Database extends AbstractHelper
                     sprintf(
                         'Updating data in table: %s with values: %s where: %s',
                         $tableName,
-                        trim(
-                            print_r(
-                                $tableData,
-                                true
-                            )
-                        ),
-                        trim(
-                            print_r(
-                                $where,
-                                true
-                            )
-                        )
+                        $this->formatLogValue($tableData),
+                        $this->formatLogValue($where)
                     )
                 );
             }
@@ -650,22 +712,12 @@ class Database extends AbstractHelper
                         'Could not update data in table: %s because: %s using values: %s',
                         $tableName,
                         $exception->getMessage(),
-                        trim(
-                            print_r(
-                                $tableData,
-                                true
-                            )
-                        )
+                        $this->formatLogValue($tableData)
                     )
                 );
 
-                throw new Exception(
-                    sprintf(
-                        'Could not update data in table: %s because: %s',
-                        $tableName,
-                        $exception->getMessage()
-                    ),
-                    0,
+                throw new CouldNotSaveException(
+                    __('Could not update data in table: %1 because: %2', $tableName, $exception->getMessage()),
                     $exception
                 );
             }
@@ -673,12 +725,21 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @throws Exception
+     * Deletes the rows matching the where condition (all rows without condition).
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param string $tableName
+     * @param mixed $where condition as accepted by AdapterInterface::delete()
+     * @param bool $test
+     * @param bool $allowLogging
+     *
+     * @return void
+     * @throws CouldNotDeleteException
      */
     public function deleteTableData(
         AdapterInterface $dbAdapter,
         string $tableName,
-        $where = null,
+        mixed $where = null,
         bool $test = false,
         bool $allowLogging = true
     ): void {
@@ -687,12 +748,7 @@ class Database extends AbstractHelper
                 sprintf(
                     'Deleting data in table: %s where: %s',
                     $tableName,
-                    trim(
-                        print_r(
-                            $where,
-                            true
-                        )
-                    )
+                    $this->formatLogValue($where)
                 )
             );
         }
@@ -712,13 +768,8 @@ class Database extends AbstractHelper
                     )
                 );
 
-                throw new Exception(
-                    sprintf(
-                        'Could not delete data in table: %s because: %s',
-                        $tableName,
-                        $exception->getMessage()
-                    ),
-                    0,
+                throw new CouldNotDeleteException(
+                    __('Could not delete data in table: %1 because: %2', $tableName, $exception->getMessage()),
                     $exception
                 );
             }
@@ -726,7 +777,9 @@ class Database extends AbstractHelper
     }
 
     /**
-     * Used in processes which take longer than the database timeout
+     * Runs a simple query to keep the connection open in processes which take longer than the database timeout.
+     *
+     * @return void
      */
     public function databaseKeepAlive(): void
     {
@@ -738,6 +791,11 @@ class Database extends AbstractHelper
         $dbAdapter->fetchOne($select);
     }
 
+    /**
+     * Checks whether query logging is enabled (dev/log/query_logging).
+     *
+     * @return bool
+     */
     public function isQueryLogging(): bool
     {
         if ($this->queryLogging === null) {
@@ -747,6 +805,15 @@ class Database extends AbstractHelper
         return $this->queryLogging;
     }
 
+    /**
+     * Executes the query and returns the statement.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param Select $select
+     * @param bool $allowLogging
+     *
+     * @return Zend_Db_Statement_Interface
+     */
     public function query(
         AdapterInterface $dbAdapter,
         Select $select,
@@ -764,7 +831,16 @@ class Database extends AbstractHelper
         return $dbAdapter->query($select);
     }
 
-    public function select($name, $cols = '*', ?string $schema = null): Select
+    /**
+     * Creates a select of the default connection from the table.
+     *
+     * @param mixed $name table name, or array alias => table name, as accepted by Select::from()
+     * @param mixed $cols
+     * @param string|null $schema
+     *
+     * @return Select
+     */
+    public function select(mixed $name, mixed $cols = '*', ?string $schema = null): Select
     {
         return $this->getDefaultConnection()->select()->from(
             $name,
@@ -774,8 +850,13 @@ class Database extends AbstractHelper
     }
 
     /**
-     * @param AbstractModel[] $objects
+     * Saves the models in one transaction; values that are no models are skipped and logged.
      *
+     * @param array $objects
+     *
+     * @phpstan-param array<int|string, mixed> $objects
+     *
+     * @return void
      * @throws Exception
      */
     public function saveObjectsInTransaction(array $objects): void
@@ -791,5 +872,20 @@ class Database extends AbstractHelper
         }
 
         $transaction->save();
+    }
+
+    /**
+     * Returns the value as JSON for log messages.
+     *
+     * @param mixed $value
+     *
+     * @return string
+     */
+    private function formatLogValue(mixed $value): string
+    {
+        return (string)json_encode(
+            $value,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
+        );
     }
 }

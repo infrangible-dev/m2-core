@@ -2,96 +2,73 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source\Carrier\Method;
 
-use FeWeDev\Base\Variables;
-use Infrangible\Core\Helper\Carrier;
-use Magento\Framework\Data\OptionSourceInterface;
+use Infrangible\Core\Model\Config\Source\Carrier\AbstractActive;
 use Magento\Shipping\Model\Carrier\CarrierInterface;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the methods of the active carriers.
  */
-class Active implements OptionSourceInterface
+class Active extends AbstractActive
 {
-    /** @var Variables */
-    protected $variables;
-
-    /** @var Carrier */
-    protected $carrierHelper;
-
-    /** @var bool */
-    private $allStores = false;
-
-    /** @var bool */
-    private $withDefault = true;
-
-    public function __construct(Variables $variables, Carrier $carrierHelper)
-    {
-        $this->variables = $variables;
-        $this->carrierHelper = $carrierHelper;
-    }
-
+    /**
+     * Returns the methods of the active carriers for a select field, grouped by carrier. The values are
+     * "carrier code_method code".
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptionArray(): array
     {
-        $activeCarriers = $this->carrierHelper->getActiveCarriers(
-            $this->isAllStores(),
-            $this->isWithDefault()
-        );
-
         $options = [['value' => '', 'label' => __('-- Please Select --')]];
 
-        foreach ($activeCarriers as $code => $carrier) {
-            $name = $carrier->getConfigData('name');
-
-            $label = $this->variables->isEmpty($name) ? $code : sprintf(
-                '%s [%s]',
-                $name,
-                $code
-            );
-
-            $options[ $code ] = ['label' => $label, 'value' => []];
+        foreach ($this->getActiveCarriers() as $code => $carrier) {
+            $methods = [];
 
             if ($carrier instanceof CarrierInterface) {
                 foreach ($carrier->getAllowedMethods() as $methodCode => $methodTitle) {
-                    $value = sprintf(
-                        '%s_%s',
-                        $code,
-                        $methodCode
-                    );
-
-                    $label = $this->variables->isEmpty($name) ? $code : sprintf(
-                        '%s [%s]',
-                        $methodTitle,
-                        $methodCode
-                    );
-
-                    $options[ $code ][ 'value' ][] = [
-                        'value' => $value,
-                        'label' => $label
+                    $methods[] = [
+                        'value' => sprintf(
+                            '%s_%s',
+                            $code,
+                            $methodCode
+                        ),
+                        'label' => sprintf(
+                            '%s [%s]',
+                            $this->variables->stringValue($methodTitle),
+                            $methodCode
+                        )
                     ];
                 }
             }
+
+            $options[ $code ] = ['label' => $this->getCarrierLabel($code, $carrier), 'value' => $methods];
         }
 
         return $options;
     }
 
+    /**
+     * Returns the methods of the active carriers as "carrier code_method code" => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toArray(): array
     {
-        $activeCarriers = $this->carrierHelper->getActiveCarriers(
-            $this->isAllStores(),
-            $this->isWithDefault()
-        );
-
         $options = [];
 
-        foreach ($activeCarriers as $code => $carrier) {
-            $name = $carrier->getConfigData('name');
-
+        foreach ($this->getActiveCarriers() as $code => $carrier) {
             if ($carrier instanceof CarrierInterface) {
+                $carrierLabel = $this->getCarrierLabel($code, $carrier);
+
                 foreach ($carrier->getAllowedMethods() as $methodCode => $methodTitle) {
                     $value = sprintf(
                         '%s_%s',
@@ -99,39 +76,16 @@ class Active implements OptionSourceInterface
                         $methodCode
                     );
 
-                    $label = $this->variables->isEmpty($name) ? $code : sprintf(
-                        '%s [%s] %s [%s]',
-                        $name,
-                        $code,
-                        $methodTitle,
+                    $options[ $value ] = sprintf(
+                        '%s %s [%s]',
+                        $carrierLabel,
+                        $this->variables->stringValue($methodTitle),
                         $methodCode
                     );
-
-                    $options[ $value ] = $label;
                 }
             }
         }
 
         return $options;
-    }
-
-    public function isAllStores(): bool
-    {
-        return $this->allStores;
-    }
-
-    public function setAllStores(bool $allStores): void
-    {
-        $this->allStores = $allStores;
-    }
-
-    public function isWithDefault(): bool
-    {
-        return $this->withDefault;
-    }
-
-    public function setWithDefault(bool $withDefault): void
-    {
-        $this->withDefault = $withDefault;
     }
 }

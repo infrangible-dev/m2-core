@@ -2,61 +2,100 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source;
 
+use Infrangible\Core\Helper\EntityType;
 use Magento\Eav\Model\Entity\Attribute\Set;
+use Magento\Eav\Model\Entity\Type;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the attribute sets of the EAV entity types, grouped by entity type if several entity types are listed.
  */
 class AttributeSet extends Eav
 {
-    /** @var \Infrangible\Core\Helper\EntityType */
-    protected $entityTypeHelper;
+    /** @var EntityType */
+    protected EntityType $entityTypeHelper;
 
     /** @var CollectionFactory */
-    protected $attributeSetCollectionFactory;
+    protected CollectionFactory $attributeSetCollectionFactory;
 
     /** @var bool */
-    private $addPleaseSelect = true;
+    private bool $addPleaseSelect = true;
 
     /** @var bool */
-    private $addAllSelect = false;
+    private bool $addAllSelect = false;
 
+    /**
+     * @param EntityType $entityTypeHelper
+     * @param CollectionFactory $attributeSetCollectionFactory
+     */
     public function __construct(
-        \Infrangible\Core\Helper\EntityType $entityTypeHelper,
+        EntityType $entityTypeHelper,
         CollectionFactory $attributeSetCollectionFactory
     ) {
         $this->entityTypeHelper = $entityTypeHelper;
         $this->attributeSetCollectionFactory = $attributeSetCollectionFactory;
     }
 
+    /**
+     * Checks whether an empty option "--Please Select--" is added.
+     *
+     * @return bool
+     */
     public function isAddPleaseSelect(): bool
     {
         return $this->addPleaseSelect;
     }
 
+    /**
+     * Sets whether an empty option "--Please Select--" is added.
+     *
+     * @param bool $addPleaseSelect
+     *
+     * @return void
+     */
     public function setAddPleaseSelect(bool $addPleaseSelect): void
     {
         $this->addPleaseSelect = $addPleaseSelect;
     }
 
+    /**
+     * Checks whether an option "All" with the value "all" is added.
+     *
+     * @return bool
+     */
     public function isAddAllSelect(): bool
     {
         return $this->addAllSelect;
     }
 
+    /**
+     * Sets whether an option "All" with the value "all" is added.
+     *
+     * @param bool $addAllSelect
+     *
+     * @return void
+     */
     public function setAddAllSelect(bool $addAllSelect): void
     {
         $this->addAllSelect = $addAllSelect;
     }
 
     /**
+     * Returns the options for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
      * @throws LocalizedException
      */
     public function toOptionArray(): array
@@ -77,179 +116,27 @@ class AttributeSet extends Eav
             ];
         }
 
-        $groups = 0;
+        $entityTypes = $this->getSelectedEntityTypes();
 
-        if ($this->isCustomer()) {
-            $groups++;
-        }
+        $isGrouped = count($entityTypes) > 1;
 
-        if ($this->isAddress()) {
-            $groups++;
-        }
+        foreach ($entityTypes as [$entityTypeLabel, $entityType]) {
+            $entityTypeAttributeSets = [];
 
-        if ($this->isCategory()) {
-            $groups++;
-        }
-
-        if ($this->isProduct()) {
-            $groups++;
-        }
-
-        $isGrouped = $groups > 1;
-
-        if ($this->isCustomer()) {
-            $customerEntityType = $this->entityTypeHelper->getCustomerEntityType();
-
-            $customerAttributeSetCollection = $this->attributeSetCollectionFactory->create();
-
-            $customerAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $customerEntityType->getId()
-            );
-            $customerAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
-
-            $customerAttributeSets = [];
-
-            /** @var Set $customerAttributeSet */
-            foreach ($customerAttributeSetCollection as $customerAttributeSet) {
-                if ($isGrouped) {
-                    $customerAttributeSets[] = [
-                        'value' => $customerAttributeSet->getId(),
-                        'label' => $customerAttributeSet->getAttributeSetName()
-                    ];
-                } else {
-                    $attributeSets[] = [
-                        'value' => $customerAttributeSet->getId(),
-                        'label' => $customerAttributeSet->getAttributeSetName()
-                    ];
-                }
+            foreach ($this->getAttributeSets($entityType) as $attributeSet) {
+                $entityTypeAttributeSets[] = [
+                    'value' => $attributeSet->getId(),
+                    'label' => $attributeSet->getAttributeSetName()
+                ];
             }
 
             if ($isGrouped) {
                 $attributeSets[] = [
-                    'value' => $customerAttributeSets,
-                    'label' => __('Customer')
+                    'value' => $entityTypeAttributeSets,
+                    'label' => $entityTypeLabel
                 ];
-            }
-        }
-
-        if ($this->isAddress()) {
-            $addressEntityType = $this->entityTypeHelper->getCustomerAddressEntityType();
-
-            $addressAttributeSetCollection = $this->attributeSetCollectionFactory->create();
-
-            $addressAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $addressEntityType->getId()
-            );
-            $addressAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
-
-            $addressAttributeSets = [];
-
-            /** @var Set $addressAttributeSet */
-            foreach ($addressAttributeSetCollection as $addressAttributeSet) {
-                if ($isGrouped) {
-                    $addressAttributeSets[] = [
-                        'value' => $addressAttributeSet->getId(),
-                        'label' => $addressAttributeSet->getAttributeSetName()
-                    ];
-                } else {
-                    $attributeSets[] = [
-                        'value' => $addressAttributeSet->getId(),
-                        'label' => $addressAttributeSet->getAttributeSetName()
-                    ];
-                }
-            }
-
-            if ($isGrouped) {
-                $attributeSets[] = [
-                    'value' => $addressAttributeSets,
-                    'label' => __('Address')
-                ];
-            }
-        }
-
-        if ($this->isCategory()) {
-            $categoryEntityType = $this->entityTypeHelper->getCategoryEntityType();
-
-            $categoryAttributeSetCollection = $this->attributeSetCollectionFactory->create();
-
-            $categoryAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $categoryEntityType->getId()
-            );
-            $categoryAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
-
-            $categoryAttributeSets = [];
-
-            /** @var Set $categoryAttributeSet */
-            foreach ($categoryAttributeSetCollection as $categoryAttributeSet) {
-                if ($isGrouped) {
-                    $categoryAttributeSets[] = [
-                        'value' => $categoryAttributeSet->getId(),
-                        'label' => $categoryAttributeSet->getAttributeSetName()
-                    ];
-                } else {
-                    $attributeSets[] = [
-                        'value' => $categoryAttributeSet->getId(),
-                        'label' => $categoryAttributeSet->getAttributeSetName()
-                    ];
-                }
-            }
-
-            if ($isGrouped) {
-                $attributeSets[] = [
-                    'value' => $categoryAttributeSets,
-                    'label' => __('Category')
-                ];
-            }
-        }
-
-        if ($this->isProduct()) {
-            $productEntityType = $this->entityTypeHelper->getProductEntityType();
-
-            $productAttributeSetCollection = $this->attributeSetCollectionFactory->create();
-
-            $productAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $productEntityType->getId()
-            );
-            $productAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
-
-            $productAttributeSets = [];
-
-            /** @var Set $productAttributeSet */
-            foreach ($productAttributeSetCollection as $productAttributeSet) {
-                if ($isGrouped) {
-                    $productAttributeSets[] = [
-                        'value' => $productAttributeSet->getId(),
-                        'label' => $productAttributeSet->getAttributeSetName()
-                    ];
-                } else {
-                    $attributeSets[] = [
-                        'value' => $productAttributeSet->getId(),
-                        'label' => $productAttributeSet->getAttributeSetName()
-                    ];
-                }
-            }
-
-            if ($isGrouped) {
-                $attributeSets[] = [
-                    'value' => $productAttributeSets,
-                    'label' => __('Product')
-                ];
+            } else {
+                array_push($attributeSets, ...$entityTypeAttributeSets);
             }
         }
 
@@ -257,6 +144,10 @@ class AttributeSet extends Eav
     }
 
     /**
+     * Returns the options as value => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
      * @throws LocalizedException
      */
     public function toOptions(): array
@@ -267,99 +158,75 @@ class AttributeSet extends Eav
             $attributeSets[ 'all' ] = __('All');
         }
 
-        if ($this->isCustomer()) {
-            $customerEntityType = $this->entityTypeHelper->getCustomerEntityType();
-
-            $customerAttributeSetCollection = $this->attributeSetCollectionFactory->create();
-
-            $customerAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $customerEntityType->getId()
-            );
-            $customerAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
-
-            /** @var Set $customerAttributeSet */
-            foreach ($customerAttributeSetCollection as $customerAttributeSet) {
-                $attributeSets[ $customerAttributeSet->getId() ] = sprintf(
+        foreach ($this->getSelectedEntityTypes() as [$entityTypeLabel, $entityType]) {
+            foreach ($this->getAttributeSets($entityType) as $attributeSet) {
+                $attributeSets[ $attributeSet->getId() ] = sprintf(
                     '%s | %s',
-                    __('Customer'),
-                    $customerAttributeSet->getAttributeSetName()
+                    $entityTypeLabel,
+                    $attributeSet->getAttributeSetName()
                 );
             }
+        }
+
+        return $attributeSets;
+    }
+
+    /**
+     * Returns the label and the model of the selected entity types.
+     *
+     * @return array
+     * @phpstan-return array<int, array{Phrase, Type|null}>
+     * @throws LocalizedException
+     */
+    private function getSelectedEntityTypes(): array
+    {
+        $entityTypes = [];
+
+        if ($this->isCustomer()) {
+            $entityTypes[] = [__('Customer'), $this->entityTypeHelper->getCustomerEntityType()];
         }
 
         if ($this->isAddress()) {
-            $addressEntityType = $this->entityTypeHelper->getCustomerAddressEntityType();
-
-            $addressAttributeSetCollection = $this->attributeSetCollectionFactory->create();
-
-            $addressAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $addressEntityType->getId()
-            );
-            $addressAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
-
-            /** @var Set $addressAttributeSet */
-            foreach ($addressAttributeSetCollection as $addressAttributeSet) {
-                $attributeSets[ $addressAttributeSet->getId() ] = sprintf(
-                    '%s | %s',
-                    __('Address'),
-                    $addressAttributeSet->getAttributeSetName()
-                );
-            }
+            $entityTypes[] = [__('Address'), $this->entityTypeHelper->getCustomerAddressEntityType()];
         }
 
         if ($this->isCategory()) {
-            $categoryEntityType = $this->entityTypeHelper->getCategoryEntityType();
-
-            $categoryAttributeSetCollection = $this->attributeSetCollectionFactory->create();
-
-            $categoryAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $categoryEntityType->getId()
-            );
-            $categoryAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
-
-            /** @var Set $categoryAttributeSet */
-            foreach ($categoryAttributeSetCollection as $categoryAttributeSet) {
-                $attributeSets[ $categoryAttributeSet->getId() ] = sprintf(
-                    '%s | %s',
-                    __('Category'),
-                    $categoryAttributeSet->getAttributeSetName()
-                );
-            }
+            $entityTypes[] = [__('Category'), $this->entityTypeHelper->getCategoryEntityType()];
         }
 
         if ($this->isProduct()) {
-            $productEntityType = $this->entityTypeHelper->getProductEntityType();
+            $entityTypes[] = [__('Product'), $this->entityTypeHelper->getProductEntityType()];
+        }
 
-            $productAttributeSetCollection = $this->attributeSetCollectionFactory->create();
+        return $entityTypes;
+    }
 
-            $productAttributeSetCollection->addFieldToFilter(
-                'entity_type_id',
-                $productEntityType->getId()
-            );
-            $productAttributeSetCollection->addOrder(
-                'attribute_set_name',
-                Collection::SORT_ORDER_ASC
-            );
+    /**
+     * Returns the attribute sets of the entity type, sorted by name.
+     *
+     * @param Type|null $entityType
+     *
+     * @return Set[]
+     * @throws LocalizedException
+     */
+    private function getAttributeSets(?Type $entityType): array
+    {
+        $attributeSetCollection = $this->attributeSetCollectionFactory->create();
 
-            /** @var Set $productAttributeSet */
-            foreach ($productAttributeSetCollection as $productAttributeSet) {
-                $attributeSets[ $productAttributeSet->getId() ] = sprintf(
-                    '%s | %s',
-                    __('Product'),
-                    $productAttributeSet->getAttributeSetName()
-                );
+        $attributeSetCollection->addFieldToFilter(
+            'entity_type_id',
+            $this->getEntityTypeId($entityType)
+        );
+        $attributeSetCollection->addOrder(
+            'attribute_set_name',
+            Collection::SORT_ORDER_ASC
+        );
+
+        $attributeSets = [];
+
+        foreach ($attributeSetCollection as $attributeSet) {
+            if ($attributeSet instanceof Set) {
+                $attributeSets[] = $attributeSet;
             }
         }
 

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Magento\Framework\Exception\AlreadyExistsException;
@@ -14,22 +20,22 @@ use Magento\Indexer\Model\ResourceModel\Indexer\StateFactory;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Index
 {
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var StateFactory */
-    protected $stateResourceFactory;
+    protected StateFactory $stateResourceFactory;
 
     /** @var IndexerFactory */
-    protected $indexerFactory;
+    protected IndexerFactory $indexerFactory;
 
+    /**
+     * @param LoggerInterface $logging
+     * @param StateFactory $stateResourceFactory
+     * @param IndexerFactory $indexerFactory
+     */
     public function __construct(
         LoggerInterface $logging,
         StateFactory $stateResourceFactory,
@@ -41,6 +47,11 @@ class Index
     }
 
     /**
+     * Runs a full reindex, or marks the index as invalid if the indexer is in "update by schedule" mode.
+     *
+     * @param Indexer $indexer
+     *
+     * @return void
      * @throws AlreadyExistsException
      * @throws Throwable
      */
@@ -64,6 +75,13 @@ class Index
         $this->logging->info(sprintf('Finished indexer with id: %s', $indexer->getId()));
     }
 
+    /**
+     * Loads the indexer with the ID.
+     *
+     * @param string $indexerName
+     *
+     * @return IndexerInterface
+     */
     public function loadIndexer(string $indexerName): IndexerInterface
     {
         return $this->indexerFactory->create()->load($indexerName);

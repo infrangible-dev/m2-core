@@ -2,24 +2,41 @@
 
 declare(strict_types=1);
 
-namespace Infrangible\Core\Helper;
-
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
+
+namespace Infrangible\Core\Helper;
+
 class Registry
 {
     /** @var \Magento\Framework\Registry */
-    protected $registry;
+    protected \Magento\Framework\Registry $registry;
 
+    /**
+     * @param \Magento\Framework\Registry $registry
+     */
     public function __construct(\Magento\Framework\Registry $registry)
     {
         $this->registry = $registry;
     }
 
-    public function register(string $key, $value, bool $graceful = false, bool $overwrite = false): void
+    /**
+     * Registers the value under the key in the Magento registry.
+     *
+     * The registry is deprecated by Magento, but still used by its core. With graceful, an existing key is kept
+     * silently; with overwrite, an existing value is replaced.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param bool $graceful
+     * @param bool $overwrite
+     *
+     * @return void
+     */
+    public function register(string $key, mixed $value, bool $graceful = false, bool $overwrite = false): void
     {
         if ($overwrite) {
             $previousValue = $this->registry($key);
@@ -32,12 +49,26 @@ class Registry
         $this->registry->register($key, $value, $graceful);
     }
 
+    /**
+     * Removes the key from the Magento registry.
+     *
+     * @param string $key
+     *
+     * @return void
+     */
     public function unregister(string $key): void
     {
         $this->registry->unregister($key);
     }
 
-    public function registry(string $key)
+    /**
+     * Returns the value registered under the key, or null if there is none.
+     *
+     * @param string $key
+     *
+     * @return mixed
+     */
+    public function registry(string $key): mixed
     {
         return $this->registry->registry($key);
     }

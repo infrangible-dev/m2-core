@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
@@ -10,19 +16,18 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\InvoiceService;
 use Psr\Log\LoggerInterface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Invoice
 {
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var InvoiceService */
-    protected $invoiceService;
+    protected InvoiceService $invoiceService;
 
+    /**
+     * @param LoggerInterface $logging
+     * @param InvoiceService $invoiceService
+     */
     public function __construct(LoggerInterface $logging, InvoiceService $invoiceService)
     {
         $this->logging = $logging;
@@ -30,8 +35,16 @@ class Invoice
     }
 
     /**
-     * Prepare order invoice based on order data and requested items qtys. If $qtys is not empty - the function will
-     * prepare only specified items, otherwise all containing in the order.
+     * Prepares an invoice of the order, without saving it.
+     *
+     * If $qtys is not empty, only the items in it are invoiced, otherwise all items of the order.
+     *
+     * @param Order $order
+     * @param array $qtys
+     *
+     * @phpstan-param array<int|string, float|int|string> $qtys order item ID => quantity
+     *
+     * @return Order\Invoice|null
      */
     public function prepareInvoice(Order $order, array $qtys = []): ?Order\Invoice
     {

@@ -2,37 +2,51 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source;
 
+use Magento\Catalog\Model\ResourceModel\Category\Attribute\CollectionFactory as CategoryAttributeCollectionFactory;
 use Magento\Catalog\Model\ResourceModel\Product\Attribute\CollectionFactory;
+use Magento\Customer\Model\ResourceModel\Address\Attribute\CollectionFactory as AddressAttributeCollectionFactory;
+use Magento\Customer\Model\ResourceModel\Attribute\CollectionFactory as CustomerAttributeCollectionFactory;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Framework\Data\Collection;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the attributes of the EAV entity types with their id as value, grouped by entity type.
  */
 class Attribute extends Eav
 {
-    /** @var \Magento\Customer\Model\ResourceModel\Attribute\CollectionFactory */
-    protected $customerAttributeCollectionFactory;
+    /** @var CustomerAttributeCollectionFactory */
+    protected CustomerAttributeCollectionFactory $customerAttributeCollectionFactory;
 
-    /** @var \Magento\Customer\Model\ResourceModel\Address\Attribute\CollectionFactory */
-    protected $customerAddressAttributeCollectionFactory;
+    /** @var AddressAttributeCollectionFactory */
+    protected AddressAttributeCollectionFactory $customerAddressAttributeCollectionFactory;
 
-    /** @var \Magento\Catalog\Model\ResourceModel\Category\Attribute\CollectionFactory */
-    protected $categoryAttributeCollectionFactory;
+    /** @var CategoryAttributeCollectionFactory */
+    protected CategoryAttributeCollectionFactory $categoryAttributeCollectionFactory;
 
     /** @var CollectionFactory */
-    protected $productAttributeCollectionFactory;
+    protected CollectionFactory $productAttributeCollectionFactory;
 
     /** @var bool */
-    private $addPleaseSelect = true;
+    private bool $addPleaseSelect = true;
 
+    /**
+     * @param CustomerAttributeCollectionFactory $customerAttributeCollectionFactory
+     * @param AddressAttributeCollectionFactory $customerAddressAttributeCollectionFactory
+     * @param CategoryAttributeCollectionFactory $categoryAttributeCollectionFactory
+     * @param CollectionFactory $productAttributeCollectionFactory
+     */
     public function __construct(
-        \Magento\Customer\Model\ResourceModel\Attribute\CollectionFactory $customerAttributeCollectionFactory,
-        \Magento\Customer\Model\ResourceModel\Address\Attribute\CollectionFactory $customerAddressAttributeCollectionFactory,
-        \Magento\Catalog\Model\ResourceModel\Category\Attribute\CollectionFactory $categoryAttributeCollectionFactory,
+        CustomerAttributeCollectionFactory $customerAttributeCollectionFactory,
+        AddressAttributeCollectionFactory $customerAddressAttributeCollectionFactory,
+        CategoryAttributeCollectionFactory $categoryAttributeCollectionFactory,
         CollectionFactory $productAttributeCollectionFactory
     ) {
         $this->customerAttributeCollectionFactory = $customerAttributeCollectionFactory;
@@ -41,16 +55,34 @@ class Attribute extends Eav
         $this->productAttributeCollectionFactory = $productAttributeCollectionFactory;
     }
 
+    /**
+     * Checks whether an empty option "-- Please Select --" is added.
+     *
+     * @return bool
+     */
     public function isAddPleaseSelect(): bool
     {
         return $this->addPleaseSelect;
     }
 
+    /**
+     * Sets whether an empty option "-- Please Select --" is added.
+     *
+     * @param bool $addPleaseSelect
+     *
+     * @return void
+     */
     public function setAddPleaseSelect(bool $addPleaseSelect): void
     {
         $this->addPleaseSelect = $addPleaseSelect;
     }
 
+    /**
+     * Returns the options for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptionArray(): array
     {
         if ($this->isAddPleaseSelect()) {
@@ -66,9 +98,9 @@ class Attribute extends Eav
 
             $customerAttributes = [];
 
-            /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $customerAttribute */
+            /** @var AbstractAttribute $customerAttribute */
             foreach ($customerAttributeCollection as $customerAttribute) {
-                $frontendLabel = $customerAttribute->getData('frontend_label');
+                $frontendLabel = $customerAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $customerAttributes[] = [
@@ -88,9 +120,9 @@ class Attribute extends Eav
 
             $addressAttributes = [];
 
-            /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $addressAttribute */
+            /** @var AbstractAttribute $addressAttribute */
             foreach ($addressAttributeCollection as $addressAttribute) {
-                $frontendLabel = $addressAttribute->getData('frontend_label');
+                $frontendLabel = $addressAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $addressAttributes[] = [
@@ -112,7 +144,7 @@ class Attribute extends Eav
 
             /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $categoryAttribute */
             foreach ($categoryAttributeCollection as $categoryAttribute) {
-                $frontendLabel = $categoryAttribute->getData('frontend_label');
+                $frontendLabel = $categoryAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $categoryAttributes[] = [
@@ -134,7 +166,7 @@ class Attribute extends Eav
 
             /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $productAttribute */
             foreach ($productAttributeCollection as $productAttribute) {
-                $frontendLabel = $productAttribute->getData('frontend_label');
+                $frontendLabel = $productAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $productAttributes[] = [
@@ -150,6 +182,12 @@ class Attribute extends Eav
         return $attributes;
     }
 
+    /**
+     * Returns the options as value => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptions(): array
     {
         $attributes = [];
@@ -159,9 +197,9 @@ class Attribute extends Eav
 
             $customerAttributeCollection->addOrder('frontend_label', Collection::SORT_ORDER_ASC);
 
-            /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $customerAttribute */
+            /** @var AbstractAttribute $customerAttribute */
             foreach ($customerAttributeCollection as $customerAttribute) {
-                $frontendLabel = $customerAttribute->getData('frontend_label');
+                $frontendLabel = $customerAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $attributes[ $customerAttribute->getId() ] =
@@ -175,9 +213,9 @@ class Attribute extends Eav
 
             $addressAttributeCollection->addOrder('frontend_label', Collection::SORT_ORDER_ASC);
 
-            /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $addressAttribute */
+            /** @var AbstractAttribute $addressAttribute */
             foreach ($addressAttributeCollection as $addressAttribute) {
-                $frontendLabel = $addressAttribute->getData('frontend_label');
+                $frontendLabel = $addressAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $attributes[ $addressAttribute->getId() ] =
@@ -193,7 +231,7 @@ class Attribute extends Eav
 
             /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $categoryAttribute */
             foreach ($categoryAttributeCollection as $categoryAttribute) {
-                $frontendLabel = $categoryAttribute->getData('frontend_label');
+                $frontendLabel = $categoryAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $attributes[ $categoryAttribute->getId() ] =
@@ -209,7 +247,7 @@ class Attribute extends Eav
 
             /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $productAttribute */
             foreach ($productAttributeCollection as $productAttribute) {
-                $frontendLabel = $productAttribute->getData('frontend_label');
+                $frontendLabel = $productAttribute->getDefaultFrontendLabel();
 
                 if (! empty($frontendLabel)) {
                     $attributes[ $productAttribute->getId() ] =

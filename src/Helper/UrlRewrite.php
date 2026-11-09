@@ -2,29 +2,36 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\UrlRewrite\Model\UrlFinderInterface;
 use Magento\UrlRewrite\Model\UrlRewriteFactory;
+use Magento\UrlRewrite\Service\V1\Data\UrlRewrite as UrlRewriteData;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class UrlRewrite
 {
     /** @var UrlFinderInterface */
-    protected $urlFinder;
+    protected UrlFinderInterface $urlFinder;
 
     /** @var UrlRewriteFactory */
-    protected $urlRewriteFactory;
+    protected UrlRewriteFactory $urlRewriteFactory;
 
     /** @var \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory */
-    protected $urlRewriteResourceFactory;
+    protected \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory $urlRewriteResourceFactory;
 
+    /**
+     * @param UrlFinderInterface $urlFinder
+     * @param UrlRewriteFactory $urlRewriteFactory
+     * @param \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory $urlRewriteResourceFactory
+     */
     public function __construct(
         UrlFinderInterface $urlFinder,
         UrlRewriteFactory $urlRewriteFactory,
@@ -35,17 +42,32 @@ class UrlRewrite
         $this->urlRewriteResourceFactory = $urlRewriteResourceFactory;
     }
 
+    /**
+     * Creates a new URL rewrite.
+     *
+     * @return \Magento\UrlRewrite\Model\UrlRewrite
+     */
     public function newUrlRewrite(): \Magento\UrlRewrite\Model\UrlRewrite
     {
         return $this->urlRewriteFactory->create();
     }
 
+    /**
+     * Loads the URL rewrite of the request path in the store.
+     *
+     * @param string $requestPath
+     * @param int $storeId
+     *
+     * @return \Magento\UrlRewrite\Model\UrlRewrite
+     */
     public function loadUrlRewrite(string $requestPath, int $storeId): \Magento\UrlRewrite\Model\UrlRewrite
     {
-        $rewriteData = $this->urlFinder->findOneByData([
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::REQUEST_PATH => $requestPath,
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::STORE_ID     => $storeId,
-                                                       ]);
+        $rewriteData = $this->urlFinder->findOneByData(
+            [
+                UrlRewriteData::REQUEST_PATH => $requestPath,
+                UrlRewriteData::STORE_ID => $storeId,
+            ]
+        );
 
         $rewrite = $this->newUrlRewrite();
 
@@ -56,13 +78,23 @@ class UrlRewrite
         return $rewrite;
     }
 
+    /**
+     * Returns the URL rewrite of the category in the store.
+     *
+     * @param int $categoryId
+     * @param int $storeId
+     *
+     * @return \Magento\UrlRewrite\Model\UrlRewrite
+     */
     public function getCategoryUrlRewrite(int $categoryId, int $storeId): \Magento\UrlRewrite\Model\UrlRewrite
     {
-        $rewriteData = $this->urlFinder->findOneByData([
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::ENTITY_ID   => $categoryId,
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::ENTITY_TYPE => CategoryUrlRewriteGenerator::ENTITY_TYPE,
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::STORE_ID    => $storeId,
-                                                       ]);
+        $rewriteData = $this->urlFinder->findOneByData(
+            [
+                UrlRewriteData::ENTITY_ID => $categoryId,
+                UrlRewriteData::ENTITY_TYPE => CategoryUrlRewriteGenerator::ENTITY_TYPE,
+                UrlRewriteData::STORE_ID => $storeId,
+            ]
+        );
 
         $rewrite = $this->newUrlRewrite();
 
@@ -73,13 +105,23 @@ class UrlRewrite
         return $rewrite;
     }
 
+    /**
+     * Returns the URL rewrite of the product in the store.
+     *
+     * @param int $productId
+     * @param int $storeId
+     *
+     * @return \Magento\UrlRewrite\Model\UrlRewrite
+     */
     public function getProductUrlRewrite(int $productId, int $storeId): \Magento\UrlRewrite\Model\UrlRewrite
     {
-        $rewriteData = $this->urlFinder->findOneByData([
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::ENTITY_ID   => $productId,
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::ENTITY_TYPE => ProductUrlRewriteGenerator::ENTITY_TYPE,
-                                                           \Magento\UrlRewrite\Service\V1\Data\UrlRewrite::STORE_ID    => $storeId,
-                                                       ]);
+        $rewriteData = $this->urlFinder->findOneByData(
+            [
+                UrlRewriteData::ENTITY_ID => $productId,
+                UrlRewriteData::ENTITY_TYPE => ProductUrlRewriteGenerator::ENTITY_TYPE,
+                UrlRewriteData::STORE_ID => $storeId,
+            ]
+        );
 
         $rewrite = $this->newUrlRewrite();
 

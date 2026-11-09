@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Block\Adminhtml\System\Config\Form\Field\FieldArray;
 
 use Infrangible\Core\Block\Adminhtml\View\Element\Html\ProductAttributeCode as ProductAttributeCodeElement;
@@ -13,18 +19,24 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Base class of configuration fields with a table of product attributes.
  */
 abstract class ProductAttributeCode extends AbstractFieldArray
 {
     /** @var Block */
-    protected $blockHelper;
+    protected Block $blockHelper;
 
-    /** @var ProductAttributeCodeElement */
-    private $attributesBlock;
+    /** @var ProductAttributeCodeElement|null */
+    private ?ProductAttributeCodeElement $attributesBlock = null;
 
+    /**
+     * @param Context $context
+     * @param Block $blockHelper
+     * @param array $data
+     * @param SecureHtmlRenderer|null $secureRenderer
+     *
+     * @phpstan-param array<string, mixed> $data
+     */
     public function __construct(
         Context $context,
         Block $blockHelper,
@@ -41,22 +53,34 @@ abstract class ProductAttributeCode extends AbstractFieldArray
     }
 
     /**
+     * Returns the block that renders the select field of the attributes.
+     *
+     * @return ProductAttributeCodeElement
      * @throws LocalizedException
      */
-    protected function _getAttributeRenderer(): ?ProductAttributeCodeElement
+    protected function _getAttributeRenderer(): ProductAttributeCodeElement
     {
-        if (! $this->attributesBlock) {
-            $this->attributesBlock = $this->blockHelper->createChildBlock(
+        if ($this->attributesBlock === null) {
+            $attributesBlock = $this->blockHelper->createChildBlock(
                 $this,
                 ProductAttributeCodeElement::class,
                 ['is_render_to_js_template' => true]
             );
+
+            if (! $attributesBlock instanceof ProductAttributeCodeElement) {
+                throw new LocalizedException(__('Could not create the attribute renderer'));
+            }
+
+            $this->attributesBlock = $attributesBlock;
         }
 
         return $this->attributesBlock;
     }
 
     /**
+     * Adds the attribute column.
+     *
+     * @return void
      * @throws LocalizedException
      */
     protected function _prepareToRender(): void
@@ -69,20 +93,30 @@ abstract class ProductAttributeCode extends AbstractFieldArray
             ]
         );
 
-        #$this->addColumn(
-        #    'defaultvalue',
-        #    ['label' => $this->getDefaultValueLabel()]
-        #);
-
         $this->_addAfter = false;
-        $this->_addButtonLabel = __('Add Attribute');
+        $this->_addButtonLabel = (string)__('Add Attribute');
     }
 
+    /**
+     * Returns the label of the attribute column.
+     *
+     * @return string
+     */
     abstract protected function getMappedAttributeLabel(): string;
 
+    /**
+     * Returns the label of the default value column (currently not shown).
+     *
+     * @return string
+     */
     abstract protected function getDefaultValueLabel(): string;
 
     /**
+     * Selects the attribute of the row in the select field.
+     *
+     * @param DataObject $row
+     *
+     * @return void
      * @throws LocalizedException
      */
     protected function _prepareArrayRow(DataObject $row): void
@@ -90,6 +124,7 @@ abstract class ProductAttributeCode extends AbstractFieldArray
         $options = [];
 
         $customAttribute = $row->getData('mapped_attribute');
+        $customAttribute = is_scalar($customAttribute) ? (string)$customAttribute : '';
 
         $key = 'option_' . $this->_getAttributeRenderer()->calcOptionHash($customAttribute);
 

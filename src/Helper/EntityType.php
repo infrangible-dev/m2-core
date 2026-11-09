@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use FeWeDev\Base\Variables;
@@ -11,26 +17,27 @@ use Magento\Customer\Model\Customer;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Type;
 use Magento\Framework\Exception\LocalizedException;
+use RuntimeException;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class EntityType
 {
     /** @var Config */
-    protected $eavConfig;
+    protected Config $eavConfig;
 
     /** @var Database */
-    protected $databaseHelper;
+    protected Database $databaseHelper;
 
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
-    /** @var array */
-    private $entityTypes = [];
+    /** @var array<string, Type> */
+    private array $entityTypes = [];
 
+    /**
+     * @param Config $eavConfig
+     * @param Database $databaseHelper
+     * @param Variables $variables
+     */
     public function __construct(Config $eavConfig, Database $databaseHelper, Variables $variables)
     {
         $this->eavConfig = $eavConfig;
@@ -39,6 +46,11 @@ class EntityType
     }
 
     /**
+     * Returns the EAV entity type with the code, for example catalog_product.
+     *
+     * @param string $entityTypeCode
+     *
+     * @return Type|null
      * @throws LocalizedException
      */
     public function getEntityType(string $entityTypeCode): ?Type
@@ -58,6 +70,11 @@ class EntityType
     }
 
     /**
+     * Returns the name of the entity table of the entity type with the code.
+     *
+     * @param string $entityTypeCode
+     *
+     * @return string|null
      * @throws LocalizedException
      */
     public function getEntityTypeTableByEntityTypeCode(string $entityTypeCode): ?string
@@ -67,12 +84,31 @@ class EntityType
         return $entityType !== null ? $this->getEntityTypeTableByEntityType($entityType) : null;
     }
 
+    /**
+     * Returns the name of the entity table of the entity type.
+     *
+     * @param Type $entityType
+     *
+     * @return string
+     * @throws RuntimeException if the entity type has no entity table
+     */
     public function getEntityTypeTableByEntityType(Type $entityType): string
     {
-        return $this->databaseHelper->getTableName($entityType->getEntityTable());
+        $entityTable = $entityType->getEntityTable();
+
+        if ($entityTable === null) {
+            throw new RuntimeException(
+                sprintf('Entity type has no entity table: %s', $entityType->getEntityTypeCode())
+            );
+        }
+
+        return $this->databaseHelper->getTableName($entityTable);
     }
 
     /**
+     * Returns the category entity type.
+     *
+     * @return Type|null
      * @throws LocalizedException
      */
     public function getCategoryEntityType(): ?Type
@@ -81,6 +117,9 @@ class EntityType
     }
 
     /**
+     * Returns the category entity type id.
+     *
+     * @return int|null
      * @throws LocalizedException
      * @throws \Exception
      */
@@ -92,14 +131,20 @@ class EntityType
     }
 
     /**
+     * Returns the name of the entity table of categories.
+     *
+     * @return string|null
      * @throws LocalizedException
      */
     public function getCategoryEntityTypeTable(): ?string
     {
-        return $this->getEntityTypeTableByEntityType($this->getCategoryEntityType());
+        return $this->getEntityTypeTableByEntityTypeCode(Category::ENTITY);
     }
 
     /**
+     * Returns the product entity type.
+     *
+     * @return Type|null
      * @throws LocalizedException
      */
     public function getProductEntityType(): ?Type
@@ -108,6 +153,9 @@ class EntityType
     }
 
     /**
+     * Returns the product entity type id.
+     *
+     * @return int|null
      * @throws LocalizedException
      * @throws \Exception
      */
@@ -119,14 +167,20 @@ class EntityType
     }
 
     /**
+     * Returns the name of the entity table of products.
+     *
+     * @return string|null
      * @throws LocalizedException
      */
     public function getProductEntityTypeTable(): ?string
     {
-        return $this->getEntityTypeTableByEntityType($this->getProductEntityType());
+        return $this->getEntityTypeTableByEntityTypeCode(Product::ENTITY);
     }
 
     /**
+     * Returns the id of the default attribute set of products.
+     *
+     * @return int|null
      * @throws LocalizedException
      * @throws \Exception
      */
@@ -139,6 +193,9 @@ class EntityType
     }
 
     /**
+     * Returns the customer entity type.
+     *
+     * @return Type|null
      * @throws LocalizedException
      */
     public function getCustomerEntityType(): ?Type
@@ -147,6 +204,9 @@ class EntityType
     }
 
     /**
+     * Returns the customer address entity type.
+     *
+     * @return Type|null
      * @throws LocalizedException
      */
     public function getCustomerAddressEntityType(): ?Type

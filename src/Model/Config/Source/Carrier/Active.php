@@ -2,69 +2,33 @@
 
 declare(strict_types=1);
 
-namespace Infrangible\Core\Model\Config\Source\Carrier;
-
-use FeWeDev\Base\Variables;
-use Infrangible\Core\Helper\Carrier;
-use Infrangible\Core\Helper\Stores;
-use Magento\Framework\Data\OptionSourceInterface;
-
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Active implements OptionSourceInterface
+
+namespace Infrangible\Core\Model\Config\Source\Carrier;
+
+/**
+ * Options of the active carriers.
+ */
+class Active extends AbstractActive
 {
-    /** @var Variables */
-    protected $variables;
-
-    /** @var Stores */
-    protected $storeHelper;
-
-    /** @var Carrier */
-    protected $carrierHelper;
-
-    /** @var bool */
-    private $allStores = false;
-
-    /** @var bool */
-    private $withDefault = true;
-
-    public function __construct(
-        Variables $variables,
-        Stores $storeHelper,
-        Carrier $carrierHelper
-    ) {
-        $this->variables = $variables;
-        $this->storeHelper = $storeHelper;
-        $this->carrierHelper = $carrierHelper;
-    }
-
     /**
-     * Options getter
+     * Returns the active carriers for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
      */
     public function toOptionArray(): array
     {
-        $activeCarriers = $this->carrierHelper->getActiveCarriers(
-            $this->isAllStores(),
-            $this->isWithDefault()
-        );
-
         $options = [['value' => '', 'label' => __('-- Please Select --')]];
 
-        foreach ($activeCarriers as $code => $carrier) {
-            $name = $carrier->getConfigData('name');
-
-            $label = $this->variables->isEmpty($name) ? $code : sprintf(
-                '%s [%s]',
-                $name,
-                $code
-            );
-
+        foreach ($this->getActiveCarriers() as $code => $carrier) {
             $options[] = [
                 'value' => $code,
-                'label' => $label
+                'label' => $this->getCarrierLabel($code, $carrier)
             ];
         }
 
@@ -72,49 +36,19 @@ class Active implements OptionSourceInterface
     }
 
     /**
-     * Get options in "key-value" format
+     * Returns the active carriers as code => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
      */
     public function toArray(): array
     {
-        $activeCarriers = $this->carrierHelper->getActiveCarriers(
-            $this->isAllStores(),
-            $this->isWithDefault()
-        );
-
         $options = [];
 
-        foreach ($activeCarriers as $code => $carrier) {
-            $name = $carrier->getConfigData('name');
-
-            $label = $this->variables->isEmpty($name) ? $code : sprintf(
-                '%s [%s]',
-                $name,
-                $code
-            );
-
-            $options[ $code ] = $label;
+        foreach ($this->getActiveCarriers() as $code => $carrier) {
+            $options[ $code ] = $this->getCarrierLabel($code, $carrier);
         }
 
         return $options;
-    }
-
-    public function isAllStores(): bool
-    {
-        return $this->allStores;
-    }
-
-    public function setAllStores(bool $allStores): void
-    {
-        $this->allStores = $allStores;
-    }
-
-    public function isWithDefault(): bool
-    {
-        return $this->withDefault;
-    }
-
-    public function setWithDefault(bool $withDefault): void
-    {
-        $this->withDefault = $withDefault;
     }
 }

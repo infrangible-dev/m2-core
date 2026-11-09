@@ -2,21 +2,32 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Block\Adminhtml\View\Element\Html;
 
 use Magento\Framework\View\Element\Context;
 use Magento\Framework\View\Element\Html\Select;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Select field with all product attributes.
  */
 class ProductAttributeCode extends Select
 {
     /** @var \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode */
-    protected $sourceProductAttributeCode;
+    protected \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode $sourceProductAttributeCode;
 
+    /**
+     * @param Context $context
+     * @param \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode $sourceProductAttributeCode
+     * @param array $data
+     *
+     * @phpstan-param array<string, mixed> $data
+     */
     public function __construct(
         Context $context,
         \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode $sourceProductAttributeCode,
@@ -30,6 +41,13 @@ class ProductAttributeCode extends Select
         $this->sourceProductAttributeCode = $sourceProductAttributeCode;
     }
 
+    /**
+     * Sets the name of the select field.
+     *
+     * @param string $value
+     *
+     * @return ProductAttributeCode
+     */
     public function setInputName(string $value): ProductAttributeCode
     {
         return $this->setDataUsingMethod(
@@ -38,6 +56,11 @@ class ProductAttributeCode extends Select
         );
     }
 
+    /**
+     * Adds the product attributes as options, if no options were set, and renders the select field.
+     *
+     * @return string
+     */
     public function _toHtml(): string
     {
         if (! $this->getOptions()) {

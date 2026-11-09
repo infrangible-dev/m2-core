@@ -2,28 +2,41 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Model\Config\Source\Attribute;
 
 use Magento\Catalog\Model\ResourceModel\Category\Attribute\CollectionFactory;
-use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute as Attribute;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Options of the category attributes with their id as value.
  */
 class Category implements OptionSourceInterface
 {
     /** @var CollectionFactory */
-    protected $categoryAttributeCollectionFactory;
+    protected CollectionFactory $categoryAttributeCollectionFactory;
 
+    /**
+     * @param CollectionFactory $categoryAttributeCollectionFactory
+     */
     public function __construct(CollectionFactory $categoryAttributeCollectionFactory)
     {
         $this->categoryAttributeCollectionFactory = $categoryAttributeCollectionFactory;
     }
 
+    /**
+     * Returns the options for a select field.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptionArray(): array
     {
         $options = [['value' => '', 'label' => __('--Please Select--')]];
@@ -34,7 +47,7 @@ class Category implements OptionSourceInterface
 
         /** @var Attribute $catalogAttribute */
         foreach ($productAttributeCollection as $catalogAttribute) {
-            $frontendLabel = $catalogAttribute->getData('frontend_label');
+            $frontendLabel = $catalogAttribute->getDefaultFrontendLabel();
 
             if (! empty($frontendLabel)) {
                 $options[] = [
@@ -47,6 +60,12 @@ class Category implements OptionSourceInterface
         return $options;
     }
 
+    /**
+     * Returns the options as value => label.
+     *
+     * @return array
+     * @phpstan-return array<int|string, mixed>
+     */
     public function toOptions(): array
     {
         $options = [];
@@ -57,7 +76,7 @@ class Category implements OptionSourceInterface
 
         /** @var Attribute $catalogAttribute */
         foreach ($productAttributeCollection as $catalogAttribute) {
-            $frontendLabel = $catalogAttribute->getData('frontend_label');
+            $frontendLabel = $catalogAttribute->getDefaultFrontendLabel();
 
             if (! empty($frontendLabel)) {
                 $options[ $this->getAttributeValue($catalogAttribute) ] =
@@ -68,8 +87,15 @@ class Category implements OptionSourceInterface
         return $options;
     }
 
+    /**
+     * Returns the value of the attribute in the options: its id.
+     *
+     * @param Attribute $catalogAttribute
+     *
+     * @return string
+     */
     protected function getAttributeValue(Attribute $catalogAttribute): string
     {
-        return $catalogAttribute->getAttributeId();
+        return (string)$catalogAttribute->getAttributeId();
     }
 }

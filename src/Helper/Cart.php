@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use FeWeDev\Base\Arrays;
@@ -10,23 +16,25 @@ use Magento\Catalog\Model\Product\Type\AbstractType;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Quote\Model\Quote\Item;
+use Magento\Quote\Model\Quote\Item\Option;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Cart
 {
     /** @var Json */
-    protected $serializer;
+    protected Json $serializer;
 
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
 
     /** @var RequestInterface */
-    protected $request;
+    protected RequestInterface $request;
 
+    /**
+     * @param Json $serializer
+     * @param Arrays $arrays
+     * @param RequestInterface $request
+     */
     public function __construct(Json $serializer, Arrays $arrays, RequestInterface $request)
     {
         $this->serializer = $serializer;
@@ -35,6 +43,14 @@ class Cart
     }
 
     /**
+     * Updates the custom options of the cart items with the options in the cart data and the uploaded files.
+     *
+     * @param \Magento\Checkout\Model\Cart $cart
+     * @param array $cartData
+     *
+     * @phpstan-param array<int|string, mixed> $cartData item ID => item data with the options in "options"
+     *
+     * @return \Magento\Checkout\Model\Cart
      * @throws LocalizedException
      */
     public function addItemCustomOptions(
@@ -42,11 +58,17 @@ class Cart
         array $cartData
     ): \Magento\Checkout\Model\Cart {
         foreach ($cartData as $itemId => $itemInfo) {
-            $item = $cart->getQuote()->getItemById($itemId);
+            $item = $cart->getQuote()->getItemById((int)$itemId);
 
-            if (! $item) {
+            if (! $item instanceof Item) {
                 continue;
             }
+
+            $itemInfo = is_array($itemInfo) ? $itemInfo : [];
+            $itemOptions = array_key_exists(
+                'options',
+                $itemInfo
+            ) && is_array($itemInfo[ 'options' ]) ? $itemInfo[ 'options' ] : [];
 
             $fileNames = [];
 
@@ -56,9 +78,9 @@ class Cart
                 if (preg_match(
                     sprintf(
                         '/cart_%s_options_([0-9]+)_file_action/',
-                        $item->getId()
+                        $itemId
                     ),
-                    $requestParamName,
+                    (string)$requestParamName,
                     $matches
                 )) {
                     $optionId = $matches[ 1 ];
@@ -70,32 +92,35 @@ class Cart
 
             $buyRequestOption = $item->getOptionByCode('info_buyRequest');
 
-            $buyRequestData = $buyRequestOption ? $this->serializer->unserialize($buyRequestOption->getValue()) : [];
+            $buyRequestData = [];
 
-            $options = $this->arrays->getValue(
-                $buyRequestData,
-                'options',
-                []
-            );
+            if ($buyRequestOption instanceof Option) {
+                $buyRequestValue = $buyRequestOption->getValue();
 
-            if (array_key_exists(
-                'options',
-                $itemInfo
-            )) {
-                foreach ($itemInfo[ 'options' ] as $optionId => $optionValue) {
-                    $options[ $optionId ] = $optionValue;
-                }
+                $buyRequestData = is_string($buyRequestValue) ? $this->serializer->unserialize($buyRequestValue) : [];
+                $buyRequestData = is_array($buyRequestData) ? $buyRequestData : [];
+            }
+
+            $options = $buyRequestData[ 'options' ] ?? [];
+            $options = is_array($options) ? $options : [];
+
+            foreach ($itemOptions as $optionId => $optionValue) {
+                $options[ $optionId ] = $optionValue;
             }
 
             $buyRequestData[ 'options' ] = $options;
 
-            $buyRequestOption->setValue($this->serializer->serialize($buyRequestData));
+            if ($buyRequestOption instanceof Option) {
+                $buyRequestOption->setValue((string)$this->serializer->serialize($buyRequestData));
+            }
 
             $optionsOption = $item->getOptionByCode('option_ids');
+            $optionsOption = $optionsOption instanceof Option ? $optionsOption : null;
 
-            $optionsOptionValue = $optionsOption && $optionsOption->getValue() ? explode(
+            $optionsOptionValue = $optionsOption?->getValue();
+            $optionsOptionValue = is_string($optionsOptionValue) && $optionsOptionValue !== '' ? explode(
                 ',',
-                $optionsOption->getValue()
+                $optionsOptionValue
             ) : [];
 
             $product = $item->getProduct();
@@ -108,18 +133,17 @@ class Cart
                 );
             }
 
-            $optionIds = array_merge(
-                array_key_exists(
-                    'options',
-                    $itemInfo
-                ) ? array_keys($itemInfo[ 'options' ]) : [],
-                array_keys($fileNames)
-            );
+            $optionIds = [...array_keys($itemOptions), ...array_keys($fileNames)];
 
             $options = $buyRequest->getData('options');
+            $options = is_array($options) ? $options : [];
 
             foreach ($optionIds as $optionId) {
-                $option = $product->getOptionById($optionId);
+                $option = $product->getOptionById((int)$optionId);
+
+                if ($option === null) {
+                    continue;
+                }
 
                 $group = $option->groupFactory($option->getType());
 
@@ -179,7 +203,9 @@ class Cart
                         )
                     );
 
-                    $optionOption->setProduct($product);
+                    if ($optionOption instanceof Option) {
+                        $optionOption->setProduct($product);
+                    }
 
                     if (! in_array(
                         $optionId,
@@ -196,7 +222,7 @@ class Cart
                 SORT_NUMERIC
             );
 
-            if ($optionsOption) {
+            if ($optionsOption !== null) {
                 $optionsOption->setValue(
                     implode(
                         ',',
@@ -216,10 +242,18 @@ class Cart
 
                 $optionsOption = $item->getOptionByCode('option_ids');
 
-                $optionsOption->setProduct($product);
+                if ($optionsOption instanceof Option) {
+                    $optionsOption->setProduct($product);
+                }
             }
 
-            $buyRequestOption->setValue($this->serializer->serialize($buyRequest->getData()));
+            if ($buyRequestOption instanceof Option) {
+                $buyRequestData = $buyRequest->getData();
+
+                $buyRequestOption->setValue(
+                    (string)$this->serializer->serialize(is_array($buyRequestData) ? $buyRequestData : [])
+                );
+            }
         }
 
         return $cart;

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Magento\Cms\Block\BlockByIdentifier;
@@ -15,19 +21,19 @@ use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\LayoutInterface;
 use Psr\Log\LoggerInterface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Block extends AbstractHelper
 {
     /** @var LoggerInterface */
-    protected $logger;
+    protected LoggerInterface $logger;
 
     /** @var LayoutInterface */
-    private $layout;
+    private LayoutInterface $layout;
 
+    /**
+     * @param Context $context
+     * @param LoggerInterface $logger
+     * @param \Magento\Framework\View\Element\Context $viewContext
+     */
     public function __construct(
         Context $context,
         LoggerInterface $logger,
@@ -40,6 +46,19 @@ class Block extends AbstractHelper
         $this->layout = $viewContext->getLayout();
     }
 
+    /**
+     * Creates a block in the current layout and sets the data on it.
+     *
+     * @param string $blockClassName
+     * @param array $blockData
+     * @param string $name
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockData
+     * @phpstan-param array<string, mixed> $blockArguments
+     *
+     * @return BlockInterface|null
+     */
     public function createBlock(
         string $blockClassName,
         array $blockData = [],
@@ -55,6 +74,20 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Creates a block in the layout and sets the data on it.
+     *
+     * @param LayoutInterface $layout
+     * @param string $blockClassName
+     * @param array $blockData
+     * @param string $name
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockData
+     * @phpstan-param array<string, mixed> $blockArguments
+     *
+     * @return BlockInterface|null
+     */
     public function createLayoutBlock(
         LayoutInterface $layout,
         string $blockClassName,
@@ -81,6 +114,18 @@ class Block extends AbstractHelper
     }
 
     /**
+     * Creates a block in the layout of the parent block and sets the data on it.
+     *
+     * @param AbstractBlock $block
+     * @param string $blockClassName
+     * @param array $blockData
+     * @param string $name
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockData
+     * @phpstan-param array<string, mixed> $blockArguments
+     *
+     * @return BlockInterface|null
      * @throws LocalizedException
      */
     public function createChildBlock(
@@ -99,6 +144,18 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Creates a block in the current layout and returns its HTML.
+     *
+     * @param string $blockClassName
+     * @param array $blockData
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockData
+     * @phpstan-param array<string, mixed> $blockArguments
+     *
+     * @return string
+     */
     public function renderBlock(
         string $blockClassName,
         array $blockData = [],
@@ -112,6 +169,19 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Creates a block in the layout and returns its HTML.
+     *
+     * @param LayoutInterface $layout
+     * @param string $blockClassName
+     * @param array $blockData
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockData
+     * @phpstan-param array<string, mixed> $blockArguments
+     *
+     * @return string
+     */
     public function renderLayoutBlock(
         LayoutInterface $layout,
         string $blockClassName,
@@ -129,6 +199,19 @@ class Block extends AbstractHelper
         return $block ? $block->toHtml() : '';
     }
 
+    /**
+     * Creates a block in the layout of the parent block and returns its HTML.
+     *
+     * @param AbstractBlock $block
+     * @param string $blockClassName
+     * @param array $blockData
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockData
+     * @phpstan-param array<string, mixed> $blockArguments
+     *
+     * @return string
+     */
     public function renderChildBlock(
         AbstractBlock $block,
         string $blockClassName,
@@ -149,6 +232,19 @@ class Block extends AbstractHelper
         }
     }
 
+    /**
+     * Renders a template with a template block in the layout.
+     *
+     * @param LayoutInterface $layout
+     * @param string $templateFile
+     * @param array $templateData
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockArguments
+     * @phpstan-param array<string, mixed> $templateData
+     *
+     * @return string
+     */
     public function renderLayoutTemplateBlock(
         LayoutInterface $layout,
         string $templateFile,
@@ -164,6 +260,19 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Renders a template with a template block in the layout of the parent block.
+     *
+     * @param AbstractBlock $block
+     * @param string $templateFile
+     * @param array $templateData
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockArguments
+     * @phpstan-param array<string, mixed> $templateData
+     *
+     * @return string
+     */
     public function renderChildTemplateBlock(
         AbstractBlock $block,
         string $templateFile,
@@ -179,6 +288,20 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Renders a template with a block of the given class in the layout.
+     *
+     * @param LayoutInterface $layout
+     * @param string $blockClassName
+     * @param string $templateFile
+     * @param array $templateData
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockArguments
+     * @phpstan-param array<string, mixed> $templateData
+     *
+     * @return string
+     */
     public function renderLayoutTemplateExtendedBlock(
         LayoutInterface $layout,
         string $blockClassName,
@@ -196,6 +319,20 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Renders a template with a block of the given class in the layout of the parent block.
+     *
+     * @param AbstractBlock $block
+     * @param string $blockClassName
+     * @param string $templateFile
+     * @param array $templateData
+     * @param array $blockArguments
+     *
+     * @phpstan-param array<string, mixed> $blockArguments
+     * @phpstan-param array<string, mixed> $templateData
+     *
+     * @return string
+     */
     public function renderChildTemplateExtendedBlock(
         AbstractBlock $block,
         string $blockClassName,
@@ -213,6 +350,18 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Returns the child block with the alias, or creates it if the block has no such child.
+     *
+     * @param AbstractBlock $block
+     * @param string $childBlockAlias
+     * @param string $childBlockClassName
+     * @param array $blockData
+     *
+     * @phpstan-param array<string, mixed> $blockData
+     *
+     * @return AbstractBlock
+     */
     public function getOrCreateChildBlock(
         AbstractBlock $block,
         string $childBlockAlias,
@@ -221,18 +370,26 @@ class Block extends AbstractHelper
     ): AbstractBlock {
         $childBlock = $block->getChildBlock($childBlockAlias);
 
-        if ($childBlock) {
+        if ($childBlock instanceof AbstractBlock) {
             return $childBlock;
-        } else {
-            return $block->addChild(
-                $childBlockAlias,
-                $childBlockClassName,
-                $blockData
-            );
         }
+
+        return $block->addChild(
+            $childBlockAlias,
+            $childBlockClassName,
+            $blockData
+        );
     }
 
-    public function renderElement(string $elementName, $useCache = true): ?string
+    /**
+     * Renders an element (block or container) of the current layout.
+     *
+     * @param string $elementName
+     * @param bool $useCache
+     *
+     * @return string|null
+     */
+    public function renderElement(string $elementName, bool $useCache = true): ?string
     {
         return $this->renderLayoutElement(
             $this->layout,
@@ -241,7 +398,16 @@ class Block extends AbstractHelper
         );
     }
 
-    public function renderLayoutElement(LayoutInterface $layout, string $elementName, $useCache = true): ?string
+    /**
+     * Renders an element (block or container) of the layout.
+     *
+     * @param LayoutInterface $layout
+     * @param string $elementName
+     * @param bool $useCache
+     *
+     * @return string|null
+     */
+    public function renderLayoutElement(LayoutInterface $layout, string $elementName, bool $useCache = true): ?string
     {
         return $layout->renderElement(
             $elementName,
@@ -249,7 +415,16 @@ class Block extends AbstractHelper
         );
     }
 
-    public function renderChildElement(AbstractBlock $block, string $elementName, $useCache = true): ?string
+    /**
+     * Renders an element (block or container) of the layout of the parent block.
+     *
+     * @param AbstractBlock $block
+     * @param string $elementName
+     * @param bool $useCache
+     *
+     * @return string|null
+     */
+    public function renderChildElement(AbstractBlock $block, string $elementName, bool $useCache = true): ?string
     {
         try {
             return $this->renderLayoutElement(
@@ -264,6 +439,13 @@ class Block extends AbstractHelper
         }
     }
 
+    /**
+     * Renders the CMS block with the identifier in the current layout.
+     *
+     * @param string $identifier
+     *
+     * @return string
+     */
     public function renderCmsBlock(string $identifier): string
     {
         return $this->renderLayoutCmsBlock(
@@ -272,6 +454,14 @@ class Block extends AbstractHelper
         );
     }
 
+    /**
+     * Renders the CMS block with the identifier in the layout.
+     *
+     * @param LayoutInterface $layout
+     * @param string $identifier
+     *
+     * @return string
+     */
     public function renderLayoutCmsBlock(LayoutInterface $layout, string $identifier): string
     {
         /** @var BlockByIdentifier $cmsBlock */
@@ -288,6 +478,14 @@ class Block extends AbstractHelper
         return $cmsBlock->toHtml();
     }
 
+    /**
+     * Renders the CMS block with the identifier in the layout of the parent block.
+     *
+     * @param AbstractBlock $block
+     * @param string $identifier
+     *
+     * @return string
+     */
     public function renderChildCmsBlock(AbstractBlock $block, string $identifier): string
     {
         try {

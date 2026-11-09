@@ -2,36 +2,53 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Block\Adminhtml\System\Config\Form;
 
 use FeWeDev\Base\Arrays;
+use FeWeDev\Base\Variables;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 
 /**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ * Configuration field with a button that sends the values of other fields to an admin URL with an Ajax request.
+ * Configured in system.xml with button_label, button_url and data_html_ids (comma-separated HTML ids of the fields).
  */
 class AjaxButton extends Field
 {
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
+
+    /** @var Variables */
+    protected Variables $variables;
 
     /** @var string */
-    private $buttonId;
+    private string $buttonId = '';
 
     /** @var string */
-    private $buttonLabel;
+    private string $buttonLabel = '';
 
     /** @var string */
-    private $ajaxUrl;
+    private string $ajaxUrl = '';
 
     /** @var string */
-    private $dataHtmlIds;
+    private string $dataHtmlIds = '';
 
-    public function __construct(Arrays $arrays, Context $context, array $data = [])
+    /**
+     * @param Arrays $arrays
+     * @param Variables $variables
+     * @param Context $context
+     * @param array $data
+     *
+     * @phpstan-param array<string, mixed> $data
+     */
+    public function __construct(Arrays $arrays, Variables $variables, Context $context, array $data = [])
     {
         parent::__construct(
             $context,
@@ -39,8 +56,14 @@ class AjaxButton extends Field
         );
 
         $this->arrays = $arrays;
+        $this->variables = $variables;
     }
 
+    /**
+     * Sets the template of the button.
+     *
+     * @return void
+     */
     protected function _construct(): void
     {
         parent::_construct();
@@ -48,73 +71,139 @@ class AjaxButton extends Field
         $this->setTemplate('Infrangible_Core::system/config/form/button.phtml');
     }
 
+    /**
+     * Renders the button with the settings of the field in system.xml.
+     *
+     * @param AbstractElement $element
+     *
+     * @return string
+     */
     protected function _getElementHtml(AbstractElement $element): string
     {
-        /** @var array $originalData */
         $originalData = $element->getData('original_data');
 
-        $this->setButtonId($element->getHtmlId());
+        if (! is_array($originalData)) {
+            $originalData = [];
+        }
+
+        $this->setButtonId($this->variables->stringValue($element->getHtmlId()));
         $this->setButtonLabel(
-            $this->arrays->getValue(
-                $originalData,
-                'button_label'
+            $this->variables->stringValue(
+                $this->arrays->getValue(
+                    $originalData,
+                    'button_label',
+                    ''
+                )
             )
         );
         $this->setAjaxUrl(
             $this->getUrl(
-                $this->arrays->getValue(
-                    $originalData,
-                    'button_url'
+                $this->variables->stringValue(
+                    $this->arrays->getValue(
+                        $originalData,
+                        'button_url',
+                        ''
+                    )
                 ),
                 ['_current' => true]
             )
         );
         $this->setDataHtmlIds(
-            $this->arrays->getValue(
-                $originalData,
-                'data_html_ids',
-                ''
+            $this->variables->stringValue(
+                $this->arrays->getValue(
+                    $originalData,
+                    'data_html_ids',
+                    ''
+                )
             )
         );
 
         return $this->_toHtml();
     }
 
+    /**
+     * Returns the button id.
+     *
+     * @return string
+     */
     public function getButtonId(): string
     {
         return $this->buttonId;
     }
 
+    /**
+     * Sets the button id.
+     *
+     * @param string $buttonId
+     *
+     * @return void
+     */
     public function setButtonId(string $buttonId): void
     {
         $this->buttonId = $buttonId;
     }
 
+    /**
+     * Returns the button label.
+     *
+     * @return string
+     */
     public function getButtonLabel(): string
     {
         return $this->buttonLabel;
     }
 
+    /**
+     * Sets the button label.
+     *
+     * @param string $buttonLabel
+     *
+     * @return void
+     */
     public function setButtonLabel(string $buttonLabel): void
     {
         $this->buttonLabel = $buttonLabel;
     }
 
+    /**
+     * Returns the URL that the button sends the request to.
+     *
+     * @return string
+     */
     public function getAjaxUrl(): string
     {
         return $this->ajaxUrl;
     }
 
+    /**
+     * Sets the URL that the button sends the request to.
+     *
+     * @param string $ajaxUrl
+     *
+     * @return void
+     */
     public function setAjaxUrl(string $ajaxUrl): void
     {
         $this->ajaxUrl = $ajaxUrl;
     }
 
+    /**
+     * Returns the comma-separated HTML ids of the fields whose values are sent with the request.
+     *
+     * @return string
+     */
     public function getDataHtmlIds(): string
     {
         return $this->dataHtmlIds;
     }
 
+    /**
+     * Sets the comma-separated HTML ids of the fields whose values are sent with the request.
+     *
+     * @param string $dataHtmlIds
+     *
+     * @return void
+     */
     public function setDataHtmlIds(string $dataHtmlIds): void
     {
         $this->dataHtmlIds = $dataHtmlIds;

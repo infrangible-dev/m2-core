@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use Exception;
@@ -17,67 +23,76 @@ use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\LocalizedException;
 use Psr\Log\LoggerInterface;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   2014-2025 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Category extends AbstractHelper
 {
     /** @var Arrays */
-    protected $arrays;
+    protected Arrays $arrays;
 
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
     /** @var Stores */
-    protected $storeHelper;
+    protected Stores $storeHelper;
 
     /** @var Attribute */
-    protected $attributeHelper;
+    protected Attribute $attributeHelper;
 
     /** @var Database */
-    protected $databaseHelper;
+    protected Database $databaseHelper;
 
     /** @var Seo */
-    protected $seoHelper;
+    protected Seo $seoHelper;
 
     /** @var EntityType */
-    protected $entityTypeHelper;
+    protected EntityType $entityTypeHelper;
 
     /** @var LoggerInterface */
-    protected $logging;
+    protected LoggerInterface $logging;
 
     /** @var CategoryFactory */
-    protected $categoryFactory;
+    protected CategoryFactory $categoryFactory;
 
     /** @var \Magento\Catalog\Model\ResourceModel\CategoryFactory */
-    protected $categoryResourceFactory;
+    protected \Magento\Catalog\Model\ResourceModel\CategoryFactory $categoryResourceFactory;
 
     /** @var CollectionFactory */
-    protected $categoryCollectionFactory;
+    protected CollectionFactory $categoryCollectionFactory;
 
-    /** @var array */
-    private $parentEntityIds = [];
+    /** @var array<string, mixed> */
+    private array $parentEntityIds = [];
 
-    /** @var array */
-    private $pathEntityIds = [];
+    /** @var array<int|string, string[]> */
+    private array $pathEntityIds = [];
 
-    /** @var array */
-    private $childEntityIds = [];
+    /** @var array<string, array<int, mixed>> */
+    private array $childEntityIds = [];
 
-    /** @var string[] */
-    private $categoryNames = [];
+    /** @var array<string, string|null> */
+    private array $categoryNames = [];
 
-    /** @var array */
-    private $categoryPaths = [];
+    /** @var array<int, string> */
+    private array $categoryPaths = [];
 
-    /* @var string[] */
-    private $categoryUrlPaths = [];
+    /** @var array<string, string> */
+    private array $categoryUrlPaths = [];
 
-    /** @var array */
-    private $subCategoryIds = [];
+    /** @var array<int, array<int, mixed>> */
+    private array $subCategoryIds = [];
 
+    /**
+     * @param Context $context
+     * @param Arrays $arrays
+     * @param Variables $variables
+     * @param Stores $storeHelper
+     * @param Attribute $attributeHelper
+     * @param Database $databaseHelper
+     * @param Seo $seoHelper
+     * @param EntityType $entityTypeHelper
+     * @param LoggerInterface $logging
+     * @param CategoryFactory $categoryFactory
+     * @param \Magento\Catalog\Model\ResourceModel\CategoryFactory $categoryResourceFactory
+     * @param CollectionFactory $categoryCollectionFactory
+     */
     public function __construct(
         Context $context,
         Arrays $arrays,
@@ -107,11 +122,24 @@ class Category extends AbstractHelper
         $this->categoryCollectionFactory = $categoryCollectionFactory;
     }
 
+    /**
+     * Creates a new category.
+     *
+     * @return \Magento\Catalog\Model\Category
+     */
     public function newCategory(): \Magento\Catalog\Model\Category
     {
         return $this->categoryFactory->create();
     }
 
+    /**
+     * Loads the category, with the values of the store if a store ID is given.
+     *
+     * @param int $categoryId
+     * @param int|null $storeId
+     *
+     * @return \Magento\Catalog\Model\Category
+     */
     public function loadCategory(int $categoryId, ?int $storeId = null): \Magento\Catalog\Model\Category
     {
         $category = $this->newCategory();
@@ -129,6 +157,11 @@ class Category extends AbstractHelper
     }
 
     /**
+     * Saves the category.
+     *
+     * @param \Magento\Catalog\Model\Category $category
+     *
+     * @return void
      * @throws Exception
      */
     public function saveCategory(\Magento\Catalog\Model\Category $category): void
@@ -136,12 +169,25 @@ class Category extends AbstractHelper
         $this->categoryResourceFactory->create()->save($category);
     }
 
+    /**
+     * Returns the category collection.
+     *
+     * @return Collection
+     */
     public function getCategoryCollection(): Collection
     {
         return $this->categoryCollectionFactory->create();
     }
 
     /**
+     * Returns the IDs of all active categories below the root category of the store, or below all root categories.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int $storeId
+     * @param bool $limitToStore
+     *
+     * @return array
+     * @phpstan-return array<int, mixed>
      * @throws Exception
      */
     public function getActiveCategoryIds(AdapterInterface $dbAdapter, int $storeId, bool $limitToStore = true): array
@@ -184,6 +230,20 @@ class Category extends AbstractHelper
         return $activeCategoryIds;
     }
 
+    /**
+     * Returns the IDs of the parent categories of the categories with a level of at least $minLevel.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $childIds
+     * @param int $minLevel
+     * @param bool $useCache
+     * @param bool $groupByChild
+     *
+     * @phpstan-param array<int, int|string> $childIds
+     *
+     * @return array the parent IDs, or child ID => parent ID if $groupByChild is true
+     * @phpstan-return array<int|string, mixed>
+     */
     public function getParentEntityIds(
         AdapterInterface $dbAdapter,
         array $childIds,
@@ -213,9 +273,9 @@ class Category extends AbstractHelper
             );
 
             if ($useCache && array_key_exists(
-                    $key,
-                    $this->parentEntityIds
-                )) {
+                $key,
+                $this->parentEntityIds
+            )) {
                 $result[ $childId ] = $this->parentEntityIds[ $key ];
             } else {
                 $loadChildIds[] = $childId;
@@ -290,6 +350,18 @@ class Category extends AbstractHelper
         return $result;
     }
 
+    /**
+     * Returns the IDs of all categories in the paths of the categories, without the category itself.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $childIds
+     * @param bool $useCache
+     *
+     * @phpstan-param array<int, int|string> $childIds
+     *
+     * @return array child ID => IDs in the path
+     * @phpstan-return array<int|string, string[]>
+     */
     public function getPathEntityIds(AdapterInterface $dbAdapter, array $childIds, bool $useCache = false): array
     {
         $this->logging->debug(
@@ -308,9 +380,9 @@ class Category extends AbstractHelper
 
         foreach ($childIds as $childId) {
             if ($useCache && array_key_exists(
-                    $childId,
-                    $this->pathEntityIds
-                )) {
+                $childId,
+                $this->pathEntityIds
+            )) {
                 $result[ $childId ] = $this->pathEntityIds[ $childId ];
             } else {
                 $loadChildIds[] = $childId;
@@ -360,9 +432,9 @@ class Category extends AbstractHelper
                 $pathIds = array_diff(
                     explode(
                         '/',
-                        $path
+                        $this->variables->stringValue($path)
                     ),
-                    [$entityId]
+                    [(string)$entityId]
                 );
 
                 $result[ $entityId ] = $pathIds;
@@ -375,6 +447,20 @@ class Category extends AbstractHelper
     }
 
     /**
+     * Returns the IDs of the child categories, optionally recursive and limited to active categories.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $parentIds
+     * @param bool $orderByPosition
+     * @param bool $recursive
+     * @param bool $includeInactiveCategories
+     * @param bool $useCache
+     * @param int|null $storeId
+     *
+     * @phpstan-param array<int, mixed> $parentIds
+     *
+     * @return array
+     * @phpstan-return array<int, mixed>
      * @throws Exception
      */
     public function getChildEntityIds(
@@ -396,12 +482,15 @@ class Category extends AbstractHelper
             )
         );
 
-        $key = md5(json_encode([$parentIds, $orderByPosition, $recursive, $includeInactiveCategories]));
+        $key = hash(
+            'sha256',
+            (string)json_encode([$parentIds, $orderByPosition, $recursive, $includeInactiveCategories, $storeId])
+        );
 
         if (! array_key_exists(
-                $key,
-                $this->childEntityIds
-            ) || ! $useCache) {
+            $key,
+            $this->childEntityIds
+        ) || ! $useCache) {
             $tableName = $this->databaseHelper->getTableName('catalog_category_entity');
 
             $childQuery = $dbAdapter->select()->from(
@@ -522,6 +611,18 @@ class Category extends AbstractHelper
     }
 
     /**
+     * Returns the IDs of the categories that the products are assigned to.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param array $productEntityIds
+     * @param bool $includeInactiveCategories
+     * @param bool $order
+     * @param bool $maintainAssociation
+     *
+     * @phpstan-param array<int, int|string> $productEntityIds
+     *
+     * @return array the category IDs, or product ID => category IDs if $maintainAssociation is true
+     * @phpstan-return array<int|string, mixed>
      * @throws LocalizedException
      * @throws Exception
      */
@@ -540,7 +641,7 @@ class Category extends AbstractHelper
         );
 
         if (! $includeInactiveCategories || $order) {
-            $categoryTableName = $this->databaseHelper->getTableName('catalog_category_product');
+            $categoryTableName = $this->databaseHelper->getTableName('catalog_category_entity');
 
             $categoryQuery->join(
                 ['category' => $categoryTableName],
@@ -641,6 +742,15 @@ class Category extends AbstractHelper
         return $result;
     }
 
+    /**
+     * Returns the name of the category in the store, or the default name if there is no name for the store.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int $categoryId
+     * @param int $storeId
+     *
+     * @return string|null
+     */
     public function getCategoryName(AdapterInterface $dbAdapter, int $categoryId, int $storeId): ?string
     {
         $key = sprintf(
@@ -751,6 +861,14 @@ class Category extends AbstractHelper
         return $this->categoryNames[ $key ];
     }
 
+    /**
+     * Returns the path (the IDs separated by slashes) of the category.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int $categoryId
+     *
+     * @return string|null
+     */
     public function getCategoryPath(AdapterInterface $dbAdapter, int $categoryId): ?string
     {
         if (array_key_exists(
@@ -791,6 +909,15 @@ class Category extends AbstractHelper
     }
 
     /**
+     * Returns the URL path of the category in the store.
+     *
+     * Without a URL path, the URL key with the SEO suffix is returned.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int $categoryId
+     * @param int $storeId
+     *
+     * @return string|null
      * @throws Exception
      */
     public function getCategoryUrlPath(AdapterInterface $dbAdapter, int $categoryId, int $storeId): ?string
@@ -808,171 +935,101 @@ class Category extends AbstractHelper
             return $this->categoryUrlPaths[ $key ];
         }
 
-        $urlPathAttribute = $this->attributeHelper->getAttribute(
-            \Magento\Catalog\Model\Category::ENTITY,
-            'url_path'
-        );
+        $categoryUrlPath = $this->getCategoryAttributeValue($dbAdapter, 'url_path', $categoryId, $storeId);
 
-        $tableName = $this->databaseHelper->getTableName('catalog_category_entity');
+        if (! empty($categoryUrlPath)) {
+            $this->categoryUrlPaths[ $key ] = $this->variables->stringValue($categoryUrlPath);
 
-        $categoryQuery = $dbAdapter->select()->from(
-            ['category' => $tableName],
-            []
-        );
-
-        $categoryQuery->joinLeft(
-            ['store_value' => $urlPathAttribute->getBackendTable()],
-            sprintf(
-                '%s AND %s AND %s',
-                'store_value.entity_id = category.entity_id',
-                $dbAdapter->quoteInto(
-                    'store_value.attribute_id = ?',
-                    $urlPathAttribute->getAttributeId()
-                ),
-                $dbAdapter->quoteInto(
-                    'store_value.store_id = ?',
-                    $storeId
-                )
-            ),
-            ['store_value_value' => 'value']
-        );
-
-        $categoryQuery->joinLeft(
-            ['admin_value' => $urlPathAttribute->getBackendTable()],
-            sprintf(
-                '%s AND %s AND %s',
-                'admin_value.entity_id = category.entity_id',
-                $dbAdapter->quoteInto(
-                    'admin_value.attribute_id = ?',
-                    $urlPathAttribute->getAttributeId()
-                ),
-                $dbAdapter->quoteInto(
-                    'admin_value.store_id = ?',
-                    0
-                )
-            ),
-            ['admin_value_value' => 'value']
-        );
-
-        $categoryQuery->where(
-            $dbAdapter->prepareSqlCondition(
-                'category.entity_id',
-                ['eq' => $categoryId]
-            ),
-            null,
-            Select::TYPE_CONDITION
-        );
-
-        $categoryUrlPaths = $this->databaseHelper->fetchRow(
-            $categoryQuery,
-            $dbAdapter
-        );
-
-        if (count($categoryUrlPaths)) {
-            $categoryUrlPath = $this->arrays->getValue(
-                $categoryUrlPaths,
-                'store_value_value'
-            );
-
-            if ($categoryUrlPath === null) {
-                $categoryUrlPath = $this->arrays->getValue(
-                    $categoryUrlPaths,
-                    'admin_value_value'
-                );
-            }
-
-            if (! empty($categoryUrlPath)) {
-                $this->categoryUrlPaths[ $key ] = $categoryUrlPath;
-
-                return $this->categoryUrlPaths[ $key ];
-            }
+            return $this->categoryUrlPaths[ $key ];
         }
 
-        $urlKeyAttribute = $this->attributeHelper->getAttribute(
-            \Magento\Catalog\Model\Category::ENTITY,
-            'url_key'
-        );
+        $categoryUrlKey = $this->getCategoryAttributeValue($dbAdapter, 'url_key', $categoryId, $storeId);
 
-        $categoryQuery = $dbAdapter->select()->from(
-            ['category' => $tableName],
-            []
-        );
+        if (! empty($categoryUrlKey)) {
+            $category = $this->newCategory();
 
-        $categoryQuery->joinLeft(
-            ['store_value' => $urlKeyAttribute->getBackendTable()],
-            sprintf(
-                '%s AND %s AND %s',
-                'store_value.entity_id = category.entity_id',
-                $dbAdapter->quoteInto(
-                    'store_value.attribute_id = ?',
-                    $urlKeyAttribute->getAttributeId()
-                ),
-                $dbAdapter->quoteInto(
-                    'store_value.store_id = ?',
-                    $storeId
-                )
-            ),
-            ['store_value_value' => 'value']
-        );
-
-        $categoryQuery->joinLeft(
-            ['admin_value' => $urlKeyAttribute->getBackendTable()],
-            sprintf(
-                '%s AND %s AND %s',
-                'admin_value.entity_id = category.entity_id',
-                $dbAdapter->quoteInto(
-                    'admin_value.attribute_id = ?',
-                    $urlKeyAttribute->getAttributeId()
-                ),
-                $dbAdapter->quoteInto(
-                    'admin_value.store_id = ?',
-                    0
-                )
-            ),
-            ['admin_value_value' => 'value']
-        );
-
-        $categoryQuery->where(
-            $dbAdapter->prepareSqlCondition(
-                'category.entity_id',
-                ['eq' => $categoryId]
-            ),
-            null,
-            Select::TYPE_CONDITION
-        );
-
-        $categoryUrlPaths = $this->databaseHelper->fetchRow(
-            $categoryQuery,
-            $dbAdapter
-        );
-
-        if (count($categoryUrlPaths)) {
-            $categoryUrlPath = $this->arrays->getValue(
-                $categoryUrlPaths,
-                'store_value_value'
+            $this->categoryUrlPaths[ $key ] = $this->seoHelper->addSeoSuffix(
+                $category->formatUrlKey($this->variables->stringValue($categoryUrlKey))
             );
 
-            if ($categoryUrlPath === null) {
-                $categoryUrlPath = $this->arrays->getValue(
-                    $categoryUrlPaths,
-                    'admin_value_value'
-                );
-            }
-
-            if (! empty($categoryUrlPath)) {
-                $category = $this->newCategory();
-
-                $this->categoryUrlPaths[ $key ] =
-                    $this->seoHelper->addSeoSuffix($category->formatUrlKey($categoryUrlPath));
-
-                return $this->categoryUrlPaths[ $key ];
-            }
+            return $this->categoryUrlPaths[ $key ];
         }
 
         return null;
     }
 
     /**
+     * Returns the value of the category attribute in the store, or the value of the admin store if the store has none.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param string $attributeCode
+     * @param int $categoryId
+     * @param int $storeId
+     *
+     * @return mixed
+     * @throws Exception
+     */
+    private function getCategoryAttributeValue(
+        AdapterInterface $dbAdapter,
+        string $attributeCode,
+        int $categoryId,
+        int $storeId
+    ): mixed {
+        $attribute = $this->attributeHelper->getAttribute(
+            \Magento\Catalog\Model\Category::ENTITY,
+            $attributeCode
+        );
+
+        $categoryQuery = $dbAdapter->select()->from(
+            ['category' => $this->databaseHelper->getTableName('catalog_category_entity')],
+            []
+        );
+
+        foreach (['store_value' => $storeId, 'admin_value' => 0] as $tableAlias => $valueStoreId) {
+            $categoryQuery->joinLeft(
+                [$tableAlias => $attribute->getBackendTable()],
+                sprintf(
+                    '%s AND %s AND %s',
+                    sprintf('%s.entity_id = category.entity_id', $tableAlias),
+                    $dbAdapter->quoteInto(
+                        sprintf('%s.attribute_id = ?', $tableAlias),
+                        $attribute->getAttributeId()
+                    ),
+                    $dbAdapter->quoteInto(
+                        sprintf('%s.store_id = ?', $tableAlias),
+                        $valueStoreId
+                    )
+                ),
+                [sprintf('%s_value', $tableAlias) => 'value']
+            );
+        }
+
+        $categoryQuery->where(
+            $dbAdapter->prepareSqlCondition(
+                'category.entity_id',
+                ['eq' => $categoryId]
+            ),
+            null,
+            Select::TYPE_CONDITION
+        );
+
+        $values = $this->databaseHelper->fetchRow(
+            $categoryQuery,
+            $dbAdapter
+        );
+
+        if (empty($values)) {
+            return null;
+        }
+
+        return $this->arrays->getValue($values, 'store_value_value') ??
+            $this->arrays->getValue($values, 'admin_value_value');
+    }
+
+    /**
+     * Returns the ID of the default attribute set of categories.
+     *
+     * @return int|null
      * @throws LocalizedException
      */
     public function getDefaultAttributeSetId(): ?int
@@ -982,6 +1039,15 @@ class Category extends AbstractHelper
         return empty($categoryEntityType) ? null : (int)$categoryEntityType->getDefaultAttributeSetId();
     }
 
+    /**
+     * Returns the IDs of all categories below the category, at any level.
+     *
+     * @param AdapterInterface $dbAdapter
+     * @param int $parentCategoryId
+     *
+     * @return array
+     * @phpstan-return array<int, mixed>
+     */
     public function getSubCategoryIds(AdapterInterface $dbAdapter, int $parentCategoryId): array
     {
         if (array_key_exists(

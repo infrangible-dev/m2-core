@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
 use FeWeDev\Base\Variables;
@@ -17,37 +23,42 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Stock
 {
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
     /** @var Stores */
-    protected $storeHelper;
+    protected Stores $storeHelper;
 
     /** @var ItemFactory */
-    protected $stockItemFactory;
+    protected ItemFactory $stockItemFactory;
 
     /** @var \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory */
-    protected $stockItemResourceFactory;
+    protected \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory;
 
     /** @var CollectionFactory */
-    protected $stockItemCollectionFactory;
+    protected CollectionFactory $stockItemCollectionFactory;
 
     /** @var StockItemRepository */
-    protected $stockItemRepository;
+    protected StockItemRepository $stockItemRepository;
 
     /** @var StockItemCriteriaInterfaceFactory */
-    protected $stockItemCriteriaInterfaceFactory;
+    protected StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory;
 
     /** @var QueryBuilderFactory */
-    protected $queryBuilderFactory;
+    protected QueryBuilderFactory $queryBuilderFactory;
 
+    /**
+     * @param Variables $variables
+     * @param Stores $storeHelper
+     * @param ItemFactory $stockItemFactory
+     * @param \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory
+     * @param CollectionFactory $stockItemCollectionFactory
+     * @param StockItemRepository $stockItemRepository
+     * @param StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory
+     * @param QueryBuilderFactory $queryBuilderFactory
+     */
     public function __construct(
         Variables $variables,
         Stores $storeHelper,
@@ -69,19 +80,38 @@ class Stock
         $this->queryBuilderFactory = $queryBuilderFactory;
     }
 
+    /**
+     * Creates a new stock item.
+     *
+     * @return Item
+     */
     public function newStockItem(): Item
     {
         return $this->stockItemFactory->create();
     }
 
     /**
-     * @throws NoSuchEntityException
+     * Loads the stock item.
+     *
+     * @param int $stockItemId
+     *
+     * @return StockItemInterface
+     * @throws NoSuchEntityException if the stock item does not exist
+     * @phpstan-ignore throws.unusedType (the repository throws it, but does not declare it)
      */
     public function loadStockItem(int $stockItemId): StockItemInterface
     {
         return $this->stockItemRepository->get($stockItemId);
     }
 
+    /**
+     * Loads the stock item by product.
+     *
+     * @param int $productId
+     * @param int $stockId
+     *
+     * @return Item
+     */
     public function loadStockItemByProduct(int $productId, int $stockId): Item
     {
         $stockItem = $this->newStockItem();
@@ -92,7 +122,13 @@ class Stock
     }
 
     /**
+     * Saves the stock item.
+     *
+     * @param Item $stockItem
+     *
+     * @return void
      * @throws CouldNotSaveException
+     * @phpstan-ignore throws.unusedType (the repository throws it, but does not declare it)
      */
     public function saveStockItem(Item $stockItem): void
     {
@@ -100,24 +136,30 @@ class Stock
     }
 
     /**
-     * @param null  $storeId
+     * Returns a new collection of stock items, filtered by products and the website of the store if given.
      *
+     * @param int[]           $productIds
+     * @param int|string|null $storeId
+     *
+     * @return Collection
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
     public function getStockItemCollection(
         array $productIds = [],
-        $storeId = null
+        int|string|null $storeId = null
     ): Collection {
-        if (!$this->variables->isEmpty($productIds) || !$this->variables->isEmpty($storeId)) {
+        if (count($productIds) > 0 || !$this->variables->isEmpty($storeId)) {
             $criteria = $this->stockItemCriteriaInterfaceFactory->create();
 
-            if (!$this->variables->isEmpty($productIds)) {
+            if (count($productIds) > 0) {
                 $criteria->setProductsFilter($productIds);
             }
 
             if (!$this->variables->isEmpty($storeId)) {
-                $criteria->setScopeFilter($this->storeHelper->getStore($storeId)->getWebsiteId());
+                $criteria->setScopeFilter(
+                    $this->variables->intValue($this->storeHelper->getStore($storeId)->getWebsiteId())
+                );
             }
 
             $queryBuilder = $this->queryBuilderFactory->create();

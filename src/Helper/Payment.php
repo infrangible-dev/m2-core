@@ -2,43 +2,52 @@
 
 declare(strict_types=1);
 
+/**
+ * @author      Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
+ * @license     http://www.opensource.org/licenses/mit-license.php MIT
+ */
+
 namespace Infrangible\Core\Helper;
 
+use Exception;
 use FeWeDev\Base\Variables;
-use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Payment\Model\Method\Factory;
+use Magento\Payment\Model\MethodInterface;
 use Magento\Sales\Model\Order\PaymentFactory;
 use Magento\Sales\Model\ResourceModel\Order\Payment\Collection;
 use Magento\Sales\Model\ResourceModel\Order\Payment\CollectionFactory;
 
-/**
- * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
- * @license     http://www.opensource.org/licenses/mit-license.php MIT
- */
 class Payment
 {
     /** @var Stores */
-    protected $storeHelper;
+    protected Stores $storeHelper;
 
     /** @var PaymentFactory */
-    protected $paymentFactory;
+    protected PaymentFactory $paymentFactory;
 
     /** @var \Magento\Sales\Model\ResourceModel\Order\PaymentFactory */
-    protected $paymentResourceFactory;
+    protected \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory;
 
     /** @var CollectionFactory */
-    protected $paymentCollectionFactory;
+    protected CollectionFactory $paymentCollectionFactory;
 
     /** @var Factory */
-    protected $paymentMethodFactory;
+    protected Factory $paymentMethodFactory;
 
     /** @var Variables */
-    protected $variables;
+    protected Variables $variables;
 
+    /**
+     * @param Stores $storeHelper
+     * @param PaymentFactory $paymentFactory
+     * @param \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory
+     * @param CollectionFactory $paymentCollectionFactory
+     * @param Factory $paymentMethodFactory
+     * @param Variables $variables
+     */
     public function __construct(
         Stores $storeHelper,
         PaymentFactory $paymentFactory,
@@ -55,11 +64,23 @@ class Payment
         $this->variables = $variables;
     }
 
+    /**
+     * Creates a new payment.
+     *
+     * @return \Magento\Sales\Model\Order\Payment
+     */
     public function newPayment(): \Magento\Sales\Model\Order\Payment
     {
         return $this->paymentFactory->create();
     }
 
+    /**
+     * Loads the payment.
+     *
+     * @param int $paymentId
+     *
+     * @return \Magento\Sales\Model\Order\Payment
+     */
     public function loadPayment(int $paymentId): \Magento\Sales\Model\Order\Payment
     {
         $payment = $this->newPayment();
@@ -73,62 +94,72 @@ class Payment
     }
 
     /**
-     * @throws AlreadyExistsException
+     * Saves the payment.
+     *
+     * @param \Magento\Sales\Model\Order\Payment $payment
+     *
+     * @return void
+     * @throws Exception
      */
     public function savePayment(\Magento\Sales\Model\Order\Payment $payment): void
     {
         $this->paymentResourceFactory->create()->save($payment);
     }
 
+    /**
+     * Returns the payment collection.
+     *
+     * @return Collection
+     */
     public function getPaymentCollection(): Collection
     {
         return $this->paymentCollectionFactory->create();
     }
 
     /**
-     * @return AbstractMethod[]
-     * @throws \Exception
+     * Returns the active payment methods of the current store or of all stores.
+     *
+     * @param bool $allStores
+     * @param bool $withDefault
+     *
+     * @return MethodInterface[] method code => method
      */
     public function getActiveMethods(bool $allStores = false, bool $withDefault = true): array
     {
         $methods = [];
 
-        $stores = [];
-
         if ($allStores) {
             $stores = $this->storeHelper->getStores($withDefault);
         } else {
             try {
-                $stores[] = $this->storeHelper->getStore();
-            } catch (NoSuchEntityException $exception) {
+                $stores = [$this->storeHelper->getStore()];
+            } catch (NoSuchEntityException) {
+                $stores = [];
             }
         }
 
         foreach ($stores as $store) {
+            $storeId = $this->variables->intValue($store->getId());
+
             $storePaymentData = $this->storeHelper->getStoreConfig(
                 'payment',
                 [],
                 false,
-                $this->variables->intValue($store->getId())
+                $storeId
             );
 
+            if (! is_array($storePaymentData)) {
+                continue;
+            }
+
             foreach ($storePaymentData as $code => $data) {
-                if (is_array($data)) {
-                    if (array_key_exists(
-                        'model',
-                        $data
-                    )) {
-                        try {
-                            $methodModel = $this->paymentMethodFactory->create($data[ 'model' ]);
+                $methodModel = $this->createMethod(
+                    $data,
+                    $storeId
+                );
 
-                            $methodModel->setStore($store->getId());
-
-                            if ($methodModel->getConfigData('active')) {
-                                $methods[ $code ] = $methodModel;
-                            }
-                        } catch (LocalizedException $exception) {
-                        }
-                    }
+                if ($methodModel !== null && $methodModel->getConfigData('active')) {
+                    $methods[ $code ] = $methodModel;
                 }
             }
         }
@@ -137,25 +168,58 @@ class Payment
     }
 
     /**
-     * @return AbstractMethod[]
+     * Returns all payment methods that are active in the default configuration.
+     *
+     * @return MethodInterface[] method code => method
      */
     public function getAllMethods(): array
     {
         $methods = [];
 
-        foreach ($this->storeHelper->getStoreConfig('payment') as $code => $data) {
-            if (isset($data[ 'active' ], $data[ 'model' ]) && $data[ 'active' ]) {
-                try {
-                    $methodModel = $this->paymentMethodFactory->create($data[ 'model' ]);
+        $paymentData = $this->storeHelper->getStoreConfig('payment');
 
-                    $methodModel->setStore(0);
+        if (! is_array($paymentData)) {
+            return [];
+        }
 
+        foreach ($paymentData as $code => $data) {
+            if (is_array($data) && ! empty($data[ 'active' ])) {
+                $methodModel = $this->createMethod(
+                    $data,
+                    0
+                );
+
+                if ($methodModel !== null) {
                     $methods[ $code ] = $methodModel;
-                } catch (LocalizedException $exception) {
                 }
             }
         }
 
         return $methods;
+    }
+
+    /**
+     * Creates the payment method model of the config data of a payment method.
+     *
+     * @param mixed $data
+     * @param int $storeId
+     *
+     * @return MethodInterface|null null if the config data has no valid model
+     */
+    private function createMethod(mixed $data, int $storeId): ?MethodInterface
+    {
+        if (! is_array($data) || ! isset($data[ 'model' ]) || ! is_string($data[ 'model' ])) {
+            return null;
+        }
+
+        try {
+            $methodModel = $this->paymentMethodFactory->create($data[ 'model' ]);
+        } catch (LocalizedException) {
+            return null;
+        }
+
+        $methodModel->setStore($storeId);
+
+        return $methodModel;
     }
 }

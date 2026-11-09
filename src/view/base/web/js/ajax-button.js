@@ -7,7 +7,7 @@
 
 /**
  * @author      Andreas Knollmann
- * @copyright   Copyright (c) 2014-2024 Softwareentwicklung Andreas Knollmann
+ * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
 
@@ -27,7 +27,7 @@ define([
             dataHtmlIds: ''
         },
         _create: function () {
-            var self = this;
+            const self = this;
             $('#' + this.options.buttonId).click(function (event) {
                 event.preventDefault();
                 self._ajaxRequest(self._getData());
@@ -82,13 +82,13 @@ define([
             });
         },
         _getData: function () {
-            var data = {
+            const data = {
                 form_key: this.options.formKey
             };
             if (this.options.dataHtmlIds) {
-                var dataHtmlIds = this.options.dataHtmlIds.split(',');
+                const dataHtmlIds = this.options.dataHtmlIds.split(',');
                 dataHtmlIds.forEach(function (dataHtmlId) {
-                    var dataHtmlElement = $('#' + dataHtmlId);
+                    const dataHtmlElement = $('#' + dataHtmlId);
                     if (dataHtmlElement.length > 0) {
                         if (dataHtmlElement.attr('type') === 'password') {
                             dataHtmlElement.prop('type', 'text');

@@ -2,7 +2,7 @@
     "name": "infrangible/m2-core",
     "description": "Infrangible Magento 2 Core",
     "type": "magento2-module",
-    "version": "4.0.0",
+    "version": "5.0.0",
     "license": "MIT",
     "keywords": [
         "Magento"
@@ -11,19 +11,52 @@
     "authors": [
         {
             "name": "Andreas Knollmann",
-            "email": "a.knollmann@seak.dev",
-            "homepage": "https://www.seak.dev",
+            "email": "a.knollmann@infrangible.dev",
+            "homepage": "https://www.infrangible.dev",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": ">=7.1",
+        "php": ">=8.2",
+        "ext-ctype": "*",
         "ext-intl": "*",
         "ext-json": "*",
         "ext-simplexml": "*",
-        "magento/framework": "~101.0.0|~102.0.0|~103.0.0",
-        "fewedev/base": "^1.2",
-        "fewedev/xml": "^1.0"
+        "fewedev/base": "~2.4.0",
+        "fewedev/xml": "~2.0.2",
+        "magento/framework": "~103.0.6",
+        "magento/module-backend": "~102.0.0",
+        "magento/module-catalog": "~104.0.0",
+        "magento/module-catalog-inventory": "~100.4.0",
+        "magento/module-catalog-url-rewrite": "~100.4.0",
+        "magento/module-checkout": "~100.4.0",
+        "magento/module-cms": "~104.0.0",
+        "magento/module-config": "~101.2.0",
+        "magento/module-customer": "~103.0.0",
+        "magento/module-directory": "~100.4.0",
+        "magento/module-eav": "~102.1.0",
+        "magento/module-email": "~101.1.0",
+        "magento/module-indexer": "~100.4.0",
+        "magento/module-page-cache": "~100.4.0",
+        "magento/module-payment": "~100.4.0",
+        "magento/module-quote": "~101.2.0",
+        "magento/module-sales": "~103.0.0",
+        "magento/module-shipping": "~100.4.0",
+        "magento/module-store": "~101.1.0",
+        "magento/module-tax": "~100.4.0",
+        "magento/module-url-rewrite": "~102.0.0",
+        "magento/zend-db": "~1.16.0",
+        "psr/log": "~1.1.0||~2.0.0||~3.0.0",
+        "symfony/console": "~5.4.0||~6.4.0||~7.4.0"
+    },
+    "suggest": {
+        "magento/module-bundle": "Prices of bundle products in Infrangible\\Core\\Helper\\Export",
+        "magento/module-catalog-rule": "Infrangible\\Core\\Model\\Config\\Source\\Operator",
+        "magento/module-checkout-agreements": "Infrangible\\Core\\Helper\\Agreement",
+        "magento/module-configurable-product": "Configurable attributes in Infrangible\\Core\\Helper\\Product",
+        "magento/module-inventory": "Infrangible\\Core\\Helper\\Source",
+        "magento/module-inventory-catalog-api": "Infrangible\\Core\\Helper\\Source",
+        "magento/module-review": "Infrangible\\Core\\Helper\\Review"
     },
     "autoload": {
         "files": [
