@@ -22,28 +22,16 @@ use Throwable;
 
 class Index
 {
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var StateFactory */
-    protected StateFactory $stateResourceFactory;
-
-    /** @var IndexerFactory */
-    protected IndexerFactory $indexerFactory;
-
     /**
      * @param LoggerInterface $logging
      * @param StateFactory $stateResourceFactory
      * @param IndexerFactory $indexerFactory
      */
     public function __construct(
-        LoggerInterface $logging,
-        StateFactory $stateResourceFactory,
-        IndexerFactory $indexerFactory
+        protected LoggerInterface $logging,
+        protected StateFactory $stateResourceFactory,
+        protected IndexerFactory $indexerFactory
     ) {
-        $this->logging = $logging;
-        $this->stateResourceFactory = $stateResourceFactory;
-        $this->indexerFactory = $indexerFactory;
     }
 
     /**

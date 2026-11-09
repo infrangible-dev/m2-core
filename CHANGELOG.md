@@ -34,6 +34,11 @@
   so existing `catch (Exception)` blocks still work.
 - Methods have native parameter and return types and complete PHPDoc, including array types. Subclasses that
   override them have to declare compatible types.
+- Constructors use constructor property promotion, private properties that are only set in the constructor are
+  `readonly`. Constructor parameters are named like their properties, which matters for named arguments and
+  `di.xml` arguments: `Helper\Csv` `$modelsHelper` is now `$variables` and `$logger` is now `$logging`,
+  `Helper\Setup`, `Helper\Stores` and `Model\Config\Source\Payment\ActiveMethods` `$arrayHelper` is now `$arrays`,
+  `Helper\Url` `$frontendUrl` is now `$url`.
 - `Helper\Product::getParentIds()` with `$maintainAssociation` returns the parent ids by child id, like
   `getChildIds()`, instead of a list of `1`.
 

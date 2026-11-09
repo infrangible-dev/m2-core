@@ -23,11 +23,8 @@ use Psr\Log\LoggerInterface;
 
 class Block extends AbstractHelper
 {
-    /** @var LoggerInterface */
-    protected LoggerInterface $logger;
-
     /** @var LayoutInterface */
-    private LayoutInterface $layout;
+    private readonly LayoutInterface $layout;
 
     /**
      * @param Context $context
@@ -36,12 +33,10 @@ class Block extends AbstractHelper
      */
     public function __construct(
         Context $context,
-        LoggerInterface $logger,
+        protected LoggerInterface $logger,
         \Magento\Framework\View\Element\Context $viewContext
     ) {
         parent::__construct($context);
-
-        $this->logger = $logger;
 
         $this->layout = $viewContext->getLayout();
     }

@@ -18,28 +18,16 @@ use Magento\Quote\Model\ResourceModel\Quote\CollectionFactory;
 
 class Quote
 {
-    /** @var QuoteFactory */
-    protected QuoteFactory $quoteFactory;
-
-    /** @var CartRepositoryInterface */
-    protected CartRepositoryInterface $quoteRepository;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $quoteCollectionFactory;
-
     /**
      * @param QuoteFactory $quoteFactory
      * @param CartRepositoryInterface $quoteRepository
      * @param CollectionFactory $quoteCollectionFactory
      */
     public function __construct(
-        QuoteFactory $quoteFactory,
-        CartRepositoryInterface $quoteRepository,
-        CollectionFactory $quoteCollectionFactory
+        protected QuoteFactory $quoteFactory,
+        protected CartRepositoryInterface $quoteRepository,
+        protected CollectionFactory $quoteCollectionFactory
     ) {
-        $this->quoteFactory = $quoteFactory;
-        $this->quoteRepository = $quoteRepository;
-        $this->quoteCollectionFactory = $quoteCollectionFactory;
     }
 
     /**

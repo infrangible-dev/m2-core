@@ -24,12 +24,6 @@ use RuntimeException;
  */
 class Source
 {
-    /** @var Product */
-    protected Product $productHelper;
-
-    /** @var Instances */
-    protected Instances $instanceHelper;
-
     /** @var bool */
     protected bool $inventoryAvailable = false;
 
@@ -43,11 +37,10 @@ class Source
      * @param Product $productHelper
      * @param Instances $instanceHelper
      */
-    public function __construct(Product $productHelper, Instances $instanceHelper)
-    {
-        $this->productHelper = $productHelper;
-        $this->instanceHelper = $instanceHelper;
-
+    public function __construct(
+        protected Product $productHelper,
+        protected Instances $instanceHelper
+    ) {
         $this->inventoryAvailable = class_exists(SourceItem::class);
     }
 
@@ -138,9 +131,7 @@ class Source
             return;
         }
 
-        if ($sourceCode === null) {
-            $sourceCode = $this->getDefaultSourceProviderCode();
-        }
+        $sourceCode ??= $this->getDefaultSourceProviderCode();
 
         $skus = $this->productHelper->determineSKUs($productIds, true);
         $entityIds = array_flip($skus);
@@ -172,9 +163,7 @@ class Source
      */
     public function loadSourceItemByProductId(int $productId, ?string $sourceCode = null): ?SourceItem
     {
-        if ($sourceCode === null) {
-            $sourceCode = $this->getDefaultSourceProviderCode();
-        }
+        $sourceCode ??= $this->getDefaultSourceProviderCode();
 
         $key = sprintf('%s_%s', $productId, $sourceCode);
 
@@ -208,9 +197,7 @@ class Source
      */
     public function loadSourceItemByProductSku(string $sku, ?string $sourceCode = null): ?SourceItem
     {
-        if ($sourceCode === null) {
-            $sourceCode = $this->getDefaultSourceProviderCode();
-        }
+        $sourceCode ??= $this->getDefaultSourceProviderCode();
 
         $key = sprintf('%s_%s', $sku, $sourceCode);
 

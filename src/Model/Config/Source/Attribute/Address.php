@@ -20,15 +20,12 @@ use Magento\Framework\Data\OptionSourceInterface;
  */
 class Address implements OptionSourceInterface
 {
-    /** @var CollectionFactory */
-    protected CollectionFactory $addressAttributeCollectionFactory;
-
     /**
      * @param CollectionFactory $addressAttributeCollectionFactory
      */
-    public function __construct(CollectionFactory $addressAttributeCollectionFactory)
-    {
-        $this->addressAttributeCollectionFactory = $addressAttributeCollectionFactory;
+    public function __construct(
+        protected CollectionFactory $addressAttributeCollectionFactory
+    ) {
     }
 
     /**

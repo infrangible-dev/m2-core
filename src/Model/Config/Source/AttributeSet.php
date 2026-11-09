@@ -23,12 +23,6 @@ use Magento\Framework\Phrase;
  */
 class AttributeSet extends Eav
 {
-    /** @var EntityType */
-    protected EntityType $entityTypeHelper;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $attributeSetCollectionFactory;
-
     /** @var bool */
     private bool $addPleaseSelect = true;
 
@@ -40,11 +34,9 @@ class AttributeSet extends Eav
      * @param CollectionFactory $attributeSetCollectionFactory
      */
     public function __construct(
-        EntityType $entityTypeHelper,
-        CollectionFactory $attributeSetCollectionFactory
+        protected EntityType $entityTypeHelper,
+        protected CollectionFactory $attributeSetCollectionFactory
     ) {
-        $this->entityTypeHelper = $entityTypeHelper;
-        $this->attributeSetCollectionFactory = $attributeSetCollectionFactory;
     }
 
     /**

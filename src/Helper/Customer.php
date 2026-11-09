@@ -21,27 +21,6 @@ use Psr\Log\LoggerInterface;
 
 class Customer
 {
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var CustomerFactory */
-    protected CustomerFactory $customerFactory;
-
-    /** @var \Magento\Customer\Model\ResourceModel\CustomerFactory */
-    protected \Magento\Customer\Model\ResourceModel\CustomerFactory $customerResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $customerCollectionFactory;
-
-    /** @var GroupFactory */
-    protected GroupFactory $customerGroupFactory;
-
-    /** @var \Magento\Customer\Model\ResourceModel\GroupFactory */
-    protected \Magento\Customer\Model\ResourceModel\GroupFactory $customerGroupResourceFactory;
-
-    /** @var \Magento\Customer\Model\ResourceModel\Group\CollectionFactory */
-    protected \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory;
-
     /**
      * @param LoggerInterface $logging
      * @param CustomerFactory $customerFactory
@@ -52,21 +31,14 @@ class Customer
      * @param \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
      */
     public function __construct(
-        LoggerInterface $logging,
-        CustomerFactory $customerFactory,
-        \Magento\Customer\Model\ResourceModel\CustomerFactory $customerResourceFactory,
-        CollectionFactory $customerCollectionFactory,
-        GroupFactory $customerGroupFactory,
-        \Magento\Customer\Model\ResourceModel\GroupFactory $customerGroupResourceFactory,
-        \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
+        protected LoggerInterface $logging,
+        protected CustomerFactory $customerFactory,
+        protected \Magento\Customer\Model\ResourceModel\CustomerFactory $customerResourceFactory,
+        protected CollectionFactory $customerCollectionFactory,
+        protected GroupFactory $customerGroupFactory,
+        protected \Magento\Customer\Model\ResourceModel\GroupFactory $customerGroupResourceFactory,
+        protected \Magento\Customer\Model\ResourceModel\Group\CollectionFactory $customerGroupCollectionFactory
     ) {
-        $this->logging = $logging;
-        $this->customerFactory = $customerFactory;
-        $this->customerResourceFactory = $customerResourceFactory;
-        $this->customerCollectionFactory = $customerCollectionFactory;
-        $this->customerGroupFactory = $customerGroupFactory;
-        $this->customerGroupResourceFactory = $customerGroupResourceFactory;
-        $this->customerGroupCollectionFactory = $customerGroupCollectionFactory;
     }
 
     /**

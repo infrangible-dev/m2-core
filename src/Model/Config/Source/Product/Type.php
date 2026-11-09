@@ -15,15 +15,12 @@ namespace Infrangible\Core\Model\Config\Source\Product;
  */
 class Type
 {
-    /** @var \Magento\Catalog\Model\Product\Type */
-    protected \Magento\Catalog\Model\Product\Type $productType;
-
     /**
      * @param \Magento\Catalog\Model\Product\Type $productType
      */
-    public function __construct(\Magento\Catalog\Model\Product\Type $productType)
-    {
-        $this->productType = $productType;
+    public function __construct(
+        protected \Magento\Catalog\Model\Product\Type $productType
+    ) {
     }
 
     /**

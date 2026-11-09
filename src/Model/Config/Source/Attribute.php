@@ -22,18 +22,6 @@ use Magento\Framework\Data\Collection;
  */
 class Attribute extends Eav
 {
-    /** @var CustomerAttributeCollectionFactory */
-    protected CustomerAttributeCollectionFactory $customerAttributeCollectionFactory;
-
-    /** @var AddressAttributeCollectionFactory */
-    protected AddressAttributeCollectionFactory $customerAddressAttributeCollectionFactory;
-
-    /** @var CategoryAttributeCollectionFactory */
-    protected CategoryAttributeCollectionFactory $categoryAttributeCollectionFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $productAttributeCollectionFactory;
-
     /** @var bool */
     private bool $addPleaseSelect = true;
 
@@ -44,15 +32,11 @@ class Attribute extends Eav
      * @param CollectionFactory $productAttributeCollectionFactory
      */
     public function __construct(
-        CustomerAttributeCollectionFactory $customerAttributeCollectionFactory,
-        AddressAttributeCollectionFactory $customerAddressAttributeCollectionFactory,
-        CategoryAttributeCollectionFactory $categoryAttributeCollectionFactory,
-        CollectionFactory $productAttributeCollectionFactory
+        protected CustomerAttributeCollectionFactory $customerAttributeCollectionFactory,
+        protected AddressAttributeCollectionFactory $customerAddressAttributeCollectionFactory,
+        protected CategoryAttributeCollectionFactory $categoryAttributeCollectionFactory,
+        protected CollectionFactory $productAttributeCollectionFactory
     ) {
-        $this->customerAttributeCollectionFactory = $customerAttributeCollectionFactory;
-        $this->customerAddressAttributeCollectionFactory = $customerAddressAttributeCollectionFactory;
-        $this->categoryAttributeCollectionFactory = $categoryAttributeCollectionFactory;
-        $this->productAttributeCollectionFactory = $productAttributeCollectionFactory;
     }
 
     /**

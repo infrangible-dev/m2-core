@@ -21,25 +21,16 @@ use Magento\Quote\Model\Quote\Item\Option;
 
 class Cart
 {
-    /** @var Json */
-    protected Json $serializer;
-
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var RequestInterface */
-    protected RequestInterface $request;
-
     /**
      * @param Json $serializer
      * @param Arrays $arrays
      * @param RequestInterface $request
      */
-    public function __construct(Json $serializer, Arrays $arrays, RequestInterface $request)
-    {
-        $this->serializer = $serializer;
-        $this->arrays = $arrays;
-        $this->request = $request;
+    public function __construct(
+        protected Json $serializer,
+        protected Arrays $arrays,
+        protected RequestInterface $request
+    ) {
     }
 
     /**

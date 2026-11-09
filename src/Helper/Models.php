@@ -15,15 +15,12 @@ use Magento\Framework\Model\AbstractModel;
 
 class Models
 {
-    /** @var Variables */
-    protected Variables $variables;
-
     /**
      * @param Variables $variables
      */
-    public function __construct(Variables $variables)
-    {
-        $this->variables = $variables;
+    public function __construct(
+        protected Variables $variables
+    ) {
     }
 
     /**

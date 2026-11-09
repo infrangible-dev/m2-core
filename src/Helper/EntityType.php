@@ -21,15 +21,6 @@ use RuntimeException;
 
 class EntityType
 {
-    /** @var Config */
-    protected Config $eavConfig;
-
-    /** @var Database */
-    protected Database $databaseHelper;
-
-    /** @var Variables */
-    protected Variables $variables;
-
     /** @var array<string, Type> */
     private array $entityTypes = [];
 
@@ -38,11 +29,11 @@ class EntityType
      * @param Database $databaseHelper
      * @param Variables $variables
      */
-    public function __construct(Config $eavConfig, Database $databaseHelper, Variables $variables)
-    {
-        $this->eavConfig = $eavConfig;
-        $this->databaseHelper = $databaseHelper;
-        $this->variables = $variables;
+    public function __construct(
+        protected Config $eavConfig,
+        protected Database $databaseHelper,
+        protected Variables $variables
+    ) {
     }
 
     /**

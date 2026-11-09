@@ -18,20 +18,14 @@ use Psr\Log\LoggerInterface;
 
 class Invoice
 {
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var InvoiceService */
-    protected InvoiceService $invoiceService;
-
     /**
      * @param LoggerInterface $logging
      * @param InvoiceService $invoiceService
      */
-    public function __construct(LoggerInterface $logging, InvoiceService $invoiceService)
-    {
-        $this->logging = $logging;
-        $this->invoiceService = $invoiceService;
+    public function __construct(
+        protected LoggerInterface $logging,
+        protected InvoiceService $invoiceService
+    ) {
     }
 
     /**

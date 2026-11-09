@@ -16,20 +16,14 @@ use Magento\Sales\Model\Order\CreditmemoFactory;
 
 class Creditmemo
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var CreditmemoFactory */
-    protected CreditmemoFactory $creditMemoFactory;
-
     /**
      * @param Variables $variables
      * @param CreditmemoFactory $creditMemoFactory
      */
-    public function __construct(Variables $variables, CreditmemoFactory $creditMemoFactory)
-    {
-        $this->variables = $variables;
-        $this->creditMemoFactory = $creditMemoFactory;
+    public function __construct(
+        protected Variables $variables,
+        protected CreditmemoFactory $creditMemoFactory
+    ) {
     }
 
     /**

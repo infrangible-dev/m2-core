@@ -28,15 +28,6 @@ use Psr\Log\LoggerInterface;
  */
 abstract class Json extends Action
 {
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var \FeWeDev\Base\Json */
-    protected \FeWeDev\Base\Json $json;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
     /** @var int */
     private int $responseCode = 200;
 
@@ -53,16 +44,12 @@ abstract class Json extends Action
      * @param LoggerInterface $logging
      */
     public function __construct(
-        Arrays $arrays,
-        \FeWeDev\Base\Json $json,
+        protected Arrays $arrays,
+        protected \FeWeDev\Base\Json $json,
         Context $context,
-        LoggerInterface $logging
+        protected LoggerInterface $logging
     ) {
         parent::__construct($context);
-
-        $this->arrays = $arrays;
-        $this->json = $json;
-        $this->logging = $logging;
     }
 
     /**
@@ -130,7 +117,7 @@ abstract class Json extends Action
      *
      * @return void
      */
-    protected function handleException(\Exception $exception): void
+    protected function handleException(\Throwable $exception): void
     {
         $this->logging->error($exception);
 
@@ -204,11 +191,7 @@ abstract class Json extends Action
      */
     protected function getResponseValue(string $key): mixed
     {
-        if (isset($this->responseValues[ $key ])) {
-            return $this->responseValues[ $key ];
-        }
-
-        return null;
+        return $this->responseValues[ $key ] ?? null;
     }
 
     /**

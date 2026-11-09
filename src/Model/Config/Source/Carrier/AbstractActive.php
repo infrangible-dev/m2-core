@@ -20,12 +20,6 @@ use Magento\Shipping\Model\Carrier\AbstractCarrierInterface;
  */
 abstract class AbstractActive implements OptionSourceInterface
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Carrier */
-    protected Carrier $carrierHelper;
-
     /** @var bool */
     private bool $allStores = false;
 
@@ -36,10 +30,10 @@ abstract class AbstractActive implements OptionSourceInterface
      * @param Variables $variables
      * @param Carrier $carrierHelper
      */
-    public function __construct(Variables $variables, Carrier $carrierHelper)
-    {
-        $this->variables = $variables;
-        $this->carrierHelper = $carrierHelper;
+    public function __construct(
+        protected Variables $variables,
+        protected Carrier $carrierHelper
+    ) {
     }
 
     /**

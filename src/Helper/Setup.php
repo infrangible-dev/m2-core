@@ -30,20 +30,14 @@ class Setup
     public const ATTRIBUTE_TYPE_TEXT = 'text';
     public const ATTRIBUTE_TYPE_VARCHAR = 'varchar';
 
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var EavSetupFactory */
-    protected EavSetupFactory $eavSetupFactory;
-
     /**
-     * @param Arrays $arrayHelper
+     * @param Arrays $arrays
      * @param EavSetupFactory $eavSetupFactory
      */
-    public function __construct(Arrays $arrayHelper, EavSetupFactory $eavSetupFactory)
-    {
-        $this->arrays = $arrayHelper;
-        $this->eavSetupFactory = $eavSetupFactory;
+    public function __construct(
+        protected Arrays $arrays,
+        protected EavSetupFactory $eavSetupFactory
+    ) {
     }
 
     /**

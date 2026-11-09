@@ -17,15 +17,12 @@ use Magento\Tax\Model\ResourceModel\TaxClass\CollectionFactory;
 
 class TaxClass
 {
-    /** @var CollectionFactory */
-    protected CollectionFactory $taxClassCollectionFactory;
-
     /**
      * @param CollectionFactory $taxClassCollectionFactory
      */
-    public function __construct(CollectionFactory $taxClassCollectionFactory)
-    {
-        $this->taxClassCollectionFactory = $taxClassCollectionFactory;
+    public function __construct(
+        protected CollectionFactory $taxClassCollectionFactory
+    ) {
     }
 
     /**

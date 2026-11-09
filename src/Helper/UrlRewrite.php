@@ -18,28 +18,16 @@ use Magento\UrlRewrite\Service\V1\Data\UrlRewrite as UrlRewriteData;
 
 class UrlRewrite
 {
-    /** @var UrlFinderInterface */
-    protected UrlFinderInterface $urlFinder;
-
-    /** @var UrlRewriteFactory */
-    protected UrlRewriteFactory $urlRewriteFactory;
-
-    /** @var \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory */
-    protected \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory $urlRewriteResourceFactory;
-
     /**
      * @param UrlFinderInterface $urlFinder
      * @param UrlRewriteFactory $urlRewriteFactory
      * @param \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory $urlRewriteResourceFactory
      */
     public function __construct(
-        UrlFinderInterface $urlFinder,
-        UrlRewriteFactory $urlRewriteFactory,
-        \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory $urlRewriteResourceFactory
+        protected UrlFinderInterface $urlFinder,
+        protected UrlRewriteFactory $urlRewriteFactory,
+        protected \Magento\UrlRewrite\Model\ResourceModel\UrlRewriteFactory $urlRewriteResourceFactory
     ) {
-        $this->urlFinder = $urlFinder;
-        $this->urlRewriteFactory = $urlRewriteFactory;
-        $this->urlRewriteResourceFactory = $urlRewriteResourceFactory;
     }
 
     /**

@@ -18,31 +18,11 @@ use Magento\Sales\Model\Order\Shipment\TrackFactory;
 use Magento\Sales\Model\Order\ShipmentFactory;
 use Magento\Sales\Model\ResourceModel\Order\Shipment\Collection;
 use Magento\Sales\Model\ResourceModel\Order\Shipment\CollectionFactory;
+use Magento\Sales\Model\ResourceModel\Order\Shipment\Track\CollectionFactory as TrackCollectionFactory;
 use RuntimeException;
 
 class Shipment
 {
-    /** @var ShipmentRepositoryInterface */
-    protected ShipmentRepositoryInterface $shipmentRepository;
-
-    /** @var ShipmentFactory */
-    protected ShipmentFactory $shipmentFactory;
-
-    /** @var \Magento\Sales\Model\ResourceModel\Order\ShipmentFactory */
-    protected \Magento\Sales\Model\ResourceModel\Order\ShipmentFactory $shipmentResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $shipmentCollectionFactory;
-
-    /** @var TrackFactory */
-    protected TrackFactory $shipmentTrackFactory;
-
-    /** @var \Magento\Sales\Model\ResourceModel\Order\Shipment\TrackFactory */
-    protected \Magento\Sales\Model\ResourceModel\Order\Shipment\TrackFactory $shipmentTrackResourceFactory;
-
-    /** @var \Magento\Sales\Model\ResourceModel\Order\Shipment\Track\CollectionFactory */
-    protected \Magento\Sales\Model\ResourceModel\Order\Shipment\Track\CollectionFactory $shipmentTrackCollectionFactory;
-
     /**
      * @param ShipmentRepositoryInterface $shipmentRepository
      * @param ShipmentFactory $shipmentFactory
@@ -50,24 +30,17 @@ class Shipment
      * @param CollectionFactory $shipmentCollectionFactory
      * @param TrackFactory $shipmentTrackFactory
      * @param \Magento\Sales\Model\ResourceModel\Order\Shipment\TrackFactory $shipmentTrackResourceFactory
-     * @param \Magento\Sales\Model\ResourceModel\Order\Shipment\Track\CollectionFactory $shipmentTrackCollectionFactory
+     * @param TrackCollectionFactory $shipmentTrackCollectionFactory
      */
     public function __construct(
-        ShipmentRepositoryInterface $shipmentRepository,
-        ShipmentFactory $shipmentFactory,
-        \Magento\Sales\Model\ResourceModel\Order\ShipmentFactory $shipmentResourceFactory,
-        CollectionFactory $shipmentCollectionFactory,
-        TrackFactory $shipmentTrackFactory,
-        \Magento\Sales\Model\ResourceModel\Order\Shipment\TrackFactory $shipmentTrackResourceFactory,
-        \Magento\Sales\Model\ResourceModel\Order\Shipment\Track\CollectionFactory $shipmentTrackCollectionFactory
+        protected ShipmentRepositoryInterface $shipmentRepository,
+        protected ShipmentFactory $shipmentFactory,
+        protected \Magento\Sales\Model\ResourceModel\Order\ShipmentFactory $shipmentResourceFactory,
+        protected CollectionFactory $shipmentCollectionFactory,
+        protected TrackFactory $shipmentTrackFactory,
+        protected \Magento\Sales\Model\ResourceModel\Order\Shipment\TrackFactory $shipmentTrackResourceFactory,
+        protected TrackCollectionFactory $shipmentTrackCollectionFactory
     ) {
-        $this->shipmentRepository = $shipmentRepository;
-        $this->shipmentFactory = $shipmentFactory;
-        $this->shipmentResourceFactory = $shipmentResourceFactory;
-        $this->shipmentCollectionFactory = $shipmentCollectionFactory;
-        $this->shipmentTrackFactory = $shipmentTrackFactory;
-        $this->shipmentTrackResourceFactory = $shipmentTrackResourceFactory;
-        $this->shipmentTrackCollectionFactory = $shipmentTrackCollectionFactory;
     }
 
     /**

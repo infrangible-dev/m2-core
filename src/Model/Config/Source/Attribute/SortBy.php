@@ -18,15 +18,12 @@ use Magento\Framework\Data\OptionSourceInterface;
  */
 class SortBy implements OptionSourceInterface
 {
-    /** @var Config */
-    protected Config $catalogConfig;
-
     /**
      * @param Config $catalogConfig
      */
-    public function __construct(Config $catalogConfig)
-    {
-        $this->catalogConfig = $catalogConfig;
+    public function __construct(
+        protected Config $catalogConfig
+    ) {
     }
 
     /**

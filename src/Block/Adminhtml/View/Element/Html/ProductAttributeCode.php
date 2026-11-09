@@ -18,9 +18,6 @@ use Magento\Framework\View\Element\Html\Select;
  */
 class ProductAttributeCode extends Select
 {
-    /** @var \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode */
-    protected \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode $sourceProductAttributeCode;
-
     /**
      * @param Context $context
      * @param \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode $sourceProductAttributeCode
@@ -30,15 +27,13 @@ class ProductAttributeCode extends Select
      */
     public function __construct(
         Context $context,
-        \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode $sourceProductAttributeCode,
+        protected \Infrangible\Core\Model\Config\Source\Attribute\ProductAttributeCode $sourceProductAttributeCode,
         array $data = []
     ) {
         parent::__construct(
             $context,
             $data
         );
-
-        $this->sourceProductAttributeCode = $sourceProductAttributeCode;
     }
 
     /**

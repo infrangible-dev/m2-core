@@ -23,9 +23,6 @@ use Magento\Framework\View\Helper\SecureHtmlRenderer;
  */
 abstract class ProductAttributeCode extends AbstractFieldArray
 {
-    /** @var Block */
-    protected Block $blockHelper;
-
     /** @var ProductAttributeCodeElement|null */
     private ?ProductAttributeCodeElement $attributesBlock = null;
 
@@ -39,7 +36,7 @@ abstract class ProductAttributeCode extends AbstractFieldArray
      */
     public function __construct(
         Context $context,
-        Block $blockHelper,
+        protected Block $blockHelper,
         array $data = [],
         ?SecureHtmlRenderer $secureRenderer = null
     ) {
@@ -48,8 +45,6 @@ abstract class ProductAttributeCode extends AbstractFieldArray
             $data,
             $secureRenderer
         );
-
-        $this->blockHelper = $blockHelper;
     }
 
     /**

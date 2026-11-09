@@ -72,7 +72,7 @@ abstract class Ajax extends Json
      *
      * @return void
      */
-    protected function handleException(\Exception $exception): void
+    protected function handleException(\Throwable $exception): void
     {
         $this->logging->error($exception);
         $this->setErrorResponse($exception->getMessage());

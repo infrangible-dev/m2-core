@@ -18,15 +18,12 @@ use Magento\Framework\Data\Collection\AbstractDb;
  */
 class CmsBlock extends AbstractCms
 {
-    /** @var CollectionFactory */
-    protected CollectionFactory $collectionFactory;
-
     /**
      * @param CollectionFactory $collectionFactory
      */
-    public function __construct(CollectionFactory $collectionFactory)
-    {
-        $this->collectionFactory = $collectionFactory;
+    public function __construct(
+        protected CollectionFactory $collectionFactory
+    ) {
     }
 
     /**

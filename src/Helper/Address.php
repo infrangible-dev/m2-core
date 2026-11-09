@@ -19,24 +19,6 @@ use Magento\Directory\Model\CountryFactory;
 
 class Address
 {
-    /** @var AddressFactory */
-    protected AddressFactory $addressFactory;
-
-    /** @var \Magento\Customer\Model\ResourceModel\AddressFactory */
-    protected \Magento\Customer\Model\ResourceModel\AddressFactory $addressResourceFactory;
-
-    /** @var CollectionFactory */
-    private CollectionFactory $addressCollectionFactory;
-
-    /** @var CountryFactory */
-    protected CountryFactory $countryFactory;
-
-    /** @var \Magento\Directory\Model\ResourceModel\CountryFactory */
-    protected \Magento\Directory\Model\ResourceModel\CountryFactory $countryResourceFactory;
-
-    /** @var \Magento\Directory\Model\ResourceModel\Country\CollectionFactory */
-    protected \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory;
-
     /**
      * @param AddressFactory $addressFactory
      * @param \Magento\Customer\Model\ResourceModel\AddressFactory $addressResourceFactory
@@ -46,19 +28,13 @@ class Address
      * @param \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
      */
     public function __construct(
-        AddressFactory $addressFactory,
-        \Magento\Customer\Model\ResourceModel\AddressFactory $addressResourceFactory,
-        CollectionFactory $addressCollectionFactory,
-        CountryFactory $countryFactory,
-        \Magento\Directory\Model\ResourceModel\CountryFactory $countryResourceFactory,
-        \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
+        protected AddressFactory $addressFactory,
+        protected \Magento\Customer\Model\ResourceModel\AddressFactory $addressResourceFactory,
+        private readonly CollectionFactory $addressCollectionFactory,
+        protected CountryFactory $countryFactory,
+        protected \Magento\Directory\Model\ResourceModel\CountryFactory $countryResourceFactory,
+        protected \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
     ) {
-        $this->addressFactory = $addressFactory;
-        $this->addressResourceFactory = $addressResourceFactory;
-        $this->addressCollectionFactory = $addressCollectionFactory;
-        $this->countryFactory = $countryFactory;
-        $this->countryResourceFactory = $countryResourceFactory;
-        $this->countryCollectionFactory = $countryCollectionFactory;
     }
 
     /**

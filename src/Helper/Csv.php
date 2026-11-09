@@ -19,41 +19,20 @@ use Psr\Log\LoggerInterface;
 
 class Csv
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Arrays */
-    protected Arrays $arrayHelper;
-
-    /** @var Files */
-    protected Files $fileHelper;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var File */
-    protected File $file;
-
     /**
      * @param Files $fileHelper
-     * @param Variables $modelsHelper
+     * @param Variables $variables
      * @param Arrays $arrayHelper
-     * @param LoggerInterface $logger
+     * @param LoggerInterface $logging
      * @param File $file
      */
     public function __construct(
-        Files $fileHelper,
-        Variables $modelsHelper,
-        Arrays $arrayHelper,
-        LoggerInterface $logger,
-        File $file
+        protected Files $fileHelper,
+        protected Variables $variables,
+        protected Arrays $arrayHelper,
+        protected LoggerInterface $logging,
+        protected File $file
     ) {
-        $this->variables = $modelsHelper;
-        $this->arrayHelper = $arrayHelper;
-        $this->fileHelper = $fileHelper;
-
-        $this->logging = $logger;
-        $this->file = $file;
     }
 
     /**

@@ -21,15 +21,12 @@ use RuntimeException;
  */
 class Operator implements OptionSourceInterface
 {
-    /** @var Instances */
-    protected Instances $instanceHelper;
-
     /**
      * @param Instances $instanceHelper
      */
-    public function __construct(Instances $instanceHelper)
-    {
-        $this->instanceHelper = $instanceHelper;
+    public function __construct(
+        protected Instances $instanceHelper
+    ) {
     }
 
     /**

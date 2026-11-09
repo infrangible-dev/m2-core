@@ -20,15 +20,12 @@ use Magento\Framework\Data\OptionSourceInterface;
  */
 class Category implements OptionSourceInterface
 {
-    /** @var CollectionFactory */
-    protected CollectionFactory $categoryAttributeCollectionFactory;
-
     /**
      * @param CollectionFactory $categoryAttributeCollectionFactory
      */
-    public function __construct(CollectionFactory $categoryAttributeCollectionFactory)
-    {
-        $this->categoryAttributeCollectionFactory = $categoryAttributeCollectionFactory;
+    public function __construct(
+        protected CollectionFactory $categoryAttributeCollectionFactory
+    ) {
     }
 
     /**

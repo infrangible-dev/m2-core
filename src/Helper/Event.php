@@ -14,15 +14,12 @@ use Magento\Framework\Event\ManagerInterface;
 
 class Event
 {
-    /** @var ManagerInterface */
-    protected ManagerInterface $eventManager;
-
     /**
      * @param ManagerInterface $eventManager
      */
-    public function __construct(ManagerInterface $eventManager)
-    {
-        $this->eventManager = $eventManager;
+    public function __construct(
+        protected ManagerInterface $eventManager
+    ) {
     }
 
     /**

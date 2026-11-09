@@ -20,24 +20,6 @@ use Psr\Log\LoggerInterface;
 
 class Files
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var \FeWeDev\Base\Files */
-    protected \FeWeDev\Base\Files $files;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var DirectoryList */
-    protected DirectoryList $directoryList;
-
-    /** @var File */
-    protected File $file;
-
-    /** @var FileDriver */
-    protected FileDriver $fileDriver;
-
     /**
      * @param Variables $variables
      * @param \FeWeDev\Base\Files $files
@@ -47,20 +29,13 @@ class Files
      * @param FileDriver $fileDriver
      */
     public function __construct(
-        Variables $variables,
-        \FeWeDev\Base\Files $files,
-        LoggerInterface $logging,
-        DirectoryList $directoryList,
-        File $file,
-        FileDriver $fileDriver
+        protected Variables $variables,
+        protected \FeWeDev\Base\Files $files,
+        protected LoggerInterface $logging,
+        protected DirectoryList $directoryList,
+        protected File $file,
+        protected FileDriver $fileDriver
     ) {
-        $this->variables = $variables;
-        $this->files = $files;
-
-        $this->logging = $logging;
-        $this->directoryList = $directoryList;
-        $this->file = $file;
-        $this->fileDriver = $fileDriver;
     }
 
     /**

@@ -18,25 +18,16 @@ use Magento\Store\Api\Data\StoreInterface;
 
 class Carrier
 {
-    /** @var Stores */
-    protected Stores $storeHelper;
-
-    /** @var CarrierFactory */
-    protected CarrierFactory $carrierFactory;
-
-    /** @var Variables */
-    protected Variables $variables;
-
     /**
      * @param Stores $storeHelper
      * @param CarrierFactory $carrierFactory
      * @param Variables $variables
      */
-    public function __construct(Stores $storeHelper, CarrierFactory $carrierFactory, Variables $variables)
-    {
-        $this->storeHelper = $storeHelper;
-        $this->carrierFactory = $carrierFactory;
-        $this->variables = $variables;
+    public function __construct(
+        protected Stores $storeHelper,
+        protected CarrierFactory $carrierFactory,
+        protected Variables $variables
+    ) {
     }
 
     /**

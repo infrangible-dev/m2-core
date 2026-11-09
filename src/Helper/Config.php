@@ -22,21 +22,6 @@ use Magento\Framework\Filesystem\Driver\File;
  */
 class Config
 {
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var File */
-    protected File $file;
-
-    /** @var Stores */
-    protected Stores $storeHelper;
-
-    /** @var Json */
-    protected Json $json;
-
-    /** @var Variables */
-    protected Variables $variables;
-
     /**
      * @param Arrays $arrays
      * @param File $file
@@ -45,17 +30,12 @@ class Config
      * @param Variables $variables
      */
     public function __construct(
-        Arrays $arrays,
-        File $file,
-        Stores $storeHelper,
-        Json $json,
-        Variables $variables
+        protected Arrays $arrays,
+        protected File $file,
+        protected Stores $storeHelper,
+        protected Json $json,
+        protected Variables $variables
     ) {
-        $this->arrays = $arrays;
-        $this->file = $file;
-        $this->storeHelper = $storeHelper;
-        $this->json = $json;
-        $this->variables = $variables;
     }
 
     /**

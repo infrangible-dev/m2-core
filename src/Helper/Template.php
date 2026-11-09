@@ -15,15 +15,12 @@ use Magento\Framework\Data\Collection;
 
 class Template
 {
-    /** @var CollectionFactory */
-    protected CollectionFactory $templateCollectionFactory;
-
     /**
      * @param CollectionFactory $templateCollectionFactory
      */
-    public function __construct(CollectionFactory $templateCollectionFactory)
-    {
-        $this->templateCollectionFactory = $templateCollectionFactory;
+    public function __construct(
+        protected CollectionFactory $templateCollectionFactory
+    ) {
     }
 
     /**

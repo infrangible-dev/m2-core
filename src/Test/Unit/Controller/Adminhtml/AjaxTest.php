@@ -121,9 +121,6 @@ class AjaxTest extends TestCase
         $variables = new Variables();
 
         return new class(new Arrays($variables), new Json(), $context, new NullLogger(), $exception) extends Ajax {
-            /** @var Exception|null */
-            private ?Exception $exception;
-
             /**
              * @param Arrays $arrays
              * @param Json $json
@@ -136,11 +133,9 @@ class AjaxTest extends TestCase
                 Json $json,
                 Context $context,
                 NullLogger $logging,
-                ?Exception $exception
+                private readonly ?Exception $exception
             ) {
                 parent::__construct($arrays, $json, $context, $logging);
-
-                $this->exception = $exception;
             }
 
             /**

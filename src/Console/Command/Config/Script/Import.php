@@ -22,15 +22,12 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class Import extends Script
 {
-    /** @var Config */
-    protected Config $configHelper;
-
     /**
      * @param Config $configHelper
      */
-    public function __construct(Config $configHelper)
-    {
-        $this->configHelper = $configHelper;
+    public function __construct(
+        protected Config $configHelper
+    ) {
     }
 
     /**

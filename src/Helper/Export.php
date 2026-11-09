@@ -31,48 +31,6 @@ use Psr\Log\LoggerInterface;
 
 class Export
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Database */
-    protected Database $databaseHelper;
-
-    /** @var Stores */
-    protected Stores $storeHelper;
-
-    /** @var \Infrangible\Core\Helper\Attribute */
-    protected \Infrangible\Core\Helper\Attribute $attributeHelper;
-
-    /** @var Product */
-    protected Product $productHelper;
-
-    /** @var Category */
-    protected Category $categoryHelper;
-
-    /** @var Customer */
-    protected Customer $customerHelper;
-
-    /** @var Address */
-    protected Address $addressHelper;
-
-    /** @var Data */
-    protected Data $taxHelper;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var Visibility */
-    protected Visibility $productVisible;
-
-    /** @var Status */
-    protected Status $productStatus;
-
-    /** @var Config */
-    protected Config $eavConfig;
-
     /** @var array<string, array<int|string, \Magento\Catalog\Model\ResourceModel\Eav\Attribute>> */
     private array $searchableAttributes = [];
 
@@ -102,36 +60,21 @@ class Export
      * @param Config $eavConfig
      */
     public function __construct(
-        Variables $variables,
-        Arrays $arrays,
-        Database $databaseHelper,
-        Stores $storeHelper,
-        \Infrangible\Core\Helper\Attribute $attributeHelper,
-        Product $productHelper,
-        Category $categoryHelper,
-        Customer $customerHelper,
-        Address $addressHelper,
-        Data $taxHelper,
-        LoggerInterface $logging,
-        Visibility $productVisible,
-        Status $productStatus,
-        Config $eavConfig
+        protected Variables $variables,
+        protected Arrays $arrays,
+        protected Database $databaseHelper,
+        protected Stores $storeHelper,
+        protected \Infrangible\Core\Helper\Attribute $attributeHelper,
+        protected Product $productHelper,
+        protected Category $categoryHelper,
+        protected Customer $customerHelper,
+        protected Address $addressHelper,
+        protected Data $taxHelper,
+        protected LoggerInterface $logging,
+        protected Visibility $productVisible,
+        protected Status $productStatus,
+        protected Config $eavConfig
     ) {
-        $this->databaseHelper = $databaseHelper;
-        $this->storeHelper = $storeHelper;
-        $this->variables = $variables;
-        $this->arrays = $arrays;
-        $this->attributeHelper = $attributeHelper;
-        $this->productHelper = $productHelper;
-        $this->categoryHelper = $categoryHelper;
-        $this->customerHelper = $customerHelper;
-        $this->addressHelper = $addressHelper;
-        $this->taxHelper = $taxHelper;
-
-        $this->logging = $logging;
-        $this->productVisible = $productVisible;
-        $this->productStatus = $productStatus;
-        $this->eavConfig = $eavConfig;
     }
 
     /**
@@ -188,7 +131,7 @@ class Export
         }
 
         return array_map(
-            fn($productId) => $this->variables->intValue($productId),
+            $this->variables->intValue(...),
             array_keys($queryResult)
         );
     }

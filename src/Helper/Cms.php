@@ -30,39 +30,6 @@ class Cms
     /** string for cms block identifier */
     public const STRING_IDENTIFIER = 'identifier';
 
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Files */
-    protected Files $files;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var PageFactory */
-    protected PageFactory $cmsPageFactory;
-
-    /** @var \Magento\Cms\Model\ResourceModel\PageFactory */
-    protected \Magento\Cms\Model\ResourceModel\PageFactory $cmsPageResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $cmsPageCollectionFactory;
-
-    /** @var BlockFactory */
-    protected BlockFactory $cmsBlockFactory;
-
-    /** @var \Magento\Cms\Model\ResourceModel\BlockFactory */
-    protected \Magento\Cms\Model\ResourceModel\BlockFactory $cmsBlockResourceFactory;
-
-    /** @var \Magento\Cms\Model\ResourceModel\Block\CollectionFactory */
-    protected \Magento\Cms\Model\ResourceModel\Block\CollectionFactory $cmsBlockCollectionFactory;
-
-    /** @var SimpleXml */
-    protected SimpleXml $simpleXml;
-
     /**
      * @param Variables $variables
      * @param Arrays $arrays
@@ -77,30 +44,18 @@ class Cms
      * @param SimpleXml $simpleXml
      */
     public function __construct(
-        Variables $variables,
-        Arrays $arrays,
-        Files $files,
-        LoggerInterface $logging,
-        PageFactory $cmsPageFactory,
-        \Magento\Cms\Model\ResourceModel\PageFactory $cmsPageResourceFactory,
-        CollectionFactory $cmsPageCollectionFactory,
-        BlockFactory $cmsBlockFactory,
-        \Magento\Cms\Model\ResourceModel\BlockFactory $cmsBlockResourceFactory,
-        \Magento\Cms\Model\ResourceModel\Block\CollectionFactory $cmsBlockCollectionFactory,
-        SimpleXml $simpleXml
+        protected Variables $variables,
+        protected Arrays $arrays,
+        protected Files $files,
+        protected LoggerInterface $logging,
+        protected PageFactory $cmsPageFactory,
+        protected \Magento\Cms\Model\ResourceModel\PageFactory $cmsPageResourceFactory,
+        protected CollectionFactory $cmsPageCollectionFactory,
+        protected BlockFactory $cmsBlockFactory,
+        protected \Magento\Cms\Model\ResourceModel\BlockFactory $cmsBlockResourceFactory,
+        protected \Magento\Cms\Model\ResourceModel\Block\CollectionFactory $cmsBlockCollectionFactory,
+        protected SimpleXml $simpleXml
     ) {
-        $this->variables = $variables;
-        $this->arrays = $arrays;
-        $this->files = $files;
-
-        $this->logging = $logging;
-        $this->cmsPageFactory = $cmsPageFactory;
-        $this->cmsPageResourceFactory = $cmsPageResourceFactory;
-        $this->cmsPageCollectionFactory = $cmsPageCollectionFactory;
-        $this->cmsBlockFactory = $cmsBlockFactory;
-        $this->cmsBlockResourceFactory = $cmsBlockResourceFactory;
-        $this->cmsBlockCollectionFactory = $cmsBlockCollectionFactory;
-        $this->simpleXml = $simpleXml;
     }
 
     /**

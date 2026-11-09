@@ -14,18 +14,15 @@ use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 
 class Seo
 {
-    /** @var Stores */
-    protected Stores $storeHelper;
-
     /** @var string|null */
     private ?string $seoSuffix = null;
 
     /**
      * @param Stores $storeHelper
      */
-    public function __construct(Stores $storeHelper)
-    {
-        $this->storeHelper = $storeHelper;
+    public function __construct(
+        protected Stores $storeHelper
+    ) {
     }
 
     /**

@@ -25,30 +25,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 
 class Stock
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Stores */
-    protected Stores $storeHelper;
-
-    /** @var ItemFactory */
-    protected ItemFactory $stockItemFactory;
-
-    /** @var \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory */
-    protected \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $stockItemCollectionFactory;
-
-    /** @var StockItemRepository */
-    protected StockItemRepository $stockItemRepository;
-
-    /** @var StockItemCriteriaInterfaceFactory */
-    protected StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory;
-
-    /** @var QueryBuilderFactory */
-    protected QueryBuilderFactory $queryBuilderFactory;
-
     /**
      * @param Variables $variables
      * @param Stores $storeHelper
@@ -60,24 +36,15 @@ class Stock
      * @param QueryBuilderFactory $queryBuilderFactory
      */
     public function __construct(
-        Variables $variables,
-        Stores $storeHelper,
-        ItemFactory $stockItemFactory,
-        \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory,
-        CollectionFactory $stockItemCollectionFactory,
-        StockItemRepository $stockItemRepository,
-        StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory,
-        QueryBuilderFactory $queryBuilderFactory
+        protected Variables $variables,
+        protected Stores $storeHelper,
+        protected ItemFactory $stockItemFactory,
+        protected \Magento\CatalogInventory\Model\ResourceModel\Stock\ItemFactory $stockItemResourceFactory,
+        protected CollectionFactory $stockItemCollectionFactory,
+        protected StockItemRepository $stockItemRepository,
+        protected StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory,
+        protected QueryBuilderFactory $queryBuilderFactory
     ) {
-        $this->variables = $variables;
-        $this->storeHelper = $storeHelper;
-
-        $this->stockItemFactory = $stockItemFactory;
-        $this->stockItemResourceFactory = $stockItemResourceFactory;
-        $this->stockItemCollectionFactory = $stockItemCollectionFactory;
-        $this->stockItemRepository = $stockItemRepository;
-        $this->stockItemCriteriaInterfaceFactory = $stockItemCriteriaInterfaceFactory;
-        $this->queryBuilderFactory = $queryBuilderFactory;
     }
 
     /**

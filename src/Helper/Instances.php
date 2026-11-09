@@ -17,15 +17,12 @@ use RuntimeException;
 
 class Instances
 {
-    /** @var ObjectManagerInterface */
-    protected ObjectManagerInterface $objectManager;
-
     /**
      * @param ObjectManagerInterface $objectManager
      */
-    public function __construct(ObjectManagerInterface $objectManager)
-    {
-        $this->objectManager = $objectManager;
+    public function __construct(
+        protected ObjectManagerInterface $objectManager
+    ) {
     }
 
     /**

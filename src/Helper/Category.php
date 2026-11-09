@@ -25,39 +25,6 @@ use Psr\Log\LoggerInterface;
 
 class Category extends AbstractHelper
 {
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Stores */
-    protected Stores $storeHelper;
-
-    /** @var Attribute */
-    protected Attribute $attributeHelper;
-
-    /** @var Database */
-    protected Database $databaseHelper;
-
-    /** @var Seo */
-    protected Seo $seoHelper;
-
-    /** @var EntityType */
-    protected EntityType $entityTypeHelper;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var CategoryFactory */
-    protected CategoryFactory $categoryFactory;
-
-    /** @var \Magento\Catalog\Model\ResourceModel\CategoryFactory */
-    protected \Magento\Catalog\Model\ResourceModel\CategoryFactory $categoryResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $categoryCollectionFactory;
-
     /** @var array<string, mixed> */
     private array $parentEntityIds = [];
 
@@ -95,31 +62,19 @@ class Category extends AbstractHelper
      */
     public function __construct(
         Context $context,
-        Arrays $arrays,
-        Variables $variables,
-        Stores $storeHelper,
-        Attribute $attributeHelper,
-        Database $databaseHelper,
-        Seo $seoHelper,
-        EntityType $entityTypeHelper,
-        LoggerInterface $logging,
-        CategoryFactory $categoryFactory,
-        \Magento\Catalog\Model\ResourceModel\CategoryFactory $categoryResourceFactory,
-        CollectionFactory $categoryCollectionFactory
+        protected Arrays $arrays,
+        protected Variables $variables,
+        protected Stores $storeHelper,
+        protected Attribute $attributeHelper,
+        protected Database $databaseHelper,
+        protected Seo $seoHelper,
+        protected EntityType $entityTypeHelper,
+        protected LoggerInterface $logging,
+        protected CategoryFactory $categoryFactory,
+        protected \Magento\Catalog\Model\ResourceModel\CategoryFactory $categoryResourceFactory,
+        protected CollectionFactory $categoryCollectionFactory
     ) {
         parent::__construct($context);
-
-        $this->arrays = $arrays;
-        $this->variables = $variables;
-        $this->storeHelper = $storeHelper;
-        $this->attributeHelper = $attributeHelper;
-        $this->databaseHelper = $databaseHelper;
-        $this->seoHelper = $seoHelper;
-        $this->entityTypeHelper = $entityTypeHelper;
-        $this->logging = $logging;
-        $this->categoryFactory = $categoryFactory;
-        $this->categoryResourceFactory = $categoryResourceFactory;
-        $this->categoryCollectionFactory = $categoryCollectionFactory;
     }
 
     /**

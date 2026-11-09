@@ -36,51 +36,6 @@ use RuntimeException;
 
 class Product
 {
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Attribute */
-    protected Attribute $attributeHelper;
-
-    /** @var Database */
-    protected Database $databaseHelper;
-
-    /** @var Data */
-    protected Data $catalogHelper;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var ProductFactory */
-    protected ProductFactory $productFactory;
-
-    /** @var \Magento\Catalog\Model\ResourceModel\ProductFactory */
-    protected \Magento\Catalog\Model\ResourceModel\ProductFactory $productResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $productCollectionFactory;
-
-    /** @var Config */
-    protected Config $productMediaConfig;
-
-    /** @var Instances */
-    protected Instances $instanceHelper;
-
-    /** @var ConfigInterface */
-    protected ConfigInterface $config;
-
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Format */
-    protected Format $localeFormat;
-
-    /** @var \Magento\Tax\Helper\Data */
-    protected \Magento\Tax\Helper\Data $taxHelper;
-
-    /** @var PriceCurrencyInterface */
-    protected PriceCurrencyInterface $priceCurrency;
-
     /** @var array<int|string, string> SKUs by entity id */
     private array $entitySkus = [];
 
@@ -120,37 +75,22 @@ class Product
      * @param PriceCurrencyInterface $priceCurrency
      */
     public function __construct(
-        Arrays $arrays,
-        Attribute $attributeHelper,
-        Database $databaseHelper,
-        Data $catalogHelper,
-        LoggerInterface $logging,
-        ProductFactory $productFactory,
-        \Magento\Catalog\Model\ResourceModel\ProductFactory $productResourceFactory,
-        CollectionFactory $productCollectionFactory,
-        Config $productMediaConfig,
-        Instances $instanceHelper,
-        ConfigInterface $config,
-        Variables $variables,
-        Format $localeFormat,
-        \Magento\Tax\Helper\Data $taxHelper,
-        PriceCurrencyInterface $priceCurrency
+        protected Arrays $arrays,
+        protected Attribute $attributeHelper,
+        protected Database $databaseHelper,
+        protected Data $catalogHelper,
+        protected LoggerInterface $logging,
+        protected ProductFactory $productFactory,
+        protected \Magento\Catalog\Model\ResourceModel\ProductFactory $productResourceFactory,
+        protected CollectionFactory $productCollectionFactory,
+        protected Config $productMediaConfig,
+        protected Instances $instanceHelper,
+        protected ConfigInterface $config,
+        protected Variables $variables,
+        protected Format $localeFormat,
+        protected \Magento\Tax\Helper\Data $taxHelper,
+        protected PriceCurrencyInterface $priceCurrency
     ) {
-        $this->arrays = $arrays;
-        $this->attributeHelper = $attributeHelper;
-        $this->databaseHelper = $databaseHelper;
-        $this->catalogHelper = $catalogHelper;
-        $this->logging = $logging;
-        $this->productFactory = $productFactory;
-        $this->productResourceFactory = $productResourceFactory;
-        $this->productCollectionFactory = $productCollectionFactory;
-        $this->productMediaConfig = $productMediaConfig;
-        $this->instanceHelper = $instanceHelper;
-        $this->config = $config;
-        $this->variables = $variables;
-        $this->localeFormat = $localeFormat;
-        $this->taxHelper = $taxHelper;
-        $this->priceCurrency = $priceCurrency;
     }
 
     /**

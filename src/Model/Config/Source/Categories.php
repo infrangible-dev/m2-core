@@ -20,20 +20,14 @@ use Magento\Framework\Data\Tree\Node;
  */
 class Categories implements OptionSourceInterface
 {
-    /** @var Category */
-    protected Category $categoryHelper;
-
-    /** @var TreeFactory */
-    protected TreeFactory $categoryTreeFactory;
-
     /**
      * @param Category $categoryHelper
      * @param TreeFactory $categoryTreeFactory
      */
-    public function __construct(Category $categoryHelper, TreeFactory $categoryTreeFactory)
-    {
-        $this->categoryHelper = $categoryHelper;
-        $this->categoryTreeFactory = $categoryTreeFactory;
+    public function __construct(
+        protected Category $categoryHelper,
+        protected TreeFactory $categoryTreeFactory
+    ) {
     }
 
     /**

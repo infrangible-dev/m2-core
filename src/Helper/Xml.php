@@ -21,18 +21,6 @@ use Magento\Framework\Filesystem\DirectoryList;
 
 class Xml
 {
-    /** @var Files */
-    protected Files $files;
-
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var DirectoryList */
-    protected DirectoryList $directoryList;
-
     /**
      * @param Files $files
      * @param Arrays $arrays
@@ -40,16 +28,11 @@ class Xml
      * @param DirectoryList $directoryList
      */
     public function __construct(
-        Files $files,
-        Arrays $arrays,
-        Variables $variables,
-        DirectoryList $directoryList
+        protected Files $files,
+        protected Arrays $arrays,
+        protected Variables $variables,
+        protected DirectoryList $directoryList
     ) {
-        $this->files = $files;
-        $this->arrays = $arrays;
-        $this->variables = $variables;
-
-        $this->directoryList = $directoryList;
     }
 
     /**

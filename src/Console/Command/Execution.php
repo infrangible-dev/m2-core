@@ -24,18 +24,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class Execution
 {
-    /** @var State */
-    protected State $state;
-
-    /** @var ObjectManagerInterface */
-    private ObjectManagerInterface $objectManager;
-
-    /** @var AreaList */
-    private AreaList $areaList;
-
-    /** @var ConfigLoaderInterface */
-    private ConfigLoaderInterface $configLoader;
-
     /**
      * @param State $state
      * @param ObjectManagerInterface $objectManager
@@ -43,15 +31,11 @@ class Execution
      * @param ConfigLoaderInterface $configLoader
      */
     public function __construct(
-        State $state,
-        ObjectManagerInterface $objectManager,
-        AreaList $areaList,
-        ConfigLoaderInterface $configLoader
+        protected State $state,
+        private readonly ObjectManagerInterface $objectManager,
+        private readonly AreaList $areaList,
+        private readonly ConfigLoaderInterface $configLoader
     ) {
-        $this->state = $state;
-        $this->objectManager = $objectManager;
-        $this->areaList = $areaList;
-        $this->configLoader = $configLoader;
     }
 
     /**

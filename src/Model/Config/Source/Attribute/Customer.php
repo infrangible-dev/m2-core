@@ -20,15 +20,12 @@ use Magento\Framework\Data\OptionSourceInterface;
  */
 class Customer implements OptionSourceInterface
 {
-    /** @var CollectionFactory */
-    protected CollectionFactory $customerAttributeCollectionFactory;
-
     /**
      * @param CollectionFactory $customerAttributeCollectionFactory
      */
-    public function __construct(CollectionFactory $customerAttributeCollectionFactory)
-    {
-        $this->customerAttributeCollectionFactory = $customerAttributeCollectionFactory;
+    public function __construct(
+        protected CollectionFactory $customerAttributeCollectionFactory
+    ) {
     }
 
     /**

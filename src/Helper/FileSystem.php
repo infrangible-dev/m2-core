@@ -14,15 +14,12 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 
 class FileSystem
 {
-    /** @var \Magento\Framework\Filesystem */
-    protected \Magento\Framework\Filesystem $filesystem;
-
     /**
      * @param \Magento\Framework\Filesystem $filesystem
      */
-    public function __construct(\Magento\Framework\Filesystem $filesystem)
-    {
-        $this->filesystem = $filesystem;
+    public function __construct(
+        protected \Magento\Framework\Filesystem $filesystem
+    ) {
     }
 
     /**

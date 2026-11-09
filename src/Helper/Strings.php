@@ -15,29 +15,16 @@ use Magento\Framework\UrlInterface;
 
 class Strings
 {
-    /** @var \FeWeDev\Base\Strings */
-    protected \FeWeDev\Base\Strings $strings;
-
-    /** @var UrlInterface */
-    protected UrlInterface $urlInterface;
-
-    /** @var EncryptorInterface */
-    protected EncryptorInterface $encryptor;
-
     /**
      * @param \FeWeDev\Base\Strings $strings
      * @param UrlInterface $urlInterface
      * @param EncryptorInterface $encryptor
      */
     public function __construct(
-        \FeWeDev\Base\Strings $strings,
-        UrlInterface $urlInterface,
-        EncryptorInterface $encryptor
+        protected \FeWeDev\Base\Strings $strings,
+        protected UrlInterface $urlInterface,
+        protected EncryptorInterface $encryptor
     ) {
-        $this->strings = $strings;
-
-        $this->urlInterface = $urlInterface;
-        $this->encryptor = $encryptor;
     }
 
     /**

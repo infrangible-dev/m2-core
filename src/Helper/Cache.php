@@ -19,24 +19,6 @@ use Psr\Log\LoggerInterface;
 
 class Cache
 {
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var TypeListInterface */
-    protected TypeListInterface $typeList;
-
-    /** @var ReinitableConfigInterface */
-    protected ReinitableConfigInterface $reinitableConfig;
-
-    /** @var CacheInterface */
-    protected CacheInterface $cache;
-
-    /** @var Config */
-    protected Config $pageCacheConfig;
-
-    /** @var Variables */
-    protected Variables $variables;
-
     /**
      * @param LoggerInterface $logging
      * @param TypeListInterface $typeList
@@ -46,19 +28,13 @@ class Cache
      * @param Variables $variables
      */
     public function __construct(
-        LoggerInterface $logging,
-        TypeListInterface $typeList,
-        ReinitableConfigInterface $reinitableConfig,
-        CacheInterface $cache,
-        Config $pageCacheConfig,
-        Variables $variables
+        protected LoggerInterface $logging,
+        protected TypeListInterface $typeList,
+        protected ReinitableConfigInterface $reinitableConfig,
+        protected CacheInterface $cache,
+        protected Config $pageCacheConfig,
+        protected Variables $variables
     ) {
-        $this->logging = $logging;
-        $this->typeList = $typeList;
-        $this->reinitableConfig = $reinitableConfig;
-        $this->cache = $cache;
-        $this->pageCacheConfig = $pageCacheConfig;
-        $this->variables = $variables;
     }
 
     /**

@@ -26,22 +26,14 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 abstract class Command extends \Symfony\Component\Console\Command\Command
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var ObjectManagerFactory */
-    protected ObjectManagerFactory $objectManagerFactory;
-
     /**
      * @param Variables $variables
      * @param ObjectManagerFactory $objectManagerFactory
      */
-    public function __construct(Variables $variables, ObjectManagerFactory $objectManagerFactory)
-    {
-        $this->variables = $variables;
-
-        $this->objectManagerFactory = $objectManagerFactory;
-
+    public function __construct(
+        protected Variables $variables,
+        protected ObjectManagerFactory $objectManagerFactory
+    ) {
         parent::__construct();
     }
 

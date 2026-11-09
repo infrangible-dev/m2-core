@@ -17,15 +17,12 @@ use Magento\Framework\Exception\LocalizedException;
  */
 class EntityType extends Eav
 {
-    /** @var \Infrangible\Core\Helper\EntityType */
-    protected \Infrangible\Core\Helper\EntityType $entityTypeHelper;
-
     /**
      * @param \Infrangible\Core\Helper\EntityType $entityTypeHelper
      */
-    public function __construct(\Infrangible\Core\Helper\EntityType $entityTypeHelper)
-    {
-        $this->entityTypeHelper = $entityTypeHelper;
+    public function __construct(
+        protected \Infrangible\Core\Helper\EntityType $entityTypeHelper
+    ) {
     }
 
     /**

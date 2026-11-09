@@ -29,12 +29,6 @@ class Database extends AbstractHelper
     /** @var LoggerInterface */
     protected LoggerInterface $logging;
 
-    /** @var ResourceConnection */
-    protected ResourceConnection $resourceConnection;
-
-    /** @var TransactionFactory */
-    protected TransactionFactory $transactionFactory;
-
     /** @var bool|null */
     private ?bool $queryLogging = null;
 
@@ -45,14 +39,12 @@ class Database extends AbstractHelper
      */
     public function __construct(
         Context $context,
-        ResourceConnection $resourceConnection,
-        TransactionFactory $transactionFactory
+        protected ResourceConnection $resourceConnection,
+        protected TransactionFactory $transactionFactory
     ) {
         parent::__construct($context);
 
         $this->logging = $context->getLogger();
-        $this->resourceConnection = $resourceConnection;
-        $this->transactionFactory = $transactionFactory;
     }
 
     /**
@@ -798,9 +790,7 @@ class Database extends AbstractHelper
      */
     public function isQueryLogging(): bool
     {
-        if ($this->queryLogging === null) {
-            $this->queryLogging = $this->scopeConfig->isSetFlag('dev/log/query_logging');
-        }
+        $this->queryLogging ??= $this->scopeConfig->isSetFlag('dev/log/query_logging');
 
         return $this->queryLogging;
     }

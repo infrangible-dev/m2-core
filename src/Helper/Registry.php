@@ -12,15 +12,12 @@ namespace Infrangible\Core\Helper;
 
 class Registry
 {
-    /** @var \Magento\Framework\Registry */
-    protected \Magento\Framework\Registry $registry;
-
     /**
      * @param \Magento\Framework\Registry $registry
      */
-    public function __construct(\Magento\Framework\Registry $registry)
-    {
-        $this->registry = $registry;
+    public function __construct(
+        protected \Magento\Framework\Registry $registry
+    ) {
     }
 
     /**

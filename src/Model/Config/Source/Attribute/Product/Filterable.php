@@ -20,20 +20,15 @@ use Magento\Catalog\Model\ResourceModel\Product\Attribute\CollectionFactory;
  */
 class Filterable extends Product
 {
-    /** @var FilterableAttributeList */
-    protected FilterableAttributeList $filterableAttributeList;
-
     /**
      * @param CollectionFactory $productAttributeCollectionFactory
      * @param FilterableAttributeList $filterableAttributeList
      */
     public function __construct(
         CollectionFactory $productAttributeCollectionFactory,
-        FilterableAttributeList $filterableAttributeList
+        protected FilterableAttributeList $filterableAttributeList
     ) {
         parent::__construct($productAttributeCollectionFactory);
-
-        $this->filterableAttributeList = $filterableAttributeList;
     }
 
     /**
@@ -49,9 +44,7 @@ class Filterable extends Product
 
         return array_filter(
             $items,
-            function ($item): bool {
-                return $item instanceof Attribute;
-            }
+            fn($item): bool => $item instanceof Attribute
         );
     }
 }

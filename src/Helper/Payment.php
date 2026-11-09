@@ -22,24 +22,6 @@ use Magento\Sales\Model\ResourceModel\Order\Payment\CollectionFactory;
 
 class Payment
 {
-    /** @var Stores */
-    protected Stores $storeHelper;
-
-    /** @var PaymentFactory */
-    protected PaymentFactory $paymentFactory;
-
-    /** @var \Magento\Sales\Model\ResourceModel\Order\PaymentFactory */
-    protected \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $paymentCollectionFactory;
-
-    /** @var Factory */
-    protected Factory $paymentMethodFactory;
-
-    /** @var Variables */
-    protected Variables $variables;
-
     /**
      * @param Stores $storeHelper
      * @param PaymentFactory $paymentFactory
@@ -49,19 +31,13 @@ class Payment
      * @param Variables $variables
      */
     public function __construct(
-        Stores $storeHelper,
-        PaymentFactory $paymentFactory,
-        \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory,
-        CollectionFactory $paymentCollectionFactory,
-        Factory $paymentMethodFactory,
-        Variables $variables
+        protected Stores $storeHelper,
+        protected PaymentFactory $paymentFactory,
+        protected \Magento\Sales\Model\ResourceModel\Order\PaymentFactory $paymentResourceFactory,
+        protected CollectionFactory $paymentCollectionFactory,
+        protected Factory $paymentMethodFactory,
+        protected Variables $variables
     ) {
-        $this->storeHelper = $storeHelper;
-        $this->paymentFactory = $paymentFactory;
-        $this->paymentResourceFactory = $paymentResourceFactory;
-        $this->paymentCollectionFactory = $paymentCollectionFactory;
-        $this->paymentMethodFactory = $paymentMethodFactory;
-        $this->variables = $variables;
     }
 
     /**

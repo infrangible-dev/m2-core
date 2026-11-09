@@ -18,15 +18,12 @@ use Magento\Sales\Model\Order\Config;
  */
 class State implements OptionSourceInterface
 {
-    /** @var Config */
-    protected Config $orderConfig;
-
     /**
      * @param Config $orderConfig
      */
-    public function __construct(Config $orderConfig)
-    {
-        $this->orderConfig = $orderConfig;
+    public function __construct(
+        protected Config $orderConfig
+    ) {
     }
 
     /**

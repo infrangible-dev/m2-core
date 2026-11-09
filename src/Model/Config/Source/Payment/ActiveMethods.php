@@ -21,15 +21,6 @@ use Magento\Payment\Model\Config\Source\Allmethods;
  */
 class ActiveMethods extends Allmethods
 {
-    /** @var Payment */
-    protected Payment $paymentHelper;
-
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Variables */
-    protected Variables $variables;
-
     /** @var bool */
     private bool $allStores = false;
 
@@ -39,16 +30,16 @@ class ActiveMethods extends Allmethods
     /**
      * @param Data $paymentData
      * @param Payment $paymentHelper
-     * @param Arrays $arrayHelper
+     * @param Arrays $arrays
      * @param Variables $variables
      */
-    public function __construct(Data $paymentData, Payment $paymentHelper, Arrays $arrayHelper, Variables $variables)
-    {
+    public function __construct(
+        Data $paymentData,
+        protected Payment $paymentHelper,
+        protected Arrays $arrays,
+        protected Variables $variables
+    ) {
         parent::__construct($paymentData);
-
-        $this->paymentHelper = $paymentHelper;
-        $this->arrays = $arrayHelper;
-        $this->variables = $variables;
     }
 
     /**

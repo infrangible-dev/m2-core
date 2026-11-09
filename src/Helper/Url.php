@@ -19,24 +19,6 @@ use Psr\Log\LoggerInterface;
 
 class Url extends AbstractHelper
 {
-    /** @var Stores */
-    protected Stores $storeHelper;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var \Magento\Framework\Url */
-    protected \Magento\Framework\Url $url;
-
-    /** @var \Magento\Backend\Model\Url */
-    protected \Magento\Backend\Model\Url $backendUrl;
-
-    /** @var UniversalFactory */
-    protected UniversalFactory $universalFactory;
-
-    /** @var FilterManager */
-    protected FilterManager $filter;
-
     /** @var \Magento\Framework\Url[] */
     private array $urls = [];
 
@@ -44,28 +26,21 @@ class Url extends AbstractHelper
      * @param Context $context
      * @param Stores $storeHelper
      * @param LoggerInterface $logging
-     * @param \Magento\Framework\Url $frontendUrl
+     * @param \Magento\Framework\Url $url
      * @param \Magento\Backend\Model\Url $backendUrl
      * @param UniversalFactory $universalFactory
      * @param FilterManager $filter
      */
     public function __construct(
         Context $context,
-        Stores $storeHelper,
-        LoggerInterface $logging,
-        \Magento\Framework\Url $frontendUrl,
-        \Magento\Backend\Model\Url $backendUrl,
-        UniversalFactory $universalFactory,
-        FilterManager $filter
+        protected Stores $storeHelper,
+        protected LoggerInterface $logging,
+        protected \Magento\Framework\Url $url,
+        protected \Magento\Backend\Model\Url $backendUrl,
+        protected UniversalFactory $universalFactory,
+        protected FilterManager $filter
     ) {
         parent::__construct($context);
-
-        $this->storeHelper = $storeHelper;
-        $this->logging = $logging;
-        $this->url = $frontendUrl;
-        $this->backendUrl = $backendUrl;
-        $this->universalFactory = $universalFactory;
-        $this->filter = $filter;
     }
 
     /**

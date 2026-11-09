@@ -21,22 +21,14 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 abstract class AbstractCrypt extends Script
 {
-    /** @var EncryptorInterface */
-    protected EncryptorInterface $encryptor;
-
-    /** @var \Infrangible\Core\Model\Config\EncryptorInterface */
-    protected \Infrangible\Core\Model\Config\EncryptorInterface $customEncryptor;
-
     /**
      * @param EncryptorInterface $encryptor
      * @param \Infrangible\Core\Model\Config\EncryptorInterface $customEncryptor
      */
     public function __construct(
-        EncryptorInterface $encryptor,
-        \Infrangible\Core\Model\Config\EncryptorInterface $customEncryptor
+        protected EncryptorInterface $encryptor,
+        protected \Infrangible\Core\Model\Config\EncryptorInterface $customEncryptor
     ) {
-        $this->encryptor = $encryptor;
-        $this->customEncryptor = $customEncryptor;
     }
 
     /**

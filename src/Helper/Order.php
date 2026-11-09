@@ -21,21 +21,6 @@ use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 
 class Order
 {
-    /** @var OrderFactory */
-    protected OrderFactory $orderFactory;
-
-    /** @var \Magento\Sales\Model\ResourceModel\OrderFactory */
-    protected \Magento\Sales\Model\ResourceModel\OrderFactory $orderResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $orderCollectionFactory;
-
-    /** @var HistoryFactory */
-    protected HistoryFactory $orderStatusHistoryFactory;
-
-    /** @var OrderStatusHistoryRepositoryInterface */
-    protected OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository;
-
     /**
      * @param OrderFactory $orderFactory
      * @param \Magento\Sales\Model\ResourceModel\OrderFactory $orderResourceFactory
@@ -44,17 +29,12 @@ class Order
      * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
      */
     public function __construct(
-        OrderFactory $orderFactory,
-        \Magento\Sales\Model\ResourceModel\OrderFactory $orderResourceFactory,
-        CollectionFactory $orderCollectionFactory,
-        HistoryFactory $orderStatusHistoryFactory,
-        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
+        protected OrderFactory $orderFactory,
+        protected \Magento\Sales\Model\ResourceModel\OrderFactory $orderResourceFactory,
+        protected CollectionFactory $orderCollectionFactory,
+        protected HistoryFactory $orderStatusHistoryFactory,
+        protected OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
     ) {
-        $this->orderFactory = $orderFactory;
-        $this->orderResourceFactory = $orderResourceFactory;
-        $this->orderCollectionFactory = $orderCollectionFactory;
-        $this->orderStatusHistoryFactory = $orderStatusHistoryFactory;
-        $this->orderStatusHistoryRepository = $orderStatusHistoryRepository;
     }
 
     /**

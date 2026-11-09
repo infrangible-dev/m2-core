@@ -112,9 +112,7 @@ class Encryptor implements EncryptorInterface
             return null;
         }
 
-        if (null === $cipherVersion) {
-            $cipherVersion = \Magento\Framework\Encryption\Encryptor::CIPHER_LATEST;
-        }
+        $cipherVersion ??= \Magento\Framework\Encryption\Encryptor::CIPHER_LATEST;
 
         if ($cipherVersion >= \Magento\Framework\Encryption\Encryptor::CIPHER_AEAD_CHACHA20POLY1305) {
             return new SodiumChachaIetf($key);

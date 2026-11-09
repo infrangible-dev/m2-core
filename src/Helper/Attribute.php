@@ -26,6 +26,7 @@ use Magento\Eav\Model\Entity\AttributeFactory;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\CollectionFactory;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\CollectionFactory as AttributeGroupCollectionFactory;
+use Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory as AttributeSetCollectionFactory;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Adapter\Pdo\Mysql;
 use Magento\Framework\DB\Select;
@@ -37,54 +38,6 @@ use Psr\Log\LoggerInterface;
 
 class Attribute
 {
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Database */
-    protected Database $databaseHelper;
-
-    /** @var EntityType */
-    protected EntityType $entityTypeHelper;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var AttributeFactory */
-    protected AttributeFactory $attributeFactory;
-
-    /** @var \Magento\Eav\Model\ResourceModel\Entity\AttributeFactory */
-    protected \Magento\Eav\Model\ResourceModel\Entity\AttributeFactory $attributeResourceFactory;
-
-    /** @var CollectionFactory */
-    protected CollectionFactory $attributeCollectionFactory;
-
-    /** @var SetFactory */
-    protected SetFactory $attributeSetFactory;
-
-    /** @var \Magento\Eav\Model\ResourceModel\Entity\Attribute\SetFactory */
-    protected \Magento\Eav\Model\ResourceModel\Entity\Attribute\SetFactory $attributeSetResourceFactory;
-
-    /** @var \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory */
-    protected \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory $attributeSetCollectionFactory;
-
-    /** @var AttributeGroupCollectionFactory */
-    protected AttributeGroupCollectionFactory $attributeGroupCollectionFactory;
-
-    /** @var ProductAttributeRepositoryInterface */
-    protected ProductAttributeRepositoryInterface $productAttributeRepository;
-
-    /** @var CategoryAttributeRepositoryInterface */
-    protected CategoryAttributeRepositoryInterface $categoryAttributeRepository;
-
-    /** @var ProductAttributeCollectionFactory */
-    protected ProductAttributeCollectionFactory $productAttributeCollectionFactory;
-
-    /** @var ConfigFactory */
-    protected ConfigFactory $configFactory;
-
     /** @var array<string, Entity\Attribute|null> */
     private array $attributes = [];
 
@@ -123,7 +76,7 @@ class Attribute
      * @param CollectionFactory $attributeCollectionFactory
      * @param SetFactory $attributeSetFactory
      * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\SetFactory $attributeSetResourceFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory $attributeSetCollectionFactory
+     * @param AttributeSetCollectionFactory $attributeSetCollectionFactory
      * @param AttributeGroupCollectionFactory $attributeGroupCollectionFactory
      * @param ProductAttributeRepositoryInterface $productAttributeRepository
      * @param CategoryAttributeRepositoryInterface $categoryAttributeRepository
@@ -131,39 +84,23 @@ class Attribute
      * @param ConfigFactory $configFactory
      */
     public function __construct(
-        Arrays $arrays,
-        Variables $variables,
-        Database $databaseHelper,
-        EntityType $entityTypeHelper,
-        LoggerInterface $logging,
-        AttributeFactory $attributeFactory,
-        \Magento\Eav\Model\ResourceModel\Entity\AttributeFactory $attributeResourceFactory,
-        CollectionFactory $attributeCollectionFactory,
-        SetFactory $attributeSetFactory,
-        \Magento\Eav\Model\ResourceModel\Entity\Attribute\SetFactory $attributeSetResourceFactory,
-        \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory $attributeSetCollectionFactory,
-        AttributeGroupCollectionFactory $attributeGroupCollectionFactory,
-        ProductAttributeRepositoryInterface $productAttributeRepository,
-        CategoryAttributeRepositoryInterface $categoryAttributeRepository,
-        ProductAttributeCollectionFactory $productAttributeCollectionFactory,
-        ConfigFactory $configFactory
+        protected Arrays $arrays,
+        protected Variables $variables,
+        protected Database $databaseHelper,
+        protected EntityType $entityTypeHelper,
+        protected LoggerInterface $logging,
+        protected AttributeFactory $attributeFactory,
+        protected \Magento\Eav\Model\ResourceModel\Entity\AttributeFactory $attributeResourceFactory,
+        protected CollectionFactory $attributeCollectionFactory,
+        protected SetFactory $attributeSetFactory,
+        protected \Magento\Eav\Model\ResourceModel\Entity\Attribute\SetFactory $attributeSetResourceFactory,
+        protected AttributeSetCollectionFactory $attributeSetCollectionFactory,
+        protected AttributeGroupCollectionFactory $attributeGroupCollectionFactory,
+        protected ProductAttributeRepositoryInterface $productAttributeRepository,
+        protected CategoryAttributeRepositoryInterface $categoryAttributeRepository,
+        protected ProductAttributeCollectionFactory $productAttributeCollectionFactory,
+        protected ConfigFactory $configFactory
     ) {
-        $this->arrays = $arrays;
-        $this->variables = $variables;
-        $this->databaseHelper = $databaseHelper;
-        $this->entityTypeHelper = $entityTypeHelper;
-        $this->logging = $logging;
-        $this->attributeFactory = $attributeFactory;
-        $this->attributeResourceFactory = $attributeResourceFactory;
-        $this->attributeCollectionFactory = $attributeCollectionFactory;
-        $this->attributeSetFactory = $attributeSetFactory;
-        $this->attributeSetResourceFactory = $attributeSetResourceFactory;
-        $this->attributeSetCollectionFactory = $attributeSetCollectionFactory;
-        $this->attributeGroupCollectionFactory = $attributeGroupCollectionFactory;
-        $this->productAttributeRepository = $productAttributeRepository;
-        $this->categoryAttributeRepository = $categoryAttributeRepository;
-        $this->productAttributeCollectionFactory = $productAttributeCollectionFactory;
-        $this->configFactory = $configFactory;
     }
 
     /**

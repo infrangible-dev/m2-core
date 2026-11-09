@@ -40,49 +40,13 @@ use Psr\Log\LoggerInterface;
 
 class Stores extends AbstractHelper
 {
-    /** @var Variables */
-    protected Variables $variables;
-
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Database */
-    protected Database $databaseHelper;
-
-    /** @var Instances */
-    protected Instances $instanceHelper;
-
-    /** @var LoggerInterface */
-    protected LoggerInterface $logging;
-
-    /** @var StoreManagerInterface */
-    protected StoreManagerInterface $storeManager;
-
-    /** @var ConfigFactory */
-    protected ConfigFactory $configFactory;
-
-    /** @var Filesystem */
-    protected Filesystem $filesystem;
-
-    /** @var Repository */
-    protected Repository $assetRepository;
-
-    /** @var RequestInterface */
-    protected RequestInterface $request;
-
-    /** @var PriceCurrencyInterface */
-    protected PriceCurrencyInterface $priceCurrency;
-
     /** @var ResolverInterface|null */
     protected ?ResolverInterface $localeResolver = null;
-
-    /** @var TimezoneInterface */
-    protected TimezoneInterface $timezoneInterface;
 
     /**
      * @param Context $context
      * @param Variables $variables
-     * @param Arrays $arrayHelper
+     * @param Arrays $arrays
      * @param Database $databaseHelper
      * @param Instances $instanceHelper
      * @param LoggerInterface $logging
@@ -96,33 +60,20 @@ class Stores extends AbstractHelper
      */
     public function __construct(
         Context $context,
-        Variables $variables,
-        Arrays $arrayHelper,
-        Database $databaseHelper,
-        Instances $instanceHelper,
-        LoggerInterface $logging,
-        StoreManagerInterface $storeManager,
-        ConfigFactory $configFactory,
-        Filesystem $filesystem,
-        Repository $assetRepository,
-        RequestInterface $request,
-        PriceCurrencyInterface $priceCurrency,
-        TimezoneInterface $timezoneInterface
+        protected Variables $variables,
+        protected Arrays $arrays,
+        protected Database $databaseHelper,
+        protected Instances $instanceHelper,
+        protected LoggerInterface $logging,
+        protected StoreManagerInterface $storeManager,
+        protected ConfigFactory $configFactory,
+        protected Filesystem $filesystem,
+        protected Repository $assetRepository,
+        protected RequestInterface $request,
+        protected PriceCurrencyInterface $priceCurrency,
+        protected TimezoneInterface $timezoneInterface
     ) {
         parent::__construct($context);
-
-        $this->variables = $variables;
-        $this->arrays = $arrayHelper;
-        $this->databaseHelper = $databaseHelper;
-        $this->instanceHelper = $instanceHelper;
-        $this->logging = $logging;
-        $this->storeManager = $storeManager;
-        $this->configFactory = $configFactory;
-        $this->filesystem = $filesystem;
-        $this->assetRepository = $assetRepository;
-        $this->request = $request;
-        $this->priceCurrency = $priceCurrency;
-        $this->timezoneInterface = $timezoneInterface;
     }
 
     /**
@@ -158,9 +109,7 @@ class Stores extends AbstractHelper
                 );
             }
 
-            if ($value === null) {
-                $value = $defaultValue;
-            }
+            $value ??= $defaultValue;
 
             return $value;
         } catch (NoSuchEntityException) {
@@ -240,9 +189,7 @@ class Stores extends AbstractHelper
                 );
             }
 
-            if ($value === null) {
-                $value = $defaultValue;
-            }
+            $value ??= $defaultValue;
 
             return $value;
         } catch (LocalizedException) {
@@ -311,9 +258,7 @@ class Stores extends AbstractHelper
             );
         }
 
-        if ($value === null) {
-            $value = $defaultValue;
-        }
+        $value ??= $defaultValue;
 
         return $value;
     }
@@ -1044,9 +989,7 @@ class Stores extends AbstractHelper
      */
     public function getLocale(): string
     {
-        if ($this->localeResolver === null) {
-            $this->localeResolver = $this->instanceHelper->getSharedInstance(ResolverInterface::class);
-        }
+        $this->localeResolver ??= $this->instanceHelper->getSharedInstance(ResolverInterface::class);
 
         return $this->localeResolver->getLocale();
     }

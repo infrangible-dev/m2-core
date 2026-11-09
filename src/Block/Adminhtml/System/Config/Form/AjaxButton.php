@@ -22,12 +22,6 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
  */
 class AjaxButton extends Field
 {
-    /** @var Arrays */
-    protected Arrays $arrays;
-
-    /** @var Variables */
-    protected Variables $variables;
-
     /** @var string */
     private string $buttonId = '';
 
@@ -48,15 +42,16 @@ class AjaxButton extends Field
      *
      * @phpstan-param array<string, mixed> $data
      */
-    public function __construct(Arrays $arrays, Variables $variables, Context $context, array $data = [])
-    {
+    public function __construct(
+        protected Arrays $arrays,
+        protected Variables $variables,
+        Context $context,
+        array $data = []
+    ) {
         parent::__construct(
             $context,
             $data
         );
-
-        $this->arrays = $arrays;
-        $this->variables = $variables;
     }
 
     /**
