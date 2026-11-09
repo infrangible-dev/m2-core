@@ -13,7 +13,7 @@ namespace Infrangible\Core\Test\Unit\Model\Config\Source\Carrier\Method;
 use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Carrier;
 use Infrangible\Core\Model\Config\Source\Carrier\Method\Active;
-use Magento\OfflineShipping\Model\Carrier\Flatrate;
+use Infrangible\Core\Test\Unit\Fixture\ShippingCarrier;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,11 +29,11 @@ class ActiveTest extends TestCase
      */
     private function createSource(): Active
     {
-        $flatrate = $this->createStub(Flatrate::class);
+        $flatrate = $this->createStub(ShippingCarrier::class);
         $flatrate->method('getConfigData')->willReturnMap([['name', 'Flat Rate']]);
         $flatrate->method('getAllowedMethods')->willReturn(['fixed' => 'Fixed', 'express' => 'Express']);
 
-        $custom = $this->createStub(Flatrate::class);
+        $custom = $this->createStub(ShippingCarrier::class);
         $custom->method('getConfigData')->willReturn(null);
         $custom->method('getAllowedMethods')->willReturn(['standard' => 'Standard']);
 

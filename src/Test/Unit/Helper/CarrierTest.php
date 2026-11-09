@@ -14,8 +14,8 @@ use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Carrier;
 use Infrangible\Core\Helper\Stores;
 use Infrangible\Core\Test\Unit\CreatesValueStubs;
+use Infrangible\Core\Test\Unit\Fixture\ShippingCarrier;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\OfflineShipping\Model\Carrier\Flatrate;
 use Magento\Shipping\Model\CarrierFactory;
 use Magento\Store\Model\Store;
 use PHPUnit\Framework\MockObject\Stub;
@@ -59,7 +59,7 @@ class CarrierTest extends TestCase
                     return false;
                 }
 
-                $carrier = $this->createStub(Flatrate::class);
+                $carrier = $this->createStub(ShippingCarrier::class);
                 $carrier->method('isActive')->willReturn($active[ $key ]);
                 $carrier->method('getCarrierCode')->willReturn($key);
 
