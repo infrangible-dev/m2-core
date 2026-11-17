@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.1
+
+### Changed
+
+- Requires `infrangible/m2-foundation` 3.0, the module that presents Infrangible in the Magento admin.
+
 ## 5.0.0
 
 ### Security
