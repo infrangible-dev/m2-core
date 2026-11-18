@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.0.4
+
+### Fixed
+
+- The data of products (`Helper\Export::getProductsData()`) can be read again: URL rewrites of products without
+  category failed with "Could not convert value: NULL to int", because `fewedev/base` 2.4 throws for null. Sitemaps and
+  product feeds of every store with products were affected.
+- CMS pages and blocks without "is_active" in the import data are active, instead of failing the import.
+
 ## 5.0.3
 
 ### Fixed

@@ -383,9 +383,8 @@ class Cms
             'is_active'         => $this->variables->intValue(
                 $this->arrays->getValue(
                     $pageData,
-                    'is_active',
-                    true
-                )
+                    'is_active'
+                ) ?? true
             ),
             'stores'            => $storeIds,
             'page_layout'       => $this->getStringValue(
@@ -584,9 +583,8 @@ class Cms
             'is_active'  => $this->variables->intValue(
                 $this->arrays->getValue(
                     $blockData,
-                    'is_active',
-                    true
-                )
+                    'is_active'
+                ) ?? true
             ),
             'stores'     => $storeIds
         ];

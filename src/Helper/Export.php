@@ -1291,12 +1291,12 @@ class Export
                     $queryRow,
                     'entity_id'
                 );
+                // rewrites without category have a row with category_id null, which getValue() returns
                 $categoryId = $this->variables->intValue(
                     $this->arrays->getValue(
                         $queryRow,
-                        'category_id',
-                        0
-                    )
+                        'category_id'
+                    ) ?? 0
                 );
 
                 $result[ $productId ][ $categoryId ] = $requestPath;
