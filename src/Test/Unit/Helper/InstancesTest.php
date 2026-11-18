@@ -82,7 +82,8 @@ class InstancesTest extends TestCase
      */
     public function testCreateInstanceOfMissingClass(): void
     {
-        $this->objectManager->method('create')
+        $this->objectManager->expects($this->once())
+            ->method('create')
             ->willThrowException(new ReflectionException('Class "Magento\Review\Model\Review" does not exist'));
 
         $this->expectException(RuntimeException::class);
@@ -98,7 +99,9 @@ class InstancesTest extends TestCase
      */
     public function testGetSharedInstanceOfMissingClass(): void
     {
-        $this->objectManager->method('get')->willThrowException(new ReflectionException('missing'));
+        $this->objectManager->expects($this->once())
+            ->method('get')
+            ->willThrowException(new ReflectionException('missing'));
 
         $this->expectException(RuntimeException::class);
 
@@ -112,7 +115,7 @@ class InstancesTest extends TestCase
      */
     public function testCreateInstanceOfOtherClass(): void
     {
-        $this->objectManager->method('create')->willReturn(new \stdClass());
+        $this->objectManager->expects($this->once())->method('create')->willReturn(new \stdClass());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Could not create an instance of class: ' . DataObject::class);
@@ -127,8 +130,8 @@ class InstancesTest extends TestCase
      */
     public function testGetInstanceAndSingletonOfNonObject(): void
     {
-        $this->objectManager->method('create')->willReturn(null);
-        $this->objectManager->method('get')->willReturn(null);
+        $this->objectManager->expects($this->once())->method('create')->willReturn(null);
+        $this->objectManager->expects($this->once())->method('get')->willReturn(null);
 
         $this->assertNull($this->instances->getInstance(DataObject::class));
         $this->assertNull($this->instances->getSingleton(DataObject::class));

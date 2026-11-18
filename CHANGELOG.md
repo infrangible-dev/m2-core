@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.2
+
+### Added
+
+- Translations of all texts (labels of the source models, error messages) into 24 locales.
+
 ## 5.0.1
 
 ### Changed
