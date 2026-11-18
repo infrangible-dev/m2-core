@@ -23,7 +23,7 @@ class ActiveTest extends TestCase
 {
     /**
      * Returns the source with the carrier flatrate (named "Flat Rate", methods "fixed" and "express") and the carrier
-     * custom without name (method "standard").
+     * custom without name (method "standard" and the method "untitled" without title).
      *
      * @return Active
      */
@@ -35,7 +35,7 @@ class ActiveTest extends TestCase
 
         $custom = $this->createStub(ShippingCarrier::class);
         $custom->method('getConfigData')->willReturn(null);
-        $custom->method('getAllowedMethods')->willReturn(['standard' => 'Standard']);
+        $custom->method('getAllowedMethods')->willReturn(['standard' => 'Standard', 'untitled' => null]);
 
         $carrierHelper = $this->createStub(Carrier::class);
         $carrierHelper->method('getActiveCarriers')->willReturn(['flatrate' => $flatrate, 'custom' => $custom]);
@@ -45,7 +45,7 @@ class ActiveTest extends TestCase
 
     /**
      * The methods are grouped by carrier; a carrier without name is labelled with its code, its methods are labelled
-     * with their title like those of other carriers.
+     * with their title like those of other carriers, a method without title with its code (before, "NULL [untitled]").
      *
      * @return void
      */
@@ -67,7 +67,13 @@ class ActiveTest extends TestCase
             $options[ 'flatrate' ]
         );
         $this->assertSame(
-            ['label' => 'custom', 'value' => [['value' => 'custom_standard', 'label' => 'Standard [standard]']]],
+            [
+                'label' => 'custom',
+                'value' => [
+                    ['value' => 'custom_standard', 'label' => 'Standard [standard]'],
+                    ['value' => 'custom_untitled', 'label' => 'untitled']
+                ]
+            ],
             $options[ 'custom' ]
         );
     }
@@ -83,7 +89,8 @@ class ActiveTest extends TestCase
             [
                 'flatrate_fixed'   => 'Flat Rate [flatrate] Fixed [fixed]',
                 'flatrate_express' => 'Flat Rate [flatrate] Express [express]',
-                'custom_standard'  => 'custom Standard [standard]'
+                'custom_standard'  => 'custom Standard [standard]',
+                'custom_untitled'  => 'custom untitled'
             ],
             $this->createSource()->toArray()
         );

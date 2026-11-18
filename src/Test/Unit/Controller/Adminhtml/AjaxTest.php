@@ -99,12 +99,10 @@ class AjaxTest extends TestCase
         $context->method('getAuthorization')->willReturn($authorization);
         $context->method('getAuth')->willReturn($auth);
         $context->method('getActionFlag')->willReturn($this->createStub(ActionFlag::class));
-        // deprecated classes are not imported, because PhpStorm does not apply the suppression to a use statement;
-        // the view is deprecated, but the backend action of Magento still renders the denied page with it
-        /** @noinspection PhpDeprecationInspection, PhpFullyQualifiedNameUsageInspection */
+        // deprecated classes are not imported, because PhpStorm reports the use statement
+        /** @noinspection PhpDeprecationInspection, PhpFullyQualifiedNameUsageInspection for the 403 page */
         $context->method('getView')->willReturn($this->createStub(\Magento\Framework\App\ViewInterface::class));
-        // deprecated, but the backend action of Magento still builds the login redirect URL with it
-        /** @noinspection PhpDeprecationInspection, PhpFullyQualifiedNameUsageInspection */
+        /** @noinspection PhpDeprecationInspection, PhpFullyQualifiedNameUsageInspection used for the login URL */
         $context->method('getHelper')->willReturn($this->createStub(\Magento\Backend\Helper\Data::class));
         // the admin session only stores flags like "is_url_notice" and the locale with magic methods
         $context->method('getSession')->willReturn(new DataObject());

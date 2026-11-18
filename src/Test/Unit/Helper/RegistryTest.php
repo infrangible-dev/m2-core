@@ -26,7 +26,7 @@ class RegistryTest extends TestCase
      */
     private function createRegistry(): Registry
     {
-        /** @noinspection PhpDeprecationInspection */
+        /** @noinspection PhpDeprecationInspection the helper wraps Magento's registry */
         return new Registry(new \Magento\Framework\Registry());
     }
 

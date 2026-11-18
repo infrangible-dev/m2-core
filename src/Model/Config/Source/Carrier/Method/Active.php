@@ -40,11 +40,7 @@ class Active extends AbstractActive
                             $code,
                             $methodCode
                         ),
-                        'label' => sprintf(
-                            '%s [%s]',
-                            $this->variables->stringValue($methodTitle),
-                            $methodCode
-                        )
+                        'label' => $this->getMethodLabel((string)$methodCode, $methodTitle)
                     ];
                 }
             }
@@ -77,15 +73,29 @@ class Active extends AbstractActive
                     );
 
                     $options[ $value ] = sprintf(
-                        '%s %s [%s]',
+                        '%s %s',
                         $carrierLabel,
-                        $this->variables->stringValue($methodTitle),
-                        $methodCode
+                        $this->getMethodLabel((string)$methodCode, $methodTitle)
                     );
                 }
             }
         }
 
         return $options;
+    }
+
+    /**
+     * Returns the label of a method: its title with its code, or only its code if it has no title.
+     *
+     * @param string $methodCode
+     * @param mixed $methodTitle
+     *
+     * @return string
+     */
+    private function getMethodLabel(string $methodCode, mixed $methodTitle): string
+    {
+        $title = $this->variables->stringValueOrDefault($methodTitle);
+
+        return $title === '' ? $methodCode : sprintf('%s [%s]', $title, $methodCode);
     }
 }

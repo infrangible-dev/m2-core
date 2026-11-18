@@ -658,8 +658,10 @@ class Attribute
             if (is_array($row) && array_key_exists('entity_id', $row) && array_key_exists('value', $row)) {
                 $rowStoreId = array_key_exists('store_id', $row) ? $row[ 'store_id' ] : $storeId;
 
-                $entityValues[ $this->stringValue($row[ 'entity_id' ]) ][ $this->stringValue($rowStoreId) ] =
-                    $row[ 'value' ];
+                $entityId = $this->variables->stringValueOrDefault($row[ 'entity_id' ]);
+                $rowStoreKey = $this->variables->stringValueOrDefault($rowStoreId);
+
+                $entityValues[ $entityId ][ $rowStoreKey ] = $row[ 'value' ];
             }
         }
 
@@ -713,7 +715,7 @@ class Attribute
                 $entityTypeCode,
                 (string)$attribute->getAttributeCode(),
                 $storeId,
-                $this->stringValue($attributeValue)
+                $this->variables->stringValueOrDefault($attributeValue)
             );
         }
 
@@ -728,7 +730,10 @@ class Attribute
 
         foreach ($source->getAllOptions() as $option) {
             if (is_array($option) && array_key_exists('label', $option) && array_key_exists('value', $option) &&
-                strcasecmp($this->stringValue($option[ 'value' ]), $this->stringValue($attributeValue)) === 0) {
+                strcasecmp(
+                    $this->variables->stringValueOrDefault($option[ 'value' ]),
+                    $this->variables->stringValueOrDefault($attributeValue)
+                ) === 0) {
                 return $option[ 'label' ];
             }
         }
@@ -776,18 +781,6 @@ class Attribute
     private function getCacheKey(array $parts): string
     {
         return hash('sha256', (string)json_encode($parts));
-    }
-
-    /**
-     * Converts a scalar value into a string, other values into an empty string.
-     *
-     * @param mixed $value
-     *
-     * @return string
-     */
-    private function stringValue(mixed $value): string
-    {
-        return is_scalar($value) ? (string)$value : '';
     }
 
     /**

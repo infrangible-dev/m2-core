@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php /** @noinspection PhpDeprecationInspection The helper wraps Magento's registry. */
 
 declare(strict_types=1);
 

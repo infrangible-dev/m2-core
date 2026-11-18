@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php
 
 declare(strict_types=1);
 
@@ -107,16 +107,22 @@ class ActiveMethods extends Allmethods
         foreach ($optionsArray as $option) {
             if (is_array($option)) {
                 $value = $this->arrays->getValue($option, 'value');
-                $label = $this->variables->stringValue($this->arrays->getValue($option, 'label', ''));
+                $label = $this->variables->stringValueOrDefault($this->arrays->getValue($option, 'label', ''));
 
                 if (is_array($value)) {
                     $groupPrefixes = $prefixes;
-                    $groupPrefixes[] = $label;
+
+                    if ($label !== '') {
+                        $groupPrefixes[] = $label;
+                    }
 
                     foreach ($this->extractOptions($value, $groupPrefixes) as $subValue => $subLabel) {
                         $options[$subValue] = $subLabel;
                     }
                 } elseif (is_int($value) || is_string($value)) {
+                    // a method without title is labelled with its code
+                    $label = $label === '' ? (string)$value : $label;
+
                     $options[$value] =
                         empty($prefixes) ? $label : sprintf('%s - %s', implode(' - ', $prefixes), $label);
                 }

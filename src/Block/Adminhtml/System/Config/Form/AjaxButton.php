@@ -81,9 +81,9 @@ class AjaxButton extends Field
             $originalData = [];
         }
 
-        $this->setButtonId($this->variables->stringValue($element->getHtmlId()));
+        $this->setButtonId($this->variables->stringValueOrDefault($element->getHtmlId()));
         $this->setButtonLabel(
-            $this->variables->stringValue(
+            $this->variables->stringValueOrDefault(
                 $this->arrays->getValue(
                     $originalData,
                     'button_label',
@@ -93,7 +93,7 @@ class AjaxButton extends Field
         );
         $this->setAjaxUrl(
             $this->getUrl(
-                $this->variables->stringValue(
+                $this->variables->stringValueOrDefault(
                     $this->arrays->getValue(
                         $originalData,
                         'button_url',
@@ -104,7 +104,7 @@ class AjaxButton extends Field
             )
         );
         $this->setDataHtmlIds(
-            $this->variables->stringValue(
+            $this->variables->stringValueOrDefault(
                 $this->arrays->getValue(
                     $originalData,
                     'data_html_ids',

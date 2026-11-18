@@ -1,5 +1,19 @@
 # Changelog
 
+## 5.0.3
+
+### Fixed
+
+- Shipping methods and payment methods without a title are listed with an empty title in the source models; before,
+  their title was the text "NULL". Empty settings of the configuration button (label, URL, data fields) no longer
+  become "NULL" either.
+
+### Changed
+
+- Requires `fewedev/base` 2.4.1 for `Variables::stringValueOrDefault()`, which replaces the private conversion of the
+  attribute helper.
+- Every use of a deprecated Magento API documents why it is needed; suppressions without deprecated code are removed.
+
 ## 5.0.2
 
 ### Added

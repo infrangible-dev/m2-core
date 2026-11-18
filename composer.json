@@ -2,7 +2,7 @@
     "name": "infrangible/m2-core",
     "description": "Infrangible Magento 2 Core",
     "type": "magento2-module",
-    "version": "5.0.2",
+    "version": "5.0.3",
     "license": "MIT",
     "keywords": [
         "Magento"
@@ -22,7 +22,7 @@
         "ext-intl": "*",
         "ext-json": "*",
         "ext-simplexml": "*",
-        "fewedev/base": "~2.4.0",
+        "fewedev/base": "~2.4.1",
         "fewedev/xml": "~2.0.2",
         "infrangible/m2-foundation": "~3.0.1",
         "magento/framework": "~103.0.6",

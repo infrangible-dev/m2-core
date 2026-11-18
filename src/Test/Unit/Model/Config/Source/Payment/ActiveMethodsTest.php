@@ -27,8 +27,9 @@ class ActiveMethodsTest extends TestCase
     use CreatesValueStubs;
 
     /**
-     * Returns the source with the methods checkmo (no group), and paypal_express, paypal_billing_agreement and
-     * braintree in the groups "PayPal" and "Braintree"; checkmo, paypal_express and braintree are active.
+     * Returns the source with the methods checkmo and banktransfer (no group, banktransfer without title), and
+     * paypal_express, paypal_billing_agreement and braintree in the groups "PayPal" and "Braintree"; checkmo,
+     * banktransfer, paypal_express and braintree are active.
      *
      * @return ActiveMethods
      */
@@ -36,24 +37,25 @@ class ActiveMethodsTest extends TestCase
     {
         $paymentData = $this->createStub(Data::class);
         $paymentData->method('getPaymentMethodList')->willReturn([
-            'checkmo'   => ['value' => 'checkmo', 'label' => 'Check / Money order'],
-            'paypal'    => [
+            'checkmo'      => ['value' => 'checkmo', 'label' => 'Check / Money order'],
+            'banktransfer' => ['value' => 'banktransfer', 'label' => null],
+            'paypal'       => [
                 'label' => 'PayPal',
                 'value' => [
                     'paypal_express'           => ['value' => 'paypal_express', 'label' => 'Express Checkout'],
                     'paypal_billing_agreement' => ['value' => 'paypal_billing_agreement', 'label' => 'Agreement']
                 ]
             ],
-            'braintree' => [
+            'braintree'    => [
                 'label' => 'Braintree',
                 'value' => ['braintree' => ['value' => 'braintree', 'label' => 'Credit Card']]
             ],
-            'free'      => ['label' => 'Unused', 'value' => ['free' => ['value' => 'free', 'label' => 'Free']]]
+            'free'         => ['label' => 'Unused', 'value' => ['free' => ['value' => 'free', 'label' => 'Free']]]
         ]);
 
         $activeMethods = [];
 
-        foreach (['checkmo', 'paypal_express', 'braintree'] as $code) {
+        foreach (['checkmo', 'banktransfer', 'paypal_express', 'braintree'] as $code) {
             $activeMethods[] = $this->createValueStub(MethodInterface::class, ['getCode' => $code]);
         }
 
@@ -66,7 +68,8 @@ class ActiveMethodsTest extends TestCase
     }
 
     /**
-     * The labels of the groups are added only to the methods of their group.
+     * The labels of the groups are added only to the methods of their group; a method without title is labelled with
+     * its code (before, "NULL").
      *
      * @return void
      */
@@ -75,6 +78,7 @@ class ActiveMethodsTest extends TestCase
         $this->assertSame(
             [
                 'checkmo'        => 'Check / Money order',
+                'banktransfer'   => 'banktransfer',
                 'paypal_express' => 'PayPal - Express Checkout',
                 'braintree'      => 'Braintree - Credit Card'
             ],
@@ -97,6 +101,7 @@ class ActiveMethodsTest extends TestCase
         $this->assertSame(
             [
                 ['value' => 'checkmo', 'label' => 'Check / Money order'],
+                ['value' => 'banktransfer', 'label' => null],
                 [
                     'label' => 'PayPal',
                     'value' => ['paypal_express' => ['value' => 'paypal_express', 'label' => 'Express Checkout']]

@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php /** @noinspection PhpDeprecationInspection Magento still provides its stock items next to Inventory. */
 
 declare(strict_types=1);
 

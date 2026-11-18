@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php /** @noinspection PhpDeprecationInspection The cart page of Magento still uses its deprecated cart model. */
 
 declare(strict_types=1);
 

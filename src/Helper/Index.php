@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php /** @noinspection PhpDeprecationInspection Magento's indexer has no other API to load and reindex. */
 
 declare(strict_types=1);
 
