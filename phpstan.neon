@@ -5,6 +5,8 @@
 includes:
     # findings that depend on the Magento version
     - phpstan.versions.php
+    # rules for conventions of PhpStorm that PHPStan does not check itself
+    - phpstan.rules.php
 parameters:
     level: 9
     paths:
@@ -23,7 +25,9 @@ parameters:
         - Magento\Framework\Model\ResourceModel\AbstractResource::_construct
         - Magento\Framework\Data\Collection\AbstractDb::_construct
     # @throws tags as PhpStorm expects them: every checked exception that a method lets through has to be declared,
-    # and not more than that; unchecked are the same exceptions as in the PhpStorm settings of the modules
+    # and not more than that; unchecked are the same exceptions as in the PhpStorm settings of the modules. The rules
+    # of phpstan.rules.php add what PhpStorm checks beyond that: @throws of the method itself, not only of a parent,
+    # and catches of exceptions that no call of the try block declares
     exceptions:
         check:
             missingCheckedExceptionInThrows: true
