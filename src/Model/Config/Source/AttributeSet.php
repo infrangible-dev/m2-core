@@ -113,14 +113,13 @@ class AttributeSet extends Eav
         $isGrouped = count($entityTypes) > 1;
 
         foreach ($entityTypes as [$entityTypeLabel, $entityType]) {
-            $entityTypeAttributeSets = [];
-
-            foreach ($this->getAttributeSets($entityType) as $attributeSet) {
-                $entityTypeAttributeSets[] = [
+            $entityTypeAttributeSets = array_map(
+                static fn(Set $attributeSet): array => [
                     'value' => $attributeSet->getId(),
                     'label' => $attributeSet->getAttributeSetName()
-                ];
-            }
+                ],
+                $this->getAttributeSets($entityType)
+            );
 
             if ($isGrouped) {
                 $attributeSets[] = [

@@ -59,11 +59,10 @@ class CarrierTest extends TestCase
                     return false;
                 }
 
-                $carrier = $this->createStub(ShippingCarrier::class);
-                $carrier->method('isActive')->willReturn($active[ $key ]);
-                $carrier->method('getCarrierCode')->willReturn($key);
-
-                return $carrier;
+                return $this->createValueStub(
+                    ShippingCarrier::class,
+                    ['isActive' => $active[ $key ], 'getCarrierCode' => $key]
+                );
             }
         );
 

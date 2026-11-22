@@ -15,6 +15,7 @@ use FeWeDev\Base\Variables;
 use Infrangible\Core\Helper\Payment;
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\Config\Source\Allmethods;
+use Magento\Payment\Model\MethodInterface;
 
 /**
  * Options of the active payment methods.
@@ -50,13 +51,7 @@ class ActiveMethods extends Allmethods
      */
     public function toOptionArray(): array
     {
-        $activeMethods = $this->paymentHelper->getActiveMethods($this->isAllStores(), $this->isWithDefault());
-
-        $activeMethodCodes = [];
-
-        foreach ($activeMethods as $activeMethod) {
-            $activeMethodCodes[] = $activeMethod->getCode();
-        }
+        $activeMethodCodes = $this->getActiveMethodCodes();
 
         $options = [['value' => '', 'label' => __('-- Please Select --')]];
 
@@ -75,15 +70,22 @@ class ActiveMethods extends Allmethods
      */
     public function toOptions(): array
     {
-        $activeMethods = $this->paymentHelper->getActiveMethods($this->isAllStores(), $this->isWithDefault());
-
-        $activeMethodCodes = [];
-
-        foreach ($activeMethods as $activeMethod) {
-            $activeMethodCodes[] = $activeMethod->getCode();
-        }
+        $activeMethodCodes = $this->getActiveMethodCodes();
 
         return $this->extractOptions($this->filterOptions(parent::toOptionArray(), $activeMethodCodes));
+    }
+
+    /**
+     * Returns the codes of the active payment methods.
+     *
+     * @return string[]
+     */
+    private function getActiveMethodCodes(): array
+    {
+        return array_map(
+            static fn(MethodInterface $activeMethod): string => $activeMethod->getCode(),
+            array_values($this->paymentHelper->getActiveMethods($this->isAllStores(), $this->isWithDefault()))
+        );
     }
 
     /**

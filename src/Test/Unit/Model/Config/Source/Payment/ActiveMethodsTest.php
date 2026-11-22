@@ -53,11 +53,10 @@ class ActiveMethodsTest extends TestCase
             'free'         => ['label' => 'Unused', 'value' => ['free' => ['value' => 'free', 'label' => 'Free']]]
         ]);
 
-        $activeMethods = [];
-
-        foreach (['checkmo', 'banktransfer', 'paypal_express', 'braintree'] as $code) {
-            $activeMethods[] = $this->createValueStub(MethodInterface::class, ['getCode' => $code]);
-        }
+        $activeMethods = array_map(
+            fn(string $code): MethodInterface => $this->createValueStub(MethodInterface::class, ['getCode' => $code]),
+            ['checkmo', 'banktransfer', 'paypal_express', 'braintree']
+        );
 
         $paymentHelper = $this->createStub(Payment::class);
         $paymentHelper->method('getActiveMethods')->willReturn($activeMethods);
