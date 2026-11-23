@@ -804,7 +804,6 @@ class Product
      *
      * @return array
      * @phpstan-return array<int|string, string>
-     * @throws LocalizedException
      */
     public function determineSKUs(array $entityIds, bool $keepAssociation = false): array
     {
@@ -896,7 +895,6 @@ class Product
      *
      * @return array
      * @phpstan-return array<int|string, int|string> entity ids, with the keys of $skus
-     * @throws LocalizedException
      */
     public function determineEntityIds(array $skus): array
     {
@@ -1297,7 +1295,6 @@ class Product
      * @param \Magento\Catalog\Model\Product $product
      *
      * @return int[]
-     * @throws LocalizedException
      */
     public function getUsedProductAttributeIds(\Magento\Catalog\Model\Product $product): array
     {

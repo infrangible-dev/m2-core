@@ -63,8 +63,6 @@ abstract class Json extends Action
      * @param RequestInterface $request
      *
      * @return ResponseInterface
-     * @throws NotFoundException
-     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatch(RequestInterface $request): ResponseInterface
     {

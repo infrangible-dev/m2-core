@@ -11,7 +11,6 @@ declare(strict_types=1);
 namespace Infrangible\Core\Model\Layer\Category;
 
 use Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection;
-use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Filterable attributes of the category layer, sorted by label instead of position.
@@ -24,7 +23,6 @@ class FilterableAttributeList extends \Magento\Catalog\Model\Layer\Category\Filt
      * @param Collection $collection
      *
      * @return Collection
-     * @throws LocalizedException
      */
     protected function _prepareAttributeCollection($collection): Collection
     {

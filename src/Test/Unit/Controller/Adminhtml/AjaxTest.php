@@ -24,7 +24,6 @@ use Magento\Framework\App\Response\Http as HttpResponse;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\DataObject;
-use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\Validator\Locale as LocaleValidator;
@@ -162,7 +161,6 @@ class AjaxTest extends TestCase
      * @param Ajax $controller
      *
      * @return void
-     * @throws NotFoundException
      */
     private function dispatch(Ajax $controller): void
     {
@@ -173,7 +171,6 @@ class AjaxTest extends TestCase
      * The response values of an Ajax request are sent as JSON together with the result.
      *
      * @return void
-     * @throws NotFoundException
      */
     public function testAjaxRequest(): void
     {
@@ -190,7 +187,6 @@ class AjaxTest extends TestCase
      * An exception in execute() is sent as error message.
      *
      * @return void
-     * @throws NotFoundException
      */
     public function testAjaxRequestWithException(): void
     {
@@ -206,7 +202,6 @@ class AjaxTest extends TestCase
      * Without permission for the ACL resource, the controller is not executed and no success is sent.
      *
      * @return void
-     * @throws NotFoundException
      */
     public function testAjaxRequestWithoutPermission(): void
     {
@@ -220,7 +215,6 @@ class AjaxTest extends TestCase
      * Without login, the controller is not executed and no success is sent.
      *
      * @return void
-     * @throws NotFoundException
      */
     public function testAjaxRequestWithoutLogin(): void
     {
@@ -234,7 +228,6 @@ class AjaxTest extends TestCase
      * Requests that are not Ajax requests are dispatched like other admin requests, without JSON response.
      *
      * @return void
-     * @throws NotFoundException
      */
     public function testNonAjaxRequest(): void
     {

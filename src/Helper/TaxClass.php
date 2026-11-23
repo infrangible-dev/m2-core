@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace Infrangible\Core\Helper;
 
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Tax\Model\ClassModel;
 use Magento\Tax\Model\ResourceModel\TaxClass\Collection;
 use Magento\Tax\Model\ResourceModel\TaxClass\CollectionFactory;
@@ -42,7 +41,6 @@ class TaxClass
      * @param string $taxClassType
      *
      * @return ClassModel|null
-     * @throws LocalizedException
      */
     public function getTaxClassByName(string $taxClassName, string $taxClassType = 'PRODUCT'): ?ClassModel
     {

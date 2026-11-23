@@ -11,7 +11,6 @@ declare(strict_types=1);
 namespace Infrangible\Core\Helper;
 
 use Exception;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Inventory\Model\ResourceModel\SourceItem\Collection;
 use Magento\Inventory\Model\SourceItem;
 use Magento\InventoryCatalogApi\Api\DefaultSourceProviderInterface;
@@ -76,7 +75,6 @@ class Source
      * @param int $productId
      *
      * @return SourceItem|null
-     * @throws LocalizedException
      */
     public function newProductSourceItem(int $productId): ?SourceItem
     {
@@ -121,7 +119,6 @@ class Source
      * @param string|null $sourceCode the default source if null
      *
      * @return void
-     * @throws LocalizedException
      */
     public function loadSourceItemsByProductId(array $productIds, ?string $sourceCode = null): void
     {
@@ -159,7 +156,6 @@ class Source
      * @param string|null $sourceCode the default source if null
      *
      * @return SourceItem|null null if the product has no source item or Magento_Inventory is not installed
-     * @throws LocalizedException
      */
     public function loadSourceItemByProductId(int $productId, ?string $sourceCode = null): ?SourceItem
     {
@@ -193,7 +189,6 @@ class Source
      * @param string|null $sourceCode the default source if null
      *
      * @return SourceItem|null null if the product has no source item or Magento_Inventory is not installed
-     * @throws LocalizedException
      */
     public function loadSourceItemByProductSku(string $sku, ?string $sourceCode = null): ?SourceItem
     {

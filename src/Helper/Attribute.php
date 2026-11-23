@@ -1448,7 +1448,6 @@ class Attribute
      * @param string $attributeSetName
      *
      * @return Set|null
-     * @throws LocalizedException
      */
     public function getAttributeSetByName(int $entityTypeId, string $attributeSetName): ?Set
     {

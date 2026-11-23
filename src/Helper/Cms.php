@@ -20,7 +20,6 @@ use Magento\Cms\Model\Page;
 use Magento\Cms\Model\PageFactory;
 use Magento\Cms\Model\ResourceModel\Page\Collection;
 use Magento\Cms\Model\ResourceModel\Page\CollectionFactory;
-use Magento\Framework\Exception\LocalizedException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use SimpleXMLElement;
@@ -297,7 +296,6 @@ class Cms
      * @phpstan-param array<string, mixed> $pageData
      *
      * @return bool true if the page was saved
-     * @throws LocalizedException
      */
     public function importPage(array $pageData, bool $overwriteExisting = false): bool
     {
@@ -506,7 +504,6 @@ class Cms
      * @phpstan-param array<string, mixed> $blockData
      *
      * @return bool true if the block was saved
-     * @throws LocalizedException
      */
     public function importBlock(array $blockData, bool $overwriteExisting = false): bool
     {

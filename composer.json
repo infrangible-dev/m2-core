@@ -50,6 +50,9 @@
         "psr/log": "~1.1.0||~2.0.0||~3.0.0",
         "symfony/console": "~5.4.0||~6.4.0||~7.4.0"
     },
+    "require-dev": {
+        "infrangible/phpstan-magento": "~1.0.0"
+    },
     "suggest": {
         "magento/module-bundle": "Prices of bundle products in Infrangible\\Core\\Helper\\Export",
         "magento/module-catalog-rule": "Infrangible\\Core\\Model\\Config\\Source\\Operator",

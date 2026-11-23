@@ -198,7 +198,6 @@ class AttributeSet extends Eav
      * @param Type|null $entityType
      *
      * @return Set[]
-     * @throws LocalizedException
      */
     private function getAttributeSets(?Type $entityType): array
     {
