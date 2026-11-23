@@ -1381,10 +1381,10 @@ class Product
                             $productAttribute = $attribute->getProductAttribute();
 
                             $attributeId = $this->variables->intValue($productAttribute->getAttributeId());
-                            $attributCode = $productAttribute->getAttributeCode();
+                            $attributeCode = $productAttribute->getAttributeCode();
 
                             $this->usedProductAttributes[ $cacheKey ][ $usedProductId ][ $attributeId ] =
-                                $this->variables->intValue($usedProduct->getData($attributCode));
+                                $this->variables->intValue($usedProduct->getData($attributeCode));
                         }
                     } catch (Exception $exception) {
                         $this->logging->debug($exception->getMessage());
