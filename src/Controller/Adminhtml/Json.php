@@ -18,7 +18,6 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Response\HttpInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
-use Magento\Framework\Exception\NotFoundException;
 use Psr\Log\LoggerInterface;
 
 /**

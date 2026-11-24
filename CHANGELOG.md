@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.5
+
+### Changed
+
+- Removed an unused import from `Controller\Adminhtml\Json`.
+
 ## 5.0.4
 
 ### Fixed
