@@ -19,7 +19,8 @@ define([
 ], function ($, alert, $__) {
     'use strict';
 
-    $.widget('infrangible.ajaxButton', {
+    // $.widget() returns the constructor, which is $.infrangible.ajaxButton
+    return $.widget('infrangible.ajaxButton', {
         options: {
             formKey: '',
             buttonId: '',
@@ -103,6 +104,4 @@ define([
             return data;
         }
     });
-
-    return $.infrangible.ajaxButton;
 });

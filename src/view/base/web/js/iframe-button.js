@@ -14,7 +14,8 @@ define([
 ], function ($, modal) {
     'use strict';
 
-    $.widget('infrangible.iframeButton', {
+    // $.widget() returns the constructor, which is $.infrangible.iframeButton
+    return $.widget('infrangible.iframeButton', {
         options: {
             buttonId: '',
             src: '',
@@ -64,6 +65,4 @@ define([
             return data;
         }
     });
-
-    return $.infrangible.iframeButton;
 });
