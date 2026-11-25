@@ -1,11 +1,14 @@
 {
     "name": "infrangible/m2-core",
-    "description": "Infrangible Magento 2 Core",
+    "description": "Shared groundwork that most Infrangible modules are built on, plus command-line tools to encrypt, decrypt, export and import configuration values.",
     "type": "magento2-module",
     "version": "5.0.5",
     "license": "MIT",
     "keywords": [
-        "Magento"
+        "Magento",
+        "Magento 2",
+        "Adobe Commerce",
+        "Developer tools"
     ],
     "homepage": "https://www.infrangible.dev/modules/core",
     "authors": [
