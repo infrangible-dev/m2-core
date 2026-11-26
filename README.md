@@ -6,7 +6,7 @@ on. It has no frontend or admin functions of its own, apart from four console co
 ## Requirements
 
 - Magento Open Source or Adobe Commerce 2.4.6 or newer
-- PHP 8.2 or newer
+- PHP 8.1 or newer
 
 ## Installation
 
@@ -66,6 +66,7 @@ The classes in `Infrangible\Core\Helper` are injected like any other class. The 
 | `Attribute`, `EntityType`  | EAV attributes, attribute sets, options and values                                     |
 | `Product`, `Category`      | loading, saving and querying products and categories                                   |
 | `Url`, `UrlRewrite`, `Seo` | URLs, URL rewrites and URL suffixes                                                    |
+| `Layer`                    | the layered navigation of the current product list and its applied filters             |
 | `Cms`, `Block`             | CMS pages and blocks, including import from XML files, rendering of layout blocks      |
 | `Export`                   | product data for feeds and exports                                                     |
 | `Setup`                    | data patches: attributes, attribute sets and groups                                    |
@@ -118,7 +119,7 @@ ads rise
 Run the checks in the `cli` container:
 
 ```bash
-# coding standard (Magento2 and PHP 8.2 compatibility)
+# coding standard (Magento2 and PHP 8.1 compatibility)
 cd /var/www/module && /var/www/magento/vendor/bin/phpcs
 
 # static analysis (PHPStan level 9)
@@ -133,8 +134,8 @@ mounted `vendor` directory of Magento.
 
 ### Continuous integration and releases
 
-Every push and pull request runs the checks above on GitHub Actions with Magento 2.4.6 (PHP 8.2), 2.4.7 (PHP 8.3),
-2.4.8 (PHP 8.4) and 2.4.9 (PHP 8.5), using the shared workflow of
+Every push and pull request runs the checks above on GitHub Actions with Magento 2.4.6 (PHP 8.1), 2.4.7 (PHP 8.2),
+2.4.8 (PHP 8.3 and 8.4) and 2.4.9 (PHP 8.5), using the shared workflow of
 [infrangible-dev/workflows](https://github.com/infrangible-dev/workflows). Outside the development environment, the
 PHPStan and PHPUnit configuration find Magento through the environment variable `MAGENTO_ROOT`.
 

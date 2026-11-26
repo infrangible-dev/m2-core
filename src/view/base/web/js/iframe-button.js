@@ -24,13 +24,15 @@ define([
         },
         _create: function () {
             const self = this;
-            $('#' + this.options.buttonId).click(function (event) {
+
+            $('#' + this.options.buttonId).on('click', function (event) {
                 event.preventDefault();
                 self._openPopup(self._getData());
             });
         },
         _openPopup: function (data) {
             let modalContent;
+
             if (data.srcDoc) {
                 modalContent = $('<iframe srcdoc=\'' + data.srcDoc + '\'></iframe>');
             } else if (data.src) {
@@ -44,6 +46,7 @@ define([
                     modalClass: 'iframe-button-modal',
                     buttons: []
                 };
+
                 if (data.title) {
                     modalOptions['title'] = data.title;
                 }
@@ -53,6 +56,7 @@ define([
         },
         _getData: function () {
             const data = {};
+
             if (this.options.srcDoc) {
                 data['srcDoc'] = this.options.srcDoc;
             }

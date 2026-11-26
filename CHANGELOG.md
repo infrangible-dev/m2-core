@@ -1,5 +1,19 @@
 # Changelog
 
+## 5.0.6
+
+### Changed
+
+- Supports PHP 8.1 again, like Magento 2.4.6: the Adobe Commerce Marketplace requires modules to allow every PHP
+  version of the Magento versions they support.
+- The JavaScript follows the ESLint rules of the Magento coding standard, which the Marketplace checks as well;
+  the behavior is unchanged.
+
+### Added
+
+- `Helper\Layer` with the layer of the current product list (`getLayer()`) and its applied filters
+  (`getActiveFilters()`), for modules that show or count the applied filters of the layered navigation.
+
 ## 5.0.5
 
 ### Changed

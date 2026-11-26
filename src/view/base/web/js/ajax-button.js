@@ -1,10 +1,5 @@
 // noinspection JSUnresolvedFunction,JSCheckFunctionSignatures,JSUnusedGlobalSymbols,JSUnresolvedVariable
 
-/* jshint esversion: 6 */
-/* global console */
-/* global define */
-/* global require */
-
 /**
  * @author      Andreas Knollmann
  * @copyright   Copyright (c) 2014-2026 Softwareentwicklung Andreas Knollmann
@@ -29,7 +24,8 @@ define([
         },
         _create: function () {
             const self = this;
-            $('#' + this.options.buttonId).click(function (event) {
+
+            $('#' + this.options.buttonId).on('click', function (event) {
                 event.preventDefault();
                 self._ajaxRequest(self._getData());
             });
@@ -40,40 +36,7 @@ define([
                 dataType: 'json',
                 data: data,
                 showLoader: true,
-                success: function (result) {
-                    if ('success' in result) {
-                        if (result.success) {
-                            if (result.message) {
-                                alert({
-                                    title: $__('Success'),
-                                    content: result.message
-                                });
-                            }
-                        } else {
-                            if (result.message) {
-                                alert({
-                                    title: $__('Error'),
-                                    content: result.message
-                                });
-                            } else {
-                                alert({
-                                    title: $__('Error')
-                                });
-                            }
-                        }
-                    } else if (result.error) {
-                        if (result.message) {
-                            alert({
-                                title: result.error ? $__('Error') : $__('Success'),
-                                content: result.message
-                            });
-                        } else {
-                            alert({
-                                title: $__('Error')
-                            });
-                        }
-                    }
-                },
+                success: this._showResult.bind(this),
                 error: function (request, error, message) {
                     alert({
                         title: $__('Error'),
@@ -82,14 +45,40 @@ define([
                 }
             });
         },
+
+        /**
+         * Shows the message of the result: on success only if there is one, on errors always.
+         *
+         * @param {{success: (boolean|undefined), error: (boolean|undefined), message: (string|undefined)}} result
+         */
+        _showResult: function (result) {
+            let title;
+
+            if ('success' in result) {
+                if (result.success && !result.message) {
+                    return;
+                }
+
+                title = result.success ? $__('Success') : $__('Error');
+            } else if (result.error) {
+                title = $__('Error');
+            } else {
+                return;
+            }
+
+            alert(result.message ? {title: title, content: result.message} : {title: title});
+        },
         _getData: function () {
             const data = {
                 form_key: this.options.formKey
             };
+
             if (this.options.dataHtmlIds) {
                 const dataHtmlIds = this.options.dataHtmlIds.split(',');
+
                 dataHtmlIds.forEach(function (dataHtmlId) {
                     const dataHtmlElement = $('#' + dataHtmlId);
+
                     if (dataHtmlElement.length > 0) {
                         if (dataHtmlElement.attr('type') === 'password') {
                             dataHtmlElement.prop('type', 'text');

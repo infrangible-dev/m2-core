@@ -7,6 +7,6 @@
 const config = {
     paths: {
         'infrangible/ajax-button': 'Infrangible_Core/js/ajax-button',
-        'infrangible/iframe-button': 'Infrangible_Core/js/iframe-button',
+        'infrangible/iframe-button': 'Infrangible_Core/js/iframe-button'
     }
 };
