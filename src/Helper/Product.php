@@ -24,7 +24,9 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Catalog\Pricing\Price\TierPrice;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableResource;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable\Attribute as ConfigurableAttribute;
 use Magento\Customer\Model\Address\AbstractAddress;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\LocalizedException;
@@ -1314,10 +1316,8 @@ class Product
                 $attributes = $typeInstance->getConfigurableAttributes($product);
 
                 foreach ($attributes as $attribute) {
-                    $productAttribute = $attribute->getProductAttribute();
-
                     try {
-                        $attributeId = $this->variables->intValue($productAttribute->getAttributeId());
+                        $attributeId = $this->variables->intValue($attribute->getAttributeId());
 
                         $this->usedProductAttributeIds[ $product->getId() ][] = $attributeId;
                     } catch (Exception $exception) {
@@ -1371,18 +1371,13 @@ class Product
             $typeInstance = $product->getTypeInstance();
 
             if ($typeInstance instanceof Configurable) {
-                $attributes = $typeInstance->getConfigurableAttributes($product);
+                $attributeCodes = $this->getAttributeCodes($typeInstance->getConfigurableAttributes($product));
 
                 foreach ($usedProducts as $usedProduct) {
                     try {
                         $usedProductId = $this->variables->intValue($usedProduct->getEntityId());
 
-                        foreach ($attributes as $attribute) {
-                            $productAttribute = $attribute->getProductAttribute();
-
-                            $attributeId = $this->variables->intValue($productAttribute->getAttributeId());
-                            $attributeCode = $productAttribute->getAttributeCode();
-
+                        foreach ($attributeCodes as $attributeId => $attributeCode) {
                             $this->usedProductAttributes[ $cacheKey ][ $usedProductId ][ $attributeId ] =
                                 $this->variables->intValue($usedProduct->getData($attributeCode));
                         }
@@ -1394,6 +1389,36 @@ class Product
         }
 
         return $this->usedProductAttributes[ $cacheKey ];
+    }
+
+    /**
+     * Returns the codes of the product attributes of the configurable attributes by attribute id.
+     *
+     * @param iterable $attributes
+     * @phpstan-param iterable<ConfigurableAttribute> $attributes a collection, which Magento declares as array
+     *
+     * @return array<int, string>
+     */
+    private function getAttributeCodes(iterable $attributes): array
+    {
+        $attributeCodes = [];
+
+        foreach ($attributes as $attribute) {
+            $productAttribute = $attribute->getData('product_attribute');
+
+            if (! $productAttribute instanceof AbstractAttribute) {
+                continue;
+            }
+
+            try {
+                $attributeCodes[ $this->variables->intValue($productAttribute->getAttributeId()) ] =
+                    $productAttribute->getAttributeCode();
+            } catch (Exception $exception) {
+                $this->logging->debug($exception->getMessage());
+            }
+        }
+
+        return $attributeCodes;
     }
 
     /**

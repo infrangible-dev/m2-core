@@ -102,7 +102,7 @@ class Cart
             $buyRequestData[ 'options' ] = $options;
 
             if ($buyRequestOption instanceof Option) {
-                $buyRequestOption->setValue((string)$this->serializer->serialize($buyRequestData));
+                $buyRequestOption->setData('value', (string)$this->serializer->serialize($buyRequestData));
             }
 
             $optionsOption = $item->getOptionByCode('option_ids');
@@ -214,7 +214,8 @@ class Cart
             );
 
             if ($optionsOption !== null) {
-                $optionsOption->setValue(
+                $optionsOption->setData(
+                    'value',
                     implode(
                         ',',
                         $optionsOptionValue
@@ -241,7 +242,8 @@ class Cart
             if ($buyRequestOption instanceof Option) {
                 $buyRequestData = $buyRequest->getData();
 
-                $buyRequestOption->setValue(
+                $buyRequestOption->setData(
+                    'value',
                     (string)$this->serializer->serialize(is_array($buyRequestData) ? $buyRequestData : [])
                 );
             }

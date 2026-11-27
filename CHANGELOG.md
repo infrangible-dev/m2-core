@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.0.7
+
+### Changed
+
+- `Helper\Cart` sets the values of quote item options with `setData('value', …)`, `Helper\Product` reads the
+  attribute ID of configurable attributes with `getAttributeId()` and their product attribute with
+  `getData('product_attribute')`, instead of magic methods. A configurable attribute without product attribute is
+  skipped instead of failing.
+
 ## 5.0.6
 
 ### Changed
